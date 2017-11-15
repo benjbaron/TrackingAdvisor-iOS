@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>TrackingAdvisor</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -25,8 +27,16 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>To show your location</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>To show your location</string>
+	<key>NSLocationUsageDescription</key>
+	<string>To show your location</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>To show your location</string>
+	<key>NSMotionUsageDescription</key>
+	<string>We need to get your motion to increase the performance of the location accuracy and battery</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
