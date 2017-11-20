@@ -7,15 +7,28 @@
 //
 
 import UIKit
+import Mapbox
 
-class OneTimelineViewController: UIViewController {
+enum MapViewState {
+    case folded
+    case full
+    case half
+}
 
+class OneTimelineViewController: UIViewController, UIScrollViewDelegate {
+
+    @IBOutlet weak var mapView: MGLMapView!
+    @IBOutlet weak var mapViewHeight: NSLayoutConstraint!
     @IBOutlet weak var timeline: ISTimeline!
-
+    
     var timelineTitle: String!
+    var isAnimating = false
+    var isFolded = true
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        timeline.delegate = self
         
         let touchAction = { (point:ISPoint) in
             print("point \(point.title)")
@@ -39,6 +52,84 @@ class OneTimelineViewController: UIViewController {
         timeline.timelineTitle = timelineTitle
     }
     
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let y = scrollView.contentOffset.y
+        if isAnimating { return }
+        
+        
+        if !isFolded && y > 10.0 {
+            isAnimating = true
+            
+            UIView.animate(withDuration: 0.2, animations: {
+                scrollView.setContentOffset(CGPoint(x: scrollView.contentOffset.x,
+                                                    y: -scrollView.contentInset.top),
+                                            animated: false)
+            }, completion: { completed in
+                if completed {
+                    UIView.animate(withDuration: 0.5, animations: { [weak self] in
+                        self?.mapViewHeight.constant = 0
+                        self?.view.layoutIfNeeded()
+                        }, completion: { c in
+                            if c {
+                                self.isAnimating = false
+                                self.isFolded = true
+                            }
+                    })
+                }
+            })
+            
+        } else if isFolded && y < -50.0 {
+            isAnimating = true
+            UIView.animate(withDuration: 0.5, animations: { [weak self] in
+                self?.mapViewHeight.constant = 300
+                self?.view.layoutIfNeeded()
+            }, completion: { completed in
+                if completed {
+                    self.isAnimating = false
+                    self.isFolded = false
+                }
+            })
+        }
+    }
+    
+    /*
+    func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        
+        let y = scrollView.contentOffset.y
+        isScrolling = false
+        let heightDiff = mapViewHeight.constant - previousMapViewHeight
+        print("scrollViewDidEndDragging - \(y), \(previousMapViewState), \(mapViewHeight.constant), \(heightDiff)")
+        
+        if y < -60.0 { // scrolling downwards
+//            if previousMapViewState == .folded && mapViewHeight.constant < 100 {
+                print("\t 1")
+                mapViewHeight.constant = 350
+                mapViewState = .half
+//            } else if (previousMapViewState == .folded || previousMapViewState == .half) && mapViewHeight.constant > 100 {
+//                print("\t 2")
+//                mapViewHeight.constant = 200
+//                mapViewState = .full
+//            }
+        }
+//        } else if y > 0.0 { // scrolling upwards
+////            if (previousMapViewState == .full && mapViewHeight.constant > 100) {
+////                print("\t 3")
+//                mapViewHeight.constant = 0
+//                mapViewState = .half
+////            } else if (previousMapViewState == .full || previousMapViewState == .half) && mapViewHeight.constant < 100 {
+////                print("\t 4")
+////                mapViewH/eight.constant = 0
+////                mapViewState = .folded
+////            }
+//        }
+    }
+    
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        isScrolling = true
+        previousMapViewState = mapViewState
+        previousMapViewHeight = mapViewHeight.constant
+    }
+    */
 
     /*
     // MARK: - Navigation

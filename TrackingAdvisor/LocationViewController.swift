@@ -33,10 +33,11 @@ class MapCircle: MKCircle {
     }
 }
 
-class LocationViewController: UIViewController, MKMapViewDelegate, LocationRegionUpdateProtocol {
+class LocationViewController: UIViewController, MKMapViewDelegate, LocationRegionUpdateProtocol, UIScrollViewDelegate {
 
     // MARK - IBOutlets
     
+    @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var mapView: MKMapView?
     @IBOutlet weak var lat: UILabel?
     @IBOutlet weak var ts: UILabel?
@@ -76,8 +77,13 @@ class LocationViewController: UIViewController, MKMapViewDelegate, LocationRegio
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        scrollView.delegate = self
         locationService.delegate = self
         mapView?.delegate = self
+        
+        self.automaticallyAdjustsScrollViewInsets = false
+        
         updateUI()
     }
     
@@ -169,6 +175,15 @@ class LocationViewController: UIViewController, MKMapViewDelegate, LocationRegio
         renderer.strokeColor = UIColor.white.withAlphaComponent(0.70)
         renderer.lineWidth = 3
         return renderer
+    }
+    
+    // MARK - UIScrollViewDelegate
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        print("hello")
+        let y = scrollView.contentOffset.y
+        if y > 0 {
+            print("Scrollview moved")
+        }
     }
 
 }
