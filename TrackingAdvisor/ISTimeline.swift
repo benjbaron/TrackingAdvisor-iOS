@@ -159,8 +159,20 @@ open class ISTimeline: UIScrollView {
     
     fileprivate let timelineTitleOffset:CGFloat = 90.0
     fileprivate var timelineTitleLabel:UILabel!
-    fileprivate var testIcon:CALayer!
+    fileprivate var timelineEditButton: UIButton!
     fileprivate let screenSize:CGRect = UIScreen.main.bounds
+    fileprivate var isEditing = false { didSet {
+            if isEditing {
+                timelineEditButton.setTitle("Done", for: .normal)
+                timelineEditButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+            } else {
+                timelineEditButton.setTitle("Edit", for: .normal)
+                timelineEditButton.titleLabel?.font = UIFont.systemFont(ofSize: 14)
+
+            }
+        }
+    }
+    fileprivate var isAnimating = false
     
     fileprivate var sections:[(point:CGPoint, bubbleRect:CGRect, descriptionRect:CGRect?, titleLabel:UILabel, descriptionLabel:UILabel?, pointColor:CGColor, lineColor:CGColor, fill:Bool, icon:UIImage, iconBg:CGColor, iconCenter:CGPoint)] = []
     
@@ -181,27 +193,70 @@ open class ISTimeline: UIScrollView {
     }
     
     @objc fileprivate func editTimeline() {
-        print("Edit timeline button pressed")
-        let duration = 0.5
-        CATransaction.begin()
-        CATransaction.setAnimationDuration(duration)
-        CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut))
+        if isAnimating { return }
         
-        for i in 1..<self.layers.count {
-            for j in 0..<self.layers[i]!.count {
-                let layer = self.layers[i]![j]
-                layer.moveDown(by: CGFloat(i)*75, with: duration)
+        isAnimating = true
+        if isEditing {
+            let duration = 0.5
+            
+            for i in 0..<self.addButtons.count {
+                let layer = self.addButtons[i]
+                layer.hide()
             }
+
+            CATransaction.begin()
+            CATransaction.setAnimationDuration(duration)
+            CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut))
+            
+            CATransaction.setCompletionBlock { [weak self] in
+                print("end animation")
+                
+                self?.isAnimating = false
+                self?.isEditing = false
+            }
+            
+            for i in 1..<self.layers.count {
+                for j in 0..<self.layers[i]!.count {
+                    let layer = self.layers[i]![j]
+                    layer.moveDown(by: -1.0 * CGFloat(i) * 75, with: duration)
+                }
+            }
+            
+            CATransaction.commit()
+            
+            self.contentSize = CGSize(width: self.contentSize.width, height: self.contentSize.height - CGFloat((self.layers.count-1))*75)
+            
+        } else {
+            let duration = 0.5
+            CATransaction.begin()
+            CATransaction.setAnimationDuration(duration)
+            CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut))
+            
+            CATransaction.setCompletionBlock { [weak self] in
+                print("end animation")
+                guard let strongSelf = self else { return  }
+                for i in 0..<strongSelf.addButtons.count {
+                    let layer = strongSelf.addButtons[i]
+                    layer.show()
+                }
+                
+                strongSelf.isAnimating = false
+                strongSelf.isEditing = true
+            }
+            
+            for i in 1..<self.layers.count {
+                for j in 0..<self.layers[i]!.count {
+                    let layer = self.layers[i]![j]
+                    layer.moveDown(by: CGFloat(i)*75, with: duration)
+                }
+            }
+            
+            CATransaction.commit()
+            
+            self.contentSize = CGSize(width: self.contentSize.width, height: self.contentSize.height + CGFloat((self.layers.count-1))*75)
         }
-        CATransaction.commit()
-        
-        for i in 0..<self.addButtons.count {
-            let layer = self.addButtons[i]
-            layer.show()
-        }
-        
-        self.contentSize = CGSize(width: self.contentSize.width, height: self.contentSize.height + CGFloat((self.layers.count-1))*75)
     }
+    
     
     override open func draw(_ rect: CGRect) {
         let ctx:CGContext = UIGraphicsGetCurrentContext()!
@@ -212,15 +267,13 @@ open class ISTimeline: UIScrollView {
         self.addSubview(timelineTitleLabel)
         
         // Place the timeline edit button
-        let timelineEditButton = UIButton(type: UIButtonType.system)
+        timelineEditButton = UIButton(type: UIButtonType.system)
         timelineEditButton.frame.size = CGSize(width: 50, height: 25)
-        timelineEditButton.frame.origin = CGPoint(x: screenSize.width-(timelineEditButton.frame.width+30), y: 43)
+        timelineEditButton.contentHorizontalAlignment = .left
+        timelineEditButton.frame.origin = CGPoint(x: screenSize.width-(timelineEditButton.frame.width+30), y: -10)
         timelineEditButton.setTitle("Edit", for: .normal)
         timelineEditButton.addTarget(self, action: #selector(ISTimeline.editTimeline), for: .touchUpInside)
         self.addSubview(timelineEditButton)
-        
-        testIcon = drawIcon(CGPoint(x: screenSize.width/2 - iconDiameter/2, y: 43), fill: Constants.primaryLight.cgColor, image: UIImage(named: "location")!)
-        self.layer.addSublayer(testIcon)
         
         for i in 0 ..< sections.count {
             layers[i] = []

@@ -22,6 +22,7 @@ class Networking {
 class FileService : NSObject {
     static let shared = FileService()
     var dir: URL?
+    let id: String = UIDevice.current.identifierForVendor!.uuidString
     
     override init() {
         self.dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
@@ -99,26 +100,50 @@ class FileService : NSObject {
         if fileExists(file: file) {
             var text = ""
             for loc in locations {
-                let line = "\(loc.userID),\(loc.latitude),\(loc.longitude),\(loc.timestamp),\(loc.accuracy),\(loc.targetAccuracy),\(loc.speed)\n"
+                let line = "\(loc.userid),\(loc.latitude),\(loc.longitude),\(loc.timestamp),\(loc.accuracy),\(loc.targetAccuracy),\(loc.speed)\n"
                 text.append(line)
             }
             append(text, in: file)
         } else  {
             var text = "User,Lat,Lon,Timestamp,Accuracy,TargetAccuracy,Speed\n"
             for loc in locations {
-                let line = "\(loc.userID),\(loc.latitude),\(loc.longitude),\(loc.timestamp),\(loc.accuracy),\(loc.targetAccuracy),\(loc.speed)\n"
+                let line = "\(loc.userid),\(loc.latitude),\(loc.longitude),\(loc.timestamp),\(loc.accuracy),\(loc.targetAccuracy),\(loc.speed)\n"
                 text.append(line)
             }
             write(text, in: file)
         }
     }
     
-    func upload(file: URL) {
+    func uploadBackground(file: URL) {
+        NSLog("upload file")
         Networking.shared.backgroundSessionManager.upload(file,
-                                                          to: "https://tracemap.herokuapp.com/upload").responseJSON { 
+                                                          to: "http://semantica.geog.ucl.ac.uk:5678/uploader").responseJSON {
                                                             response in
             debugPrint(response)
         }
+    }
+    
+    func upload(file: URL, callback: @escaping (DataResponse<Any>)->Void) {
+        NSLog("upload file \(file)")
+        Alamofire.upload(
+            multipartFormData: { multipartFormData in
+                multipartFormData.append(file,
+                                         withName: "trace",
+                                         fileName: "\(self.id)_\(file.lastPathComponent)",
+                                         mimeType: "text/csv")
+            },
+            to: "http://semantica.geog.ucl.ac.uk:5678/uploader",
+            encodingCompletion: { encodingResult in
+                switch encodingResult {
+                case .success(let upload, _, _):
+                    upload.responseJSON { response in
+                        callback(response)
+                    }
+                case .failure(let encodingError):
+                    print(encodingError)
+                }
+            
+        })
     }
     
     func log(_ text: String, classname: String) {

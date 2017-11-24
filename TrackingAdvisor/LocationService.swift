@@ -43,7 +43,7 @@ class LocationService: NSObject, CLLocationManagerDelegate {
     var updating = false
 
     var locations:[UserLocation] = []
-    var id: String = UIDevice.current.identifierForVendor!.uuidString
+    let id: String = UIDevice.current.identifierForVendor!.uuidString
     
     let uclCoords = CLLocationCoordinate2D(latitude: 51.524657746824921, longitude: -0.13423115015042408)
     let homeCoords = CLLocationCoordinate2D(latitude: 51.513596047066898, longitude: -0.093435771182253588)
@@ -241,7 +241,7 @@ class LocationService: NSObject, CLLocationManagerDelegate {
 //                                   magneticField: mf,
 //                                   activity: activity,
 //                                   activityConfidence: confidence)
-            let loc = UserLocation(id: self.id, location: location)
+            let loc = UserLocation(id: self.id, location: location, targetAccuracy: locationManager.desiredAccuracy)
             self.locations.append(loc)
         }
         

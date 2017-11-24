@@ -11,49 +11,61 @@ import CoreData
 
 
 protocol DataStoreUpdateProtocol {
-    func dataStoreDidUpdate(location: UserLocation)
+    func dataStoreDidUpdate(update: UserUpdate)
 }
 
 
 class DataStoreService: NSObject {
     static let shared = DataStoreService()
-    var delegate:DataStoreUpdateProtocol!
-    var managedContext:NSManagedObjectContext?
-    var visitEntity:NSEntityDescription?
+    var delegate: DataStoreUpdateProtocol? = nil
+    var container: NSPersistentContainer? = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer
     
     override init() {
         super.init()
-        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
-            return
-        }
-        
-        self.managedContext = appDelegate.persistentContainer.viewContext
-        if let context = self.managedContext {
-            self.visitEntity = NSEntityDescription.entity(forEntityName: "Visit", in: context)!
+    }
+    
+    func updateDatabase(with userUpdate: UserUpdate) {
+        container?.performBackgroundTask { [weak self] context in
+            for userPlace in userUpdate.places {
+                print("save place")
+                _ = try? Place.findOrCreatePlace(matching: userPlace, in: context)
+            }
+            
+            for userVisit in userUpdate.visits {
+                print("save visit")
+                _ = try? Visit.findOrCreateVisit(matching: userVisit, in: context)
+            }
+            
+            for userMove in userUpdate.movements {
+                print("save move")
+                _ = try? Move.findOrCreateMove(matching: userMove, in: context)
+            }
+            
+            do {
+                try context.save()
+            } catch {
+                print("error saving the database")
+            }
+            self?.stats()
+            
+            DispatchQueue.main.async { () -> Void in
+                self?.delegate?.dataStoreDidUpdate(update: userUpdate)
+            }
         }
     }
     
-    func save(_ location: UserLocation) {
-        guard let context = self.managedContext,
-            let entity = self.visitEntity else {
-                return
-        }
-        
-        let loc = NSManagedObject(entity: entity, insertInto: context)
-        
-        loc.setValue(location.latitude, forKey: "latitude")
-        loc.setValue(location.longitude, forKey: "longitude")
-        
-        do {
-            try context.save()
-        } catch let error as NSError {
-            NSLog("Could not save. \(error), \(error.userInfo)")
-            return
-        }
-        
-        DispatchQueue.main.async { () -> Void in
-            if self.delegate != nil {
-                self.delegate.dataStoreDidUpdate(location: location)
+    func stats() {
+        if let context = container?.viewContext {
+            context.perform {
+                if let placeCount = try? context.count(for: Place.fetchRequest()) {
+                    print("\(placeCount) places")
+                }
+                if let visitCount = try? context.count(for: Visit.fetchRequest()) {
+                    print("\(visitCount) visits")
+                }
+                if let moveCount = try? context.count(for: Move.fetchRequest()) {
+                    print("\(moveCount) moves")
+                }
             }
         }
     }
