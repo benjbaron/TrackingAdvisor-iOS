@@ -8,79 +8,125 @@
 
 import UIKit
 
-struct Moveable {
-    let layer:CALayer?
-    let label:UILabel?
-    var type = ""
+protocol Moveable {
+    func hide()
+    func show()
+    func move(to: CGPoint, with delay: CFTimeInterval)
+    func moveDown(by value: CGFloat, with delay:CFTimeInterval)
+}
+
+class MoveableLayer : Moveable {
+    var layer: CALayer?
     var position = -1
     var maxPosition = -1
     
-    init(layer:CALayer? = nil, label:UILabel? = nil, type:String = "", position:Int = -1, maxPosition: Int = -1) {
+    init(layer:CALayer? = nil, position:Int = -1, maxPosition: Int = -1) {
         self.layer = layer
-        self.label = label
-        self.type = type
         self.position = position
         self.maxPosition = maxPosition
     }
     
-    init(layer:CALayer, type:String = "", position:Int = -1, maxPosition: Int = -1) {
-        self.init(layer: layer, label: nil, type:type, position: position, maxPosition: maxPosition)
-    }
-    
-    init(label:UILabel, type:String = "", position:Int = -1, maxPosition: Int = -1) {
-        self.init(layer: nil, label: label, type:type, position:position, maxPosition: maxPosition)
-    }
-    
     func hide() {
-        if let layer = layer {
-            layer.opacity = 0
-        } else if let label = label {
-            label.alpha = 0
-        }
+        guard let layer = layer else { return }
+        layer.opacity = 0
     }
     
     func show() {
-        if let layer = layer {
-            layer.opacity = 1
-        } else if let label = label {
-            label.alpha = 1
-        }
+        guard let layer = layer else { return }
+        layer.opacity = 1
     }
     
     func move(to: CGPoint, with delay: CFTimeInterval) {
-        if let layer = layer {
-            if position > 0 {
-                let animation = CABasicAnimation(keyPath: "position")
-                animation.fromValue = layer.position
-                animation.toValue = to
-                animation.duration = delay
-                layer.position = to
-                layer.add(animation, forKey: nil)
+        guard let layer = layer else { return }
+        if position > 0 {
+            let animation = CABasicAnimation(keyPath: "position")
+            animation.fromValue = layer.position
+            animation.toValue = to
+            animation.duration = delay
+            layer.position = to
+            layer.add(animation, forKey: nil)
+        }
+    }
+    
+    func moveDown(by value: CGFloat, with delay: CFTimeInterval) {
+        guard let layer = layer else { return }
+        var position = CGPoint()
+        position.x = layer.position.x
+        position.y = layer.position.y + value
+        move(to: position, with: delay)
+    }
+}
+
+class MovableLineLayer: MoveableLayer {
+    var line: CAShapeLayer? { didSet {
+            self.layer = line
+        }
+    }
+    var topCap: CAShapeLayer?
+    var bottomCap: CAShapeLayer?
+    var intermediateOffset: CGFloat = 0.0
+    var lineOffset: CGFloat = 0.0
+    
+    init(line:CAShapeLayer? = nil, position:Int = -1, maxPosition: Int = -1, intermediateOffset: CGFloat = 0.0) {
+        self.line = line
+        self.intermediateOffset = intermediateOffset
+        super.init(layer: line, position: position, maxPosition: maxPosition)
+    }
+    
+    override func moveDown(by value: CGFloat, with delay: CFTimeInterval) {
+        guard let line = line else { return }
+        var position = CGPoint()
+        position.x = line.position.x
+        position.y = line.position.y + value
+        
+        if self.position == self.maxPosition {
+            position.y += value / CGFloat(self.position)
+            line.strokeStart = value < 0 ? lineOffset : 0.0
+            if let topCap = topCap {
+                topCap.position.y += value < 0 ? intermediateOffset : -1*intermediateOffset
             }
-        } else if let label = label {
-            if position > 0 {
-                UIView.animate(withDuration: delay) {
-                    label.center = to
-                }
+        }
+        
+        print("MovableLineLayer -- moveDown \(position)")
+        move(to: position, with: delay)
+    }
+}
+
+class MoveableLabel : Moveable {
+    let label:UILabel?
+    var position = -1
+    var maxPosition = -1
+    
+    init(label:UILabel? = nil, position:Int = -1, maxPosition: Int = -1) {
+        self.label = label
+        self.position = position
+        self.maxPosition = maxPosition
+    }
+   
+    func hide() {
+        guard let label = label else { return }
+        label.alpha = 0
+    }
+    
+    func show() {
+        guard let label = label else { return }
+        label.alpha = 1
+    }
+    
+    func move(to: CGPoint, with delay: CFTimeInterval) {
+        guard let label = label else { return }
+        if self.position > 0 {
+            UIView.animate(withDuration: delay) {
+                label.center = to
             }
         }
     }
     
     func moveDown(by value: CGFloat, with delay:CFTimeInterval) {
+        guard let label = label else { return }
         var position = CGPoint()
-        if let layer = layer {
-            position.x = layer.position.x
-            position.y = layer.position.y + value
-            if type == "line" && self.position == self.maxPosition {
-                print("before: \(position.y) \(value)")
-                position.y += value/CGFloat(self.position)
-                print("after: \(position.y) \(value)")
-            }
-        } else if let label = label {
-            position.x = label.center.x
-            position.y = label.center.y + value
-//            label.center = position
-        }
+        position.x = label.center.x
+        position.y = label.center.y + value
         move(to: position, with: delay)
     }
 }
@@ -158,7 +204,7 @@ open class ISTimeline: UIScrollView {
     }
     
     fileprivate let timelineTitleOffset:CGFloat = 90.0
-    fileprivate var timelineTitleLabel:UILabel!
+    fileprivate var timelineTitleLabel: UILabel!
     fileprivate var timelineEditButton: UIButton!
     fileprivate let screenSize:CGRect = UIScreen.main.bounds
     fileprivate var isEditing = false { didSet {
@@ -172,6 +218,7 @@ open class ISTimeline: UIScrollView {
             }
         }
     }
+    
     fileprivate var isAnimating = false
     
     fileprivate var sections:[(point:CGPoint, bubbleRect:CGRect, descriptionRect:CGRect?, titleLabel:UILabel, descriptionLabel:UILabel?, pointColor:CGColor, lineColor:CGColor, fill:Bool, icon:UIImage, iconBg:CGColor, iconCenter:CGPoint)] = []
@@ -218,13 +265,13 @@ open class ISTimeline: UIScrollView {
             for i in 1..<self.layers.count {
                 for j in 0..<self.layers[i]!.count {
                     let layer = self.layers[i]![j]
-                    layer.moveDown(by: -1.0 * CGFloat(i) * 75, with: duration)
+                    layer.moveDown(by: -1.0 * CGFloat(i) * 50, with: duration)
                 }
             }
             
             CATransaction.commit()
             
-            self.contentSize = CGSize(width: self.contentSize.width, height: self.contentSize.height - CGFloat((self.layers.count-1))*75)
+            self.contentSize = CGSize(width: self.contentSize.width, height: self.contentSize.height - CGFloat((self.layers.count-1))*50)
             
         } else {
             let duration = 0.5
@@ -246,14 +293,15 @@ open class ISTimeline: UIScrollView {
             
             for i in 1..<self.layers.count {
                 for j in 0..<self.layers[i]!.count {
+                    print("call moveDown \(i), \(j)")
                     let layer = self.layers[i]![j]
-                    layer.moveDown(by: CGFloat(i)*75, with: duration)
+                    layer.moveDown(by: CGFloat(i) * 50, with: duration)
                 }
             }
             
             CATransaction.commit()
             
-            self.contentSize = CGSize(width: self.contentSize.width, height: self.contentSize.height + CGFloat((self.layers.count-1))*75)
+            self.contentSize = CGSize(width: self.contentSize.width, height: self.contentSize.height + CGFloat((self.layers.count-1))*50)
         }
     }
     
@@ -269,8 +317,8 @@ open class ISTimeline: UIScrollView {
         // Place the timeline edit button
         timelineEditButton = UIButton(type: UIButtonType.system)
         timelineEditButton.frame.size = CGSize(width: 50, height: 25)
-        timelineEditButton.contentHorizontalAlignment = .left
-        timelineEditButton.frame.origin = CGPoint(x: screenSize.width-(timelineEditButton.frame.width+30), y: -10)
+        timelineEditButton.contentHorizontalAlignment = .right
+        timelineEditButton.frame.origin = CGPoint(x: screenSize.width - (timelineEditButton.frame.width + 40), y: -10)
         timelineEditButton.setTitle("Edit", for: .normal)
         timelineEditButton.addTarget(self, action: #selector(ISTimeline.editTimeline), for: .touchUpInside)
         self.addSubview(timelineEditButton)
@@ -284,25 +332,24 @@ open class ISTimeline: UIScrollView {
                 
                 var end = sections[i + 1].point
                 end.x = start.x
-                if (i < sections.count - 2) {
-                    end.y = sections[i + 2].point.y
-                }
-                end.y += pointDiameter / 2
+                end.y = sections[sections.count-1].point.y + pointDiameter / 2
                 
-                var cap = 1
-                if i == sections.count - 2 {
-                    cap = 2
-                }
-                let lineLayer = drawLine(start, end: end, color: sections[i].lineColor, cap: cap)
+                let cap = (i == sections.count - 2) ? 2 : 1
+                let offset: CGFloat = (i == sections.count - 2) ? 50.0 : 0.0
+
+                let moveableLineLayer = MovableLineLayer(line: nil, position: i, maxPosition: sections.count - 2, intermediateOffset: offset)
+                let lineLayer = drawLine(start, end: end, color: sections[i].lineColor,
+                                         cap: cap, offset: offset, layer: moveableLineLayer)
+                
                 self.layer.addSublayer(lineLayer)
-                layers[i]!.append(Moveable(layer: lineLayer, type: "line", position: i, maxPosition: sections.count - 2))
+                layers[i]!.append(moveableLineLayer)
                 
                 // Add button (with opacity = 0)
                 let addIconPosition = CGPoint(x: sections[i].point.x - lineWidth/2,
-                                              y: sections[i+1].point.y + CGFloat(i) * 75)
-                let addIconLayer = drawIcon(addIconPosition, fill: UIColor.gray.cgColor, image: UIImage(named: "add")!)
+                                              y: sections[i+1].point.y + CGFloat(i) * 50 - 10)
+                let addIconLayer = drawIcon(addIconPosition, fill: Constants.primaryLight.cgColor, image: UIImage(named: "add")!)
                 addIconLayer.opacity = 0
-                addButtons.append(Moveable(layer: addIconLayer, type: "addIcon", position: i, maxPosition: sections.count - 2))
+                addButtons.append(MoveableLayer(layer: addIconLayer, position: i, maxPosition: sections.count - 2))
                 self.layer.addSublayer(addIconLayer)
                 
                 // Add text (button)
@@ -311,33 +358,31 @@ open class ISTimeline: UIScrollView {
                     y: addIconPosition.y + 2,
                     width: 100,
                     height: 25)
-                let addTextLabel = buildDescriptionLabel(text: "Add an event")
+                let addTextLabel = buildAddLabel(text: "Add an event")
                 
-                let addTextLayer = drawDescription(addTextRect, textColor: Constants.descriptionColor, descriptionLabel: addTextLabel!)
+                let addTextLayer = drawDescription(addTextRect, textColor: Constants.black, descriptionLabel: addTextLabel!)
                 addTextLayer.alpha = 0
-                addButtons.append(Moveable(label: addTextLayer, type: "addText", position: i, maxPosition: sections.count - 2))
+                addButtons.append(MoveableLabel(label: addTextLayer, position: i, maxPosition: sections.count - 2))
                 self.addSubview(addTextLayer)
             }
             
             let iconLayer = drawIcon(sections[i].iconCenter, fill: sections[i].iconBg, image: sections[i].icon)
             self.layer.addSublayer(iconLayer)
-            layers[i]!.append(Moveable(layer: iconLayer, type: "icon", position: i, maxPosition: sections.count - 1))
+            layers[i]!.append(MoveableLayer(layer: iconLayer, position: i, maxPosition: sections.count - 1))
             
             let pointLayer = drawPoint(sections[i].point, color: sections[i].pointColor, fill: sections[i].fill)
             self.layer.addSublayer(pointLayer)
-            layers[i]!.append(Moveable(layer: pointLayer, type: "point", position: i, maxPosition: sections.count - 1))
+            layers[i]!.append(MoveableLayer(layer: pointLayer, position: i, maxPosition: sections.count - 1))
             
             let bubbleLayer = drawBubble(sections[i].bubbleRect, backgroundColor: Constants.primaryLight, textColor: Constants.titleColor, titleLabel: sections[i].titleLabel)
             self.addSubview(bubbleLayer)
-            layers[i]!.append(Moveable(label: bubbleLayer, type: "bubble", position: i, maxPosition: sections.count - 1))
-            
-            print("#\(i): \(sections[i].point)")
+            layers[i]!.append(MoveableLabel(label: bubbleLayer, position: i, maxPosition: sections.count - 1))
             
             let descriptionLabel = sections[i].descriptionLabel
             if (descriptionLabel != nil) {
                 let descriptionLayer = drawDescription(sections[i].descriptionRect!, textColor: Constants.descriptionColor, descriptionLabel: sections[i].descriptionLabel!)
                 self.addSubview(descriptionLayer)
-                layers[i]!.append(Moveable(label: descriptionLayer, type: "description", position: i, maxPosition: sections.count - 1))
+                layers[i]!.append(MoveableLabel(label: descriptionLayer, position: i, maxPosition: sections.count - 1))
             }
         }
         
@@ -439,13 +484,29 @@ open class ISTimeline: UIScrollView {
         return nil
     }
     
+    fileprivate func buildAddLabel(text: String?) -> UILabel? {
+        if (text != nil) {
+            let addLabel = UILabel()
+            addLabel.text = text
+            addLabel.font = UIFont.boldSystemFont(ofSize: 14.0)
+            addLabel.lineBreakMode = .byWordWrapping
+            addLabel.numberOfLines = 0
+            addLabel.preferredMaxLayoutWidth = calcWidth()
+            return addLabel
+        }
+        return nil
+    }
+    
     fileprivate func calcWidth() -> CGFloat {
         return self.bounds.width - (self.contentInset.left + self.contentInset.right) - pointDiameter - lineWidth - ISTimeline.gap * 1.5
     }
     
-    fileprivate func drawLine(_ start:CGPoint, end:CGPoint, color:CGColor, cap:Int) -> CALayer {
+    fileprivate func drawLine(_ start:CGPoint, end:CGPoint, color:CGColor, cap:Int, offset:CGFloat = 0.0, layer:MovableLineLayer) -> CAShapeLayer {
+        var startPoint = start
+        startPoint.y -= offset
+        
         let path = UIBezierPath()
-        path.move(to: start)
+        path.move(to: startPoint)
         path.addLine(to: end)
         
         let shapeLayer = CAShapeLayer()
@@ -454,19 +515,29 @@ open class ISTimeline: UIScrollView {
         shapeLayer.lineWidth = lineWidth
         
         if cap > 0 {
-            var roundedCap:UIBezierPath?
-            if cap == 1 {
-                roundedCap = UIBezierPath(ovalIn: CGRect(x: start.x - lineWidth/2.0, y: start.y - lineWidth/2.0, width: lineWidth, height: lineWidth))
-            } else if cap == 2 {
-                roundedCap = UIBezierPath(ovalIn: CGRect(x: end.x - lineWidth/2.0, y: end.y - lineWidth/2.0, width: lineWidth, height: lineWidth))
+            let topRoundedCap = UIBezierPath(ovalIn: CGRect(x: start.x - lineWidth/2.0, y: start.y - lineWidth/2.0, width: lineWidth, height: lineWidth))
+            let topRoundedCapLayer = CAShapeLayer()
+            topRoundedCapLayer.path = topRoundedCap.cgPath
+            topRoundedCapLayer.fillColor = color
+            topRoundedCapLayer.lineWidth = 0
+            shapeLayer.addSublayer(topRoundedCapLayer)
+            layer.topCap = topRoundedCapLayer
+            
+            if cap == 2 {
+                let lineOffset = 1.0 - ((end.y - start.y) / (end.y - startPoint.y))
+                shapeLayer.strokeStart = lineOffset
+                let bottomRoundedCap = UIBezierPath(ovalIn: CGRect(x: end.x - lineWidth/2.0, y: end.y - lineWidth/2.0, width: lineWidth, height: lineWidth))
+                let bottomRoundedCapLayer = CAShapeLayer()
+                bottomRoundedCapLayer.path = bottomRoundedCap.cgPath
+                bottomRoundedCapLayer.fillColor = Constants.black.cgColor
+                bottomRoundedCapLayer.lineWidth = 0
+                shapeLayer.addSublayer(bottomRoundedCapLayer)
+                layer.bottomCap = bottomRoundedCapLayer
+                layer.lineOffset = lineOffset
             }
-            let roundedCapLayer = CAShapeLayer()
-            roundedCapLayer.path = roundedCap?.cgPath
-            roundedCapLayer.fillColor = color
-            roundedCapLayer.lineWidth = 0
-            shapeLayer.addSublayer(roundedCapLayer)
         }
         
+        layer.line = shapeLayer
         return shapeLayer
     }
     

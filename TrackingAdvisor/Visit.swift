@@ -11,6 +11,7 @@ import CoreData
 
 @objc(Visit)
 class Visit: NSManagedObject {
+    
     class func findOrCreateVisit(matching userVisit: UserVisit, in context: NSManagedObjectContext) throws -> Visit {
         let request: NSFetchRequest<Visit> = Visit.fetchRequest()
         request.predicate = NSPredicate(format: "id = %@", userVisit.visitid)
@@ -25,13 +26,21 @@ class Visit: NSManagedObject {
             throw error
         }
         
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd-MM-yyyy"
+        
         let visit = Visit(context: context)
         visit.id = userVisit.visitid
         visit.confidence = userVisit.confidence
         visit.departure = userVisit.departure
         visit.arrival = userVisit.arrival
         visit.placeid = userVisit.placeid
+        visit.day = dateFormatter.string(from: userVisit.arrival)
+        visit.longitude = userVisit.longitude
+        visit.latitude = userVisit.latitude
+        
         visit.place = try? Place.findOrCreatePlace(matching: userVisit.place, in: context)
+        
         return visit
     }
 }

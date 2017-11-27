@@ -15,10 +15,8 @@ class Place: NSManagedObject {
         let request: NSFetchRequest<Place> = Place.fetchRequest()
         request.predicate = NSPredicate(format: "id = %@", userPlace.placeid)
         
-        print("findOrCreatePlace - 1")
         do {
             let matches = try context.fetch(request)
-            print(matches)
             if matches.count > 0 {
                 assert(matches.count == 1, "Place.findOrCreatePlace -- database inconsistency")
                 return matches[0]
@@ -26,8 +24,6 @@ class Place: NSManagedObject {
         } catch {
             throw error
         }
-        
-        print("findOrCreatePlace - 2")
         
         let place = Place(context: context)
         place.address = userPlace.address
@@ -38,8 +34,6 @@ class Place: NSManagedObject {
         place.longitude = userPlace.longitude
         place.name = userPlace.name
         place.userEntered = userPlace.userEntered
-        
-        
         
         return place
     }

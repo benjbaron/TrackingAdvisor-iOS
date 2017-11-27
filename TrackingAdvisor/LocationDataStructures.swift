@@ -27,6 +27,8 @@ struct UserVisit: Codable {
     let arrival: Date
     let departure: Date
     let confidence: Double
+    let longitude: Double
+    let latitude: Double
 }
 
 struct UserMove: Codable {

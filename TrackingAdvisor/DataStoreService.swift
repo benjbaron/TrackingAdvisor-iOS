@@ -69,4 +69,82 @@ class DataStoreService: NSObject {
             }
         }
     }
+    
+    func getUniqueVisitDays() -> [String] {
+        guard let context = container?.viewContext else { return [] }
+        
+        // create the fetch request
+        let request: NSFetchRequest<Visit> = Visit.fetchRequest()
+        
+        // Add Sort Descriptor
+        let sortDescriptor = NSSortDescriptor(key: "arrival", ascending: true)
+        request.sortDescriptors = [sortDescriptor]
+        
+        do {
+            let matches = try context.fetch(request)
+            let distinct = NSSet(array: matches.map { $0.day! })
+            return Array(distinct.allObjects.reversed()) as! [String]
+        } catch {
+            print("Could not fetch visits. \(error)")
+        }
+        
+        return []
+    }
+    
+    func getVisits(for day: String) -> [Visit] {
+        guard let context = container?.viewContext else { return [] }
+        
+        // create the fetch request
+        let request: NSFetchRequest<Visit> = Visit.fetchRequest()
+        
+        // Add Sort Descriptor
+        let sortDescriptor = NSSortDescriptor(key: "arrival", ascending: true)
+        request.sortDescriptors = [sortDescriptor]
+        
+        // Add a predicate
+        request.predicate = NSPredicate(format: "day = %@", day)
+        
+        do {
+            let matches = try context.fetch(request)
+            return matches
+        } catch {
+            print("Could not fetch visits. \(error)")
+        }
+        
+        return []
+    }
+    
+    func deleteAll() {
+        guard let context = container?.viewContext else { return }
+        
+        // deleting visits
+        var fetch = NSFetchRequest<NSFetchRequestResult>(entityName: "Visit")
+        var request = NSBatchDeleteRequest(fetchRequest: fetch)
+        
+        do {
+            _ = try context.execute(request)
+        } catch {
+            print("error when deleting visits", error)
+        }
+        
+        // deleting moves
+        fetch = NSFetchRequest<NSFetchRequestResult>(entityName: "Move")
+        request = NSBatchDeleteRequest(fetchRequest: fetch)
+        
+        do {
+            _ = try context.execute(request)
+        } catch {
+            print("error when deleting moves", error)
+        }
+        
+        // deleting places
+        fetch = NSFetchRequest<NSFetchRequestResult>(entityName: "Place")
+        request = NSBatchDeleteRequest(fetchRequest: fetch)
+        
+        do {
+            _ = try context.execute(request)
+        } catch {
+            print("error when deleting places", error)
+        }
+    }
 }

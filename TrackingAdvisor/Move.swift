@@ -25,6 +25,9 @@ class Move: NSManagedObject {
             throw error
         }
         
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd-MM-yyyy"
+        
         let move = Move(context: context)
         move.id = userMove.moveid
         move.activity = userMove.activity
@@ -32,6 +35,7 @@ class Move: NSManagedObject {
         move.departureDate = userMove.departureDate
         move.arrivalPlace = try? Place.findOrCreatePlace(matching: userMove.arrivalPlace, in: context)
         move.departurePlace = try? Place.findOrCreatePlace(matching: userMove.departurePlace, in: context)
+        move.day = dateFormatter.string(from: userMove.arrivalDate)
         
         return move
     }

@@ -52,7 +52,7 @@ class RawCollectedDataTextViewController: UIViewController {
                 let decoder = JSONDecoder()
                 decoder.dateDecodingStrategy = .secondsSince1970
                 let userUpdate = try decoder.decode(UserUpdate.self, from: data)
-                print(userUpdate)
+//                print(userUpdate)
                 DataStoreService.shared.updateDatabase(with: userUpdate)
             } catch {
                 print("Error serializing the json", error)

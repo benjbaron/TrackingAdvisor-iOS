@@ -10,7 +10,6 @@
 		B50EF6B21FA8AFAC0008ADFB /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50EF6B11FA8AFAC0008ADFB /* LocationService.swift */; };
 		B512ED441FBC8EB60062B9E1 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B512ED431FBC8EB60062B9E1 /* Constants.swift */; };
 		B51C756A1FB4C643008C4BBF /* TaskService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51C75691FB4C643008C4BBF /* TaskService.swift */; };
-		B52AF1CC1FA8C72A00FDDF2A /* TimelineViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52AF1CB1FA8C72A00FDDF2A /* TimelineViewController.swift */; };
 		B52AF1CE1FA8C87D00FDDF2A /* ISPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52AF1CD1FA8C87D00FDDF2A /* ISPoint.swift */; };
 		B52AF1D01FA8C89F00FDDF2A /* ISTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52AF1CF1FA8C89F00FDDF2A /* ISTimeline.swift */; };
 		B53F20751FC3341100006B67 /* Mapbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B53F20741FC3341000006B67 /* Mapbox.framework */; };
@@ -26,6 +25,7 @@
 		B586126F1FB0D0E200480DD4 /* Alamofire.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B58612611FB0D08A00480DD4 /* Alamofire.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B58612751FB0D9C700480DD4 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58612741FB0D9C700480DD4 /* NotificationService.swift */; };
 		B5883BD51FA3274200EA8A02 /* TrackingAdvisor.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = B5883BD31FA3274100EA8A02 /* TrackingAdvisor.xcdatamodeld */; };
+		B58A6E141FCC4CF9003DA168 /* SettingsTableTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A6E131FCC4CF9003DA168 /* SettingsTableTableViewController.swift */; };
 		B58B79181FC734A1007BA1BC /* Visit.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58B79171FC734A1007BA1BC /* Visit.swift */; };
 		B58B79211FC734AF007BA1BC /* Place.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58B79201FC734AF007BA1BC /* Place.swift */; };
 		B58B79241FC742F9007BA1BC /* Move.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58B79231FC742F9007BA1BC /* Move.swift */; };
@@ -153,7 +153,6 @@
 		B50EF6B11FA8AFAC0008ADFB /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		B512ED431FBC8EB60062B9E1 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = SOURCE_ROOT; };
 		B51C75691FB4C643008C4BBF /* TaskService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskService.swift; sourceTree = "<group>"; };
-		B52AF1CB1FA8C72A00FDDF2A /* TimelineViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineViewController.swift; sourceTree = "<group>"; };
 		B52AF1CD1FA8C87D00FDDF2A /* ISPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ISPoint.swift; sourceTree = "<group>"; };
 		B52AF1CF1FA8C89F00FDDF2A /* ISTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ISTimeline.swift; sourceTree = "<group>"; };
 		B53F20741FC3341000006B67 /* Mapbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Mapbox.framework; sourceTree = "<group>"; };
@@ -168,6 +167,7 @@
 		B58612551FB0D08A00480DD4 /* Alamofire.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Alamofire.xcodeproj; path = Alamofire/Alamofire.xcodeproj; sourceTree = "<group>"; };
 		B58612741FB0D9C700480DD4 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		B5883BD41FA3274100EA8A02 /* TrackingAdvisor.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = TrackingAdvisor.xcdatamodel; sourceTree = "<group>"; };
+		B58A6E131FCC4CF9003DA168 /* SettingsTableTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsTableTableViewController.swift; sourceTree = "<group>"; };
 		B58B79171FC734A1007BA1BC /* Visit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Visit.swift; sourceTree = "<group>"; };
 		B58B79201FC734AF007BA1BC /* Place.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Place.swift; sourceTree = "<group>"; };
 		B58B79231FC742F9007BA1BC /* Move.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Move.swift; sourceTree = "<group>"; };
@@ -331,13 +331,13 @@
 				B5883BD31FA3274100EA8A02 /* TrackingAdvisor.xcdatamodeld */,
 				B584C21E1FA0F16B002582D1 /* Assets.xcassets */,
 				B599B3A31FA0B57F006D70B4 /* AppDelegate.swift */,
-				B52AF1CB1FA8C72A00FDDF2A /* TimelineViewController.swift */,
 				B5C347471FB092D40078C12E /* TimelineSwipeViewController.swift */,
 				B5FE77B51FA9D1BD002B5F0C /* CalendarViewController.swift */,
 				B5FE77F21FA9F2F6002B5F0C /* MapCalendarContainerViewController.swift */,
 				B5C3474B1FB0B4760078C12E /* RawCollectedDataTextViewController.swift */,
 				B5C347421FB064D50078C12E /* RawCollectedDataViewController.swift */,
 				B5C347491FB093F50078C12E /* OneTimelineViewController.swift */,
+				B58A6E131FCC4CF9003DA168 /* SettingsTableTableViewController.swift */,
 			);
 			path = TrackingAdvisor;
 			sourceTree = "<group>";
@@ -771,6 +771,7 @@
 				B5FE77E01FA9D442002B5F0C /* FSCalendar.m in Sources */,
 				B5C347481FB092D40078C12E /* TimelineSwipeViewController.swift in Sources */,
 				B5FE77E11FA9D442002B5F0C /* FSCalendarCollectionViewLayout.m in Sources */,
+				B58A6E141FCC4CF9003DA168 /* SettingsTableTableViewController.swift in Sources */,
 				B53FB6FB1FAB74630000112E /* ActivityServiceOld.swift in Sources */,
 				B568D8821FB45FD800E051B1 /* ActivityService.swift in Sources */,
 				B5FE77E91FA9D442002B5F0C /* FSCalendarConstants.m in Sources */,
@@ -782,7 +783,6 @@
 				B5C3474A1FB093F50078C12E /* OneTimelineViewController.swift in Sources */,
 				B5FE77EE1FA9D442002B5F0C /* FSCalendarWeekdayView.m in Sources */,
 				B5FE77E41FA9D442002B5F0C /* FSCalendarTransitionCoordinator.m in Sources */,
-				B52AF1CC1FA8C72A00FDDF2A /* TimelineViewController.swift in Sources */,
 				B5FE77E61FA9D442002B5F0C /* FSCalendarAppearance.m in Sources */,
 				B58B79211FC734AF007BA1BC /* Place.swift in Sources */,
 				B5FE77E71FA9D442002B5F0C /* FSCalendarScopeHandle.m in Sources */,
