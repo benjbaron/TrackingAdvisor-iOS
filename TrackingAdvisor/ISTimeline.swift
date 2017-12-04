@@ -2,7 +2,7 @@
 //  ISTimeline.swift
 //  ISTimeline
 //
-//  Created by Max Holzleitner on 07.05.16.
+//  Created by Max Holzleitner on 07.05.16 and modified by Benjamin Baron.
 //  Copyright © 2016 instant:solutions. All rights reserved.
 //
 
@@ -529,7 +529,7 @@ open class ISTimeline: UIScrollView {
                 let bottomRoundedCap = UIBezierPath(ovalIn: CGRect(x: end.x - lineWidth/2.0, y: end.y - lineWidth/2.0, width: lineWidth, height: lineWidth))
                 let bottomRoundedCapLayer = CAShapeLayer()
                 bottomRoundedCapLayer.path = bottomRoundedCap.cgPath
-                bottomRoundedCapLayer.fillColor = Constants.black.cgColor
+                bottomRoundedCapLayer.fillColor = color
                 bottomRoundedCapLayer.lineWidth = 0
                 shapeLayer.addSublayer(bottomRoundedCapLayer)
                 layer.bottomCap = bottomRoundedCapLayer

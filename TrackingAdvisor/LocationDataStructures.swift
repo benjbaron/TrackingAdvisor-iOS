@@ -9,6 +9,11 @@
 import Foundation
 import CoreLocation
 
+struct defaultsKeys {
+    static let lastLocationUpdate = "lastLocationUpdate"
+    static let lastFileUpdate = "lastFileUpdate"
+}
+
 struct UserPlace: Codable {
     let placeid: String
     let name: String

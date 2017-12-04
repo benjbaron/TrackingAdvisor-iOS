@@ -1,3 +1,6 @@
 [submodule "Alamofire"]
 	path = Alamofire
 	url = https://github.com/Alamofire/Alamofire.git
+[submodule "Eureka"]
+	path = Eureka
+	url = https://github.com/xmartlabs/Eureka.git

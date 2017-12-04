@@ -52,7 +52,7 @@ class ActivityService {
             FileService.shared.log("nbSteps: \(nbSteps)", classname: "ActivityService")
             if nbSteps > 50 {
                 self.getActivity(from: start, to: end) { activities in
-                    let (activity, confidence) = self.mostLikelyActivity(activities: activities)
+                    let (activity, confidence) = ActivityService.mostLikelyActivity(activities: activities)
                     DispatchQueue.main.async { () -> Void in
                         FileService.shared.log("nbSteps: \(nbSteps), ativities: \(activities), activity: \(activity), \(confidence)", classname: "ActivityService")
                     }
@@ -130,13 +130,11 @@ class ActivityService {
                 res[k] = v + activityConfidence(hasActivityType(activity: activity, type: k), confidenceMult)
             }
         }
-        
-        NSLog("activities: \(res)")
         return res
     }
     
-    func mostLikelyActivity(activities: [ActivityType:Int]) -> (ActivityType,Int) {
-        if activities.count == 0 { return (ActivityType.unknown,0) }
+    class func mostLikelyActivity(activities: [ActivityType:Int]) -> (ActivityType,Int) {
+        if activities.count == 0 { return (ActivityType.unknown, 0) }
         var bestActivity = ActivityType.unknown
         var bestConfidence = 0
         for (activity, confidence) in activities {

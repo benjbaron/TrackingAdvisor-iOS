@@ -21,10 +21,21 @@ class Networking {
 
 class FileService : NSObject {
     static let shared = FileService()
+    
+    // to persist the last location update (key: lastLocationUpdate)
+    let defaults = UserDefaults.standard
+    
     var dir: URL?
     let id: String = UIDevice.current.identifierForVendor!.uuidString
+    var batteryLevel: Float {
+        return UIDevice.current.batteryLevel
+    }
+    var batteryState: UIDeviceBatteryState {
+        return UIDevice.current.batteryState
+    }
     
     override init() {
+        UIDevice.current.isBatteryMonitoringEnabled = true
         self.dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
     }
     
@@ -97,20 +108,33 @@ class FileService : NSObject {
     }
     
     func recordLocations(_ locations: [UserLocation], in file: String) {
-        if fileExists(file: file) {
-            var text = ""
-            for loc in locations {
-                let line = "\(loc.userid),\(loc.latitude),\(loc.longitude),\(loc.timestamp),\(loc.accuracy),\(loc.targetAccuracy),\(loc.speed)\n"
-                text.append(line)
+        let ssid = NetworkService.shared.getSSID() ?? "none"
+        
+        // get the last location update date
+        if let lastLocationUpdate = self.defaults.object(forKey: defaultsKeys.lastLocationUpdate) as? Date {
+            ActivityService.shared.getActivity(from: lastLocationUpdate, to: locations[0].timestamp) { activities in
+                let (mostLikelyActivity, activityConfidence) = ActivityService.mostLikelyActivity(activities: activities)
+                ActivityService.shared.getSteps(from: lastLocationUpdate, to: locations[0].timestamp) { nbSteps in                    
+                    if self.fileExists(file: file) {
+                        var text = ""
+                        for loc in locations {
+                            let line = "\(loc.userid),\(loc.latitude),\(loc.longitude),\(loc.timestamp),\(loc.accuracy),\(loc.targetAccuracy),\(loc.speed),\(nbSteps),\(mostLikelyActivity),\(activityConfidence),\(ssid),\(self.batteryLevel),\(self.batteryState)\n"
+                            text.append(line)
+                        }
+                        self.append(text, in: file)
+                    } else  {
+                        var text = "User,Lat,Lon,Timestamp,Accuracy,TargetAccuracy,Speed,nbSteps,activity,activityConfidence,ssid,batteryLevel,batteryCharge\n"
+                        for loc in locations {
+                            let line = "\(loc.userid),\(loc.latitude),\(loc.longitude),\(loc.timestamp),\(loc.accuracy),\(loc.targetAccuracy),\(loc.speed),\(nbSteps),\(mostLikelyActivity),\(activityConfidence),\(ssid),\(self.batteryLevel),\(self.batteryState)\n"
+                            text.append(line)
+                        }
+                        self.write(text, in: file)
+                    }
+                    
+                    // Save the last location update date
+                    self.defaults.set(locations[0].timestamp, forKey: defaultsKeys.lastLocationUpdate)
+                }
             }
-            append(text, in: file)
-        } else  {
-            var text = "User,Lat,Lon,Timestamp,Accuracy,TargetAccuracy,Speed\n"
-            for loc in locations {
-                let line = "\(loc.userid),\(loc.latitude),\(loc.longitude),\(loc.timestamp),\(loc.accuracy),\(loc.targetAccuracy),\(loc.speed)\n"
-                text.append(line)
-            }
-            write(text, in: file)
         }
     }
     

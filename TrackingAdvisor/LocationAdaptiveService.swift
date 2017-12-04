@@ -99,56 +99,58 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
     }
     
     @objc func stopUpdatingLocationAfterXSeconds() {
-        if locations.count == 0 { return }
-        
-        FileService.shared.log("stopUpdatingLocationAfterXSeconds", classname: "LocationAdaptiveService")
-        var bestLocation:CLLocation?
-        var bestAccuracy = 3000.0
-        
-        for loc in locations {
-            if(bestLocation == nil) {
-                bestAccuracy = loc.horizontalAccuracy;
-                bestLocation = loc;
-            } else if(loc.horizontalAccuracy < bestAccuracy) {
-                bestAccuracy = loc.horizontalAccuracy;
-                bestLocation = loc;
-            } else if (loc.horizontalAccuracy == bestAccuracy) &&
-                (loc.timestamp.compare(bestLocation!.timestamp) == ComparisonResult.orderedDescending) {
-                bestAccuracy = loc.horizontalAccuracy;
-                bestLocation = loc;
+        DispatchQueue.global(qos: .background).async {
+            if self.locations.count == 0 { return }
+            
+            FileService.shared.log("stopUpdatingLocationAfterXSeconds", classname: "LocationAdaptiveService")
+            var bestLocation:CLLocation?
+            var bestAccuracy = 3000.0
+            
+            for loc in self.locations {
+                if(bestLocation == nil) {
+                    bestAccuracy = loc.horizontalAccuracy;
+                    bestLocation = loc;
+                } else if(loc.horizontalAccuracy < bestAccuracy) {
+                    bestAccuracy = loc.horizontalAccuracy;
+                    bestLocation = loc;
+                } else if (loc.horizontalAccuracy == bestAccuracy) &&
+                    (loc.timestamp.compare(bestLocation!.timestamp) == ComparisonResult.orderedDescending) {
+                    bestAccuracy = loc.horizontalAccuracy;
+                    bestLocation = loc;
+                }
             }
-        }
-        
-        guard let newLocation = bestLocation else { return }
-        
-        if let cur = currentLocation {
-            let previousLocation = CLLocation(latitude: cur.latitude, longitude: cur.longitude)
-            let distanceMoved = previousLocation.distance(from: newLocation)
-            FileService.shared.log("Distance moved: \(distanceMoved), prev: \(previousLocation), new: \(newLocation)", classname: "LocationAdaptiveService")
-            if distanceMoved > 25 {
-                self.isStationary = false
-            } else {
-                self.isStationary = true
+            
+            guard let newLocation = bestLocation else { return }
+            
+            if let cur = self.currentLocation {
+                let previousLocation = CLLocation(latitude: cur.latitude, longitude: cur.longitude)
+                let distanceMoved = previousLocation.distance(from: newLocation)
+                FileService.shared.log("Distance moved: \(distanceMoved), prev: \(previousLocation), new: \(newLocation)", classname: "LocationAdaptiveService")
+                if distanceMoved > 25 {
+                    self.isStationary = false
+                } else {
+                    self.isStationary = true
+                }
             }
-        }
-        
-        let loc = UserLocation(id: self.id, location: newLocation, targetAccuracy: locationManager.desiredAccuracy)
-        self.currentLocation = loc
-        
-        let filename = loc.dateString() + ".csv"
-        FileService.shared.recordLocations([loc], in: filename)
-        FileService.shared.log("added location to \(filename)", classname: "LocationAdaptiveService")
-        
-        DispatchQueue.main.async { () -> Void in
-            NSLog("call delegate method for location handler")
-            if self.delegate != nil {
-                self.delegate.locationDidUpdate(location: loc)
+            
+            let loc = UserLocation(id: self.id, location: newLocation, targetAccuracy: self.locationManager.desiredAccuracy)
+            self.currentLocation = loc
+            
+            let filename = loc.dateString() + ".csv"
+            FileService.shared.recordLocations([loc], in: filename)
+            FileService.shared.log("added location to \(filename)", classname: "LocationAdaptiveService")
+            
+            DispatchQueue.main.async { () -> Void in
+                NSLog("call delegate method for location handler")
+                if self.delegate != nil {
+                    self.delegate.locationDidUpdate(location: loc)
+                }
             }
+            
+            self.locations.removeAll()
+            self.locationManager.stopUpdatingLocation()
+            self.updating = false
         }
-        
-        locations.removeAll()
-        locationManager.stopUpdatingLocation()
-        updating = false
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
@@ -162,23 +164,17 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
             return
         }
         
-        FileService.shared.log("didUpdateLocations -- 1", classname: "LocationAdaptiveService")
-        
         let location = locations.last!
         let timeSinceUpdate = location.timestamp.timeIntervalSinceNow as Double
         if location.horizontalAccuracy < 0 || abs(timeSinceUpdate) > 2.0 {
-            FileService.shared.log("didUpdateLocations -- 1a", classname: "LocationAdaptiveService")
             return  // continue polling the location (get the next one)
         }
-        
-        FileService.shared.log("didUpdateLocations -- 2", classname: "LocationAdaptiveService")
         
         self.locations.append(location)
         
         // if the timer is still valid, the code below is not executed
         if timer.isValid { return }
         
-        FileService.shared.log("didUpdateLocations -- 3", classname: "LocationAdaptiveService")
         
         // determine the new timeout
 //        if self.isStationary {
@@ -186,7 +182,6 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
 //            self.accuracy = kCLLocationAccuracyThreeKilometers
 //        }
         
-        FileService.shared.log("Next location update in \(timeout) seconds", classname: "LocationAdaptiveService")
         // Restart the locationManager after "timeout" seconds
         timer = Timer.scheduledTimer(timeInterval: timeout,
                                      target: self,

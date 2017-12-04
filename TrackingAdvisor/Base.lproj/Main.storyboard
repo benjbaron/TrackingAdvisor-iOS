@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13529" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="lh6-aJ-Fah">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13770" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="lh6-aJ-Fah">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13527"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13770"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--Greetings-->
+        <!--Timeline-->
         <scene sceneID="a8Y-K2-95A">
             <objects>
                 <viewController id="6Zi-sN-QSn" sceneMemberID="viewController">
@@ -35,7 +35,7 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="8J6-II-bXY"/>
                     </view>
-                    <tabBarItem key="tabBarItem" title="Greetings" image="Locations" id="BPu-15-x8F"/>
+                    <tabBarItem key="tabBarItem" title="Timeline" image="timeline" id="BPu-15-x8F"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="8Kh-8O-6Kx" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -54,6 +54,7 @@
                     <connections>
                         <segue destination="6Zi-sN-QSn" kind="relationship" relationship="viewControllers" id="dPF-jm-r3h"/>
                         <segue destination="z95-xf-Auk" kind="relationship" relationship="viewControllers" id="9Ng-Pp-9tW"/>
+                        <segue destination="yzb-Jj-agW" kind="relationship" relationship="viewControllers" id="Lrb-QS-ZBh"/>
                         <segue destination="gB2-OU-cZi" kind="relationship" relationship="viewControllers" id="fc5-vb-wjA"/>
                     </connections>
                 </tabBarController>
@@ -115,6 +116,9 @@
                                                 </label>
                                             </subviews>
                                         </tableViewCellContentView>
+                                        <connections>
+                                            <segue destination="b0D-s5-6Sh" kind="show" id="Rir-zD-gf4"/>
+                                        </connections>
                                     </tableViewCell>
                                 </cells>
                             </tableViewSection>
@@ -170,6 +174,21 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="a6l-o8-LQ9" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1705" y="132"/>
+        </scene>
+        <!--Get in touch-->
+        <scene sceneID="vWA-SJ-Rvv">
+            <objects>
+                <viewController title="Get in touch" id="b0D-s5-6Sh" customClass="GetInTouchFormViewController" customModule="TrackingAdvisor" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="f2G-KJ-Sgb">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <viewLayoutGuide key="safeArea" id="MYj-1z-t3t"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Uav-a3-Lat" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2621.5999999999999" y="-824.43778110944538"/>
         </scene>
         <!--Terms-->
         <scene sceneID="URq-U8-5Vi">
@@ -461,6 +480,22 @@
             </objects>
             <point key="canvasLocation" x="-690.39999999999998" y="1873.313343328336"/>
         </scene>
+        <!--Profile-->
+        <scene sceneID="cHO-1Y-9cq">
+            <objects>
+                <viewController id="yzb-Jj-agW" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="QTm-Ay-PkC">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <viewLayoutGuide key="safeArea" id="MOS-JZ-012"/>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Profile" image="profile" id="7V7-Vp-ngT"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="3u9-jd-v0K" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="791" y="-854"/>
+        </scene>
         <!--Settings-->
         <scene sceneID="dx7-t7-TJ1">
             <objects>
@@ -538,8 +573,9 @@
         </scene>
     </scenes>
     <resources>
-        <image name="Locations" width="30" height="30"/>
         <image name="calendar" width="30" height="30"/>
+        <image name="profile" width="24" height="24"/>
         <image name="settings" width="30" height="30"/>
+        <image name="timeline" width="24" height="24"/>
     </resources>
 </document>

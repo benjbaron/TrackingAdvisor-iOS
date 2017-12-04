@@ -150,7 +150,9 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
 //        FileService.shared.log("location updated with \(locationManager.desiredAccuracy) and type \(locationUpdateType)", classname: "LocationRegionService")
         let location = locations.last!
         
-        updateRegions(for: location)
+        DispatchQueue.global(qos: .background).async {
+            self.updateRegions(for: location)
+        }
         restartUpdatingLocation()
         locationUpdateType = .significant
     }
@@ -164,9 +166,11 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
     
     func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
         let location = regionLocations[region.identifier]
-        FileService.shared.log("didEnterRegion \(region.identifier) and location \(location)", classname: "LocationRegionService")
         guard let loc = location else { return }
-        updateRegions(for: loc)
+        FileService.shared.log("didEnterRegion \(region.identifier) and location \(loc)", classname: "LocationRegionService")
+        DispatchQueue.global(qos: .background).async {
+            self.updateRegions(for: loc)
+        }
         restartUpdatingLocation()
         locationUpdateType = .region
     }

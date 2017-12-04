@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		B50EF6B21FA8AFAC0008ADFB /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50EF6B11FA8AFAC0008ADFB /* LocationService.swift */; };
+		B511C4FA1FD5BFBC006A312C /* Eureka.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B511C4F71FD5BF8C006A312C /* Eureka.framework */; };
+		B511C4FB1FD5BFBC006A312C /* Eureka.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B511C4F71FD5BF8C006A312C /* Eureka.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		B511C4FF1FD5C039006A312C /* GetInTouchFormViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B511C4FE1FD5C039006A312C /* GetInTouchFormViewController.swift */; };
 		B512ED441FBC8EB60062B9E1 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B512ED431FBC8EB60062B9E1 /* Constants.swift */; };
 		B51C756A1FB4C643008C4BBF /* TaskService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51C75691FB4C643008C4BBF /* TaskService.swift */; };
 		B52AF1CE1FA8C87D00FDDF2A /* ISPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52AF1CD1FA8C87D00FDDF2A /* ISPoint.swift */; };
@@ -20,6 +23,7 @@
 		B55DE5D41FAB582B00CACB47 /* DataStoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55DE5D31FAB582B00CACB47 /* DataStoreService.swift */; };
 		B568D8801FB45D0700E051B1 /* LocationAdaptiveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568D87F1FB45D0700E051B1 /* LocationAdaptiveService.swift */; };
 		B568D8821FB45FD800E051B1 /* ActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568D8811FB45FD800E051B1 /* ActivityService.swift */; };
+		B57F514E1FD55A5B0018B416 /* NetworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57F514D1FD55A5B0018B416 /* NetworkService.swift */; };
 		B584C21F1FA0F16B002582D1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B584C21E1FA0F16B002582D1 /* Assets.xcassets */; };
 		B586126E1FB0D0E200480DD4 /* Alamofire.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B58612611FB0D08A00480DD4 /* Alamofire.framework */; };
 		B586126F1FB0D0E200480DD4 /* Alamofire.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B58612611FB0D08A00480DD4 /* Alamofire.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -62,6 +66,27 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		B511C4F61FD5BF8C006A312C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B511C4EA1FD5BF8C006A312C /* Eureka.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 51729DEB1B9A4F5E004A00EB;
+			remoteInfo = Eureka;
+		};
+		B511C4F81FD5BF8C006A312C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B511C4EA1FD5BF8C006A312C /* Eureka.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 51729DF51B9A4F5E004A00EB;
+			remoteInfo = EurekaTests;
+		};
+		B511C4FC1FD5BFBC006A312C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B511C4EA1FD5BF8C006A312C /* Eureka.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 51729DEA1B9A4F5E004A00EB;
+			remoteInfo = Eureka;
+		};
 		B58612601FB0D08A00480DD4 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B58612551FB0D08A00480DD4 /* Alamofire.xcodeproj */;
@@ -141,6 +166,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				B511C4FB1FD5BFBC006A312C /* Eureka.framework in Embed Frameworks */,
 				B586126F1FB0D0E200480DD4 /* Alamofire.framework in Embed Frameworks */,
 				B53F20761FC3341100006B67 /* Mapbox.framework in Embed Frameworks */,
 			);
@@ -151,6 +177,8 @@
 
 /* Begin PBXFileReference section */
 		B50EF6B11FA8AFAC0008ADFB /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
+		B511C4EA1FD5BF8C006A312C /* Eureka.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Eureka.xcodeproj; path = Eureka/Eureka.xcodeproj; sourceTree = "<group>"; };
+		B511C4FE1FD5C039006A312C /* GetInTouchFormViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetInTouchFormViewController.swift; sourceTree = "<group>"; };
 		B512ED431FBC8EB60062B9E1 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = SOURCE_ROOT; };
 		B51C75691FB4C643008C4BBF /* TaskService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskService.swift; sourceTree = "<group>"; };
 		B52AF1CD1FA8C87D00FDDF2A /* ISPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ISPoint.swift; sourceTree = "<group>"; };
@@ -163,6 +191,7 @@
 		B568D87E1FB3827100E051B1 /* TrackingAdvisor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TrackingAdvisor.entitlements; sourceTree = "<group>"; };
 		B568D87F1FB45D0700E051B1 /* LocationAdaptiveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationAdaptiveService.swift; sourceTree = "<group>"; };
 		B568D8811FB45FD800E051B1 /* ActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityService.swift; sourceTree = "<group>"; };
+		B57F514D1FD55A5B0018B416 /* NetworkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkService.swift; sourceTree = "<group>"; };
 		B584C21E1FA0F16B002582D1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B58612551FB0D08A00480DD4 /* Alamofire.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Alamofire.xcodeproj; path = Alamofire/Alamofire.xcodeproj; sourceTree = "<group>"; };
 		B58612741FB0D9C700480DD4 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
@@ -232,6 +261,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B5DD9C581FA0D51E000B970F /* CoreLocation.framework in Frameworks */,
+				B511C4FA1FD5BFBC006A312C /* Eureka.framework in Frameworks */,
 				B586126E1FB0D0E200480DD4 /* Alamofire.framework in Frameworks */,
 				B53F20751FC3341100006B67 /* Mapbox.framework in Frameworks */,
 			);
@@ -254,6 +284,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B511C4EB1FD5BF8C006A312C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B511C4F71FD5BF8C006A312C /* Eureka.framework */,
+				B511C4F91FD5BF8C006A312C /* EurekaTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		B58612561FB0D08A00480DD4 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -280,6 +319,7 @@
 				B58612741FB0D9C700480DD4 /* NotificationService.swift */,
 				B568D8811FB45FD800E051B1 /* ActivityService.swift */,
 				B51C75691FB4C643008C4BBF /* TaskService.swift */,
+				B57F514D1FD55A5B0018B416 /* NetworkService.swift */,
 			);
 			name = Services;
 			sourceTree = "<group>";
@@ -298,6 +338,7 @@
 			isa = PBXGroup;
 			children = (
 				B53F20741FC3341000006B67 /* Mapbox.framework */,
+				B511C4EA1FD5BF8C006A312C /* Eureka.xcodeproj */,
 				B58612551FB0D08A00480DD4 /* Alamofire.xcodeproj */,
 				B5FE77BC1FA9D410002B5F0C /* FSCalendar */,
 				B599B3A21FA0B57F006D70B4 /* TrackingAdvisor */,
@@ -338,6 +379,7 @@
 				B5C347421FB064D50078C12E /* RawCollectedDataViewController.swift */,
 				B5C347491FB093F50078C12E /* OneTimelineViewController.swift */,
 				B58A6E131FCC4CF9003DA168 /* SettingsTableTableViewController.swift */,
+				B511C4FE1FD5C039006A312C /* GetInTouchFormViewController.swift */,
 			);
 			path = TrackingAdvisor;
 			sourceTree = "<group>";
@@ -445,6 +487,7 @@
 			);
 			dependencies = (
 				B58612711FB0D0E200480DD4 /* PBXTargetDependency */,
+				B511C4FD1FD5BFBC006A312C /* PBXTargetDependency */,
 			);
 			name = TrackingAdvisor;
 			productName = TrackingAdvisor;
@@ -550,6 +593,10 @@
 					ProductGroup = B58612561FB0D08A00480DD4 /* Products */;
 					ProjectRef = B58612551FB0D08A00480DD4 /* Alamofire.xcodeproj */;
 				},
+				{
+					ProductGroup = B511C4EB1FD5BF8C006A312C /* Products */;
+					ProjectRef = B511C4EA1FD5BF8C006A312C /* Eureka.xcodeproj */;
+				},
 			);
 			projectRoot = "";
 			targets = (
@@ -561,6 +608,20 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		B511C4F71FD5BF8C006A312C /* Eureka.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = Eureka.framework;
+			remoteRef = B511C4F61FD5BF8C006A312C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		B511C4F91FD5BF8C006A312C /* EurekaTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = EurekaTests.xctest;
+			remoteRef = B511C4F81FD5BF8C006A312C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		B58612611FB0D08A00480DD4 /* Alamofire.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
@@ -760,6 +821,7 @@
 				B55DE5D41FAB582B00CACB47 /* DataStoreService.swift in Sources */,
 				B5C347431FB064D50078C12E /* RawCollectedDataViewController.swift in Sources */,
 				B5C347461FB0929F0078C12E /* EMPageViewController.swift in Sources */,
+				B57F514E1FD55A5B0018B416 /* NetworkService.swift in Sources */,
 				B5FE77EF1FA9D442002B5F0C /* FSCalendarHeaderView.m in Sources */,
 				B5C3C9521FB20F750037DD22 /* LocationRegionService.swift in Sources */,
 				B58612751FB0D9C700480DD4 /* NotificationService.swift in Sources */,
@@ -769,6 +831,7 @@
 				B5FE77E21FA9D442002B5F0C /* FSCalendarDelegationProxy.m in Sources */,
 				B52AF1D01FA8C89F00FDDF2A /* ISTimeline.swift in Sources */,
 				B5FE77E01FA9D442002B5F0C /* FSCalendar.m in Sources */,
+				B511C4FF1FD5C039006A312C /* GetInTouchFormViewController.swift in Sources */,
 				B5C347481FB092D40078C12E /* TimelineSwipeViewController.swift in Sources */,
 				B5FE77E11FA9D442002B5F0C /* FSCalendarCollectionViewLayout.m in Sources */,
 				B58A6E141FCC4CF9003DA168 /* SettingsTableTableViewController.swift in Sources */,
@@ -820,6 +883,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		B511C4FD1FD5BFBC006A312C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Eureka;
+			targetProxy = B511C4FC1FD5BFBC006A312C /* PBXContainerItemProxy */;
+		};
 		B58612711FB0D0E200480DD4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = "Alamofire iOS";
