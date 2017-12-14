@@ -9,34 +9,17 @@
 import Foundation
 import Alamofire
 
-class Networking {
-    static let shared = Networking()
-    public var sessionManager: Alamofire.SessionManager // most of your web service clients will call through sessionManager
-    public var backgroundSessionManager: Alamofire.SessionManager // your web services you intend to keep running when the system backgrounds your app will use this
-    private init() {
-        self.sessionManager = Alamofire.SessionManager(configuration: URLSessionConfiguration.default)
-        self.backgroundSessionManager = Alamofire.SessionManager(configuration: URLSessionConfiguration.background(withIdentifier: "com.trackingadvisor.backgroundtransfer"))
-    }
-}
-
 class FileService : NSObject {
     static let shared = FileService()
-    
-    // to persist the last location update (key: lastLocationUpdate)
-    let defaults = UserDefaults.standard
-    
     var dir: URL?
-    let id: String = UIDevice.current.identifierForVendor!.uuidString
-    var batteryLevel: Float {
-        return UIDevice.current.batteryLevel
-    }
-    var batteryState: UIDeviceBatteryState {
-        return UIDevice.current.batteryState
-    }
     
     override init() {
-        UIDevice.current.isBatteryMonitoringEnabled = true
         self.dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+    }
+    
+    func getFilePath(for file: String) -> URL? {
+        guard let dir = self.dir else { return nil }
+        return dir.appendingPathComponent(file)
     }
     
     func listFiles() -> [URL] {
@@ -56,6 +39,16 @@ class FileService : NSObject {
             try FileManager.default.removeItem(at: file)
         } catch {
             print("Could not delete file: \(file.path)")
+        }
+    }
+    
+    func delete(file: String) {
+        guard let dir = dir else { return }
+        let path = dir.appendingPathComponent(file)
+        do {
+            try FileManager.default.removeItem(at: path)
+        } catch {
+            print("Could not delete file: \(path.path)")
         }
     }
     
@@ -96,7 +89,7 @@ class FileService : NSObject {
             NSLog("could not write in file \(file)")
         }
     }
-    
+
     func write(_ string: String, in file: String) {
         guard let dir = dir else { return }
         let path = dir.appendingPathComponent(file)
@@ -107,57 +100,17 @@ class FileService : NSObject {
         }
     }
     
-    func recordLocations(_ locations: [UserLocation], in file: String) {
-        let ssid = NetworkService.shared.getSSID() ?? "none"
-        
-        // get the last location update date
-        if let lastLocationUpdate = self.defaults.object(forKey: defaultsKeys.lastLocationUpdate) as? Date {
-            ActivityService.shared.getActivity(from: lastLocationUpdate, to: locations[0].timestamp) { activities in
-                let (mostLikelyActivity, activityConfidence) = ActivityService.mostLikelyActivity(activities: activities)
-                ActivityService.shared.getSteps(from: lastLocationUpdate, to: locations[0].timestamp) { nbSteps in                    
-                    if self.fileExists(file: file) {
-                        var text = ""
-                        for loc in locations {
-                            let line = "\(loc.userid),\(loc.latitude),\(loc.longitude),\(loc.timestamp),\(loc.accuracy),\(loc.targetAccuracy),\(loc.speed),\(nbSteps),\(mostLikelyActivity),\(activityConfidence),\(ssid),\(self.batteryLevel),\(self.batteryState)\n"
-                            text.append(line)
-                        }
-                        self.append(text, in: file)
-                    } else  {
-                        var text = "User,Lat,Lon,Timestamp,Accuracy,TargetAccuracy,Speed,nbSteps,activity,activityConfidence,ssid,batteryLevel,batteryCharge\n"
-                        for loc in locations {
-                            let line = "\(loc.userid),\(loc.latitude),\(loc.longitude),\(loc.timestamp),\(loc.accuracy),\(loc.targetAccuracy),\(loc.speed),\(nbSteps),\(mostLikelyActivity),\(activityConfidence),\(ssid),\(self.batteryLevel),\(self.batteryState)\n"
-                            text.append(line)
-                        }
-                        self.write(text, in: file)
-                    }
-                    
-                    // Save the last location update date
-                    self.defaults.set(locations[0].timestamp, forKey: defaultsKeys.lastLocationUpdate)
-                }
-            }
-        }
-    }
-    
-    func uploadBackground(file: URL) {
-        NSLog("upload file")
-        Networking.shared.backgroundSessionManager.upload(file,
-                                                          to: "http://semantica.geog.ucl.ac.uk:5678/uploader").responseJSON {
-                                                            response in
-            debugPrint(response)
-        }
-    }
-    
-    func upload(file: URL, callback: @escaping (DataResponse<Any>)->Void) {
+    class func upload(file: URL, callback: @escaping (DataResponse<Any>) -> Void) {
         NSLog("upload file \(file)")
+        let id: String = UIDevice.current.identifierForVendor!.uuidString
         Alamofire.upload(
             multipartFormData: { multipartFormData in
                 multipartFormData.append(file,
                                          withName: "trace",
-                                         fileName: "\(self.id)_\(file.lastPathComponent)",
+                                         fileName: "\(id)_\(file.lastPathComponent)",
                                          mimeType: "text/csv")
             },
-            to: "http://semantica.geog.ucl.ac.uk:5678/uploader",
-//            to: "http://192.168.0.46:5678/uploader",
+            to: Constants.urls.locationUploadURL,
             encodingCompletion: { encodingResult in
                 switch encodingResult {
                 case .success(let upload, _, _):
@@ -167,18 +120,14 @@ class FileService : NSObject {
                 case .failure(let encodingError):
                     print(encodingError)
                 }
-            
-        })
+            })
     }
     
     func log(_ text: String, classname: String) {
-        let date = Date()
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let filename = "log-" + formatter.string(from: date) + ".log"
-        formatter.dateFormat = "HH:mm:ss"
-        let time = formatter.string(from: date)
+        let date = DateHandler.dateToDayString(from: Date())
+        let time = DateHandler.dateToHourString(from: Date())
         
+        let filename = "log-\(date).log"
         let logText = "\(time) [\(classname)] \(text)\n"
         createOrAppend(logText, in: filename)
         

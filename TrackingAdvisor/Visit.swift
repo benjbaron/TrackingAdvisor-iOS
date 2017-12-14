@@ -36,10 +36,7 @@ class Visit: NSManagedObject {
         visit.arrival = userVisit.arrival
         visit.placeid = userVisit.placeid
         visit.day = dateFormatter.string(from: userVisit.arrival)
-        visit.longitude = userVisit.longitude
-        visit.latitude = userVisit.latitude
-        
-        visit.place = try? Place.findOrCreatePlace(matching: userVisit.place, in: context)
+        visit.place = try! Place.findPlace(matching: userVisit.placeid, in: context)
         
         return visit
     }

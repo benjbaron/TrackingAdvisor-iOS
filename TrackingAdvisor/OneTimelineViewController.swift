@@ -53,8 +53,18 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         
         let visits = DataStoreService.shared.getVisits(for: timelineTitle)
         
-        let touchAction = { (point:ISPoint) in
+        let touchAction = { [weak self] (point:ISPoint) in
+            guard let strongSelf = self else { return }
             print("point \(point.title)")
+            print("Show map button tapped")
+            // show the place detail view
+            if let controller = strongSelf.storyboard?.instantiateViewController(withIdentifier: "OneTimelinePlaceDetailViewController") as? UINavigationController {
+                if let viewController = controller.topViewController as? OneTimelinePlaceDetailViewController {
+                    viewController.visit = point.visit
+                    print("Show OneTimelinePlaceDetailViewController")
+                    strongSelf.tabBarController?.present(controller, animated: true, completion: nil)
+                }
+            }
         }
         
         let dateFormatter = DateFormatter()
@@ -65,26 +75,43 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         for visit in visits {
             let arrivalTime = dateFormatter.string(from: visit.arrival!)
             let departureTime = dateFormatter.string(from: visit.departure!)
-            let title = "\(arrivalTime) - \(departureTime)"
             var icon = UIImage(named: "location")!
             let placeName = visit.place!.name!
+            let placeCategory = visit.place!.category!
+            let placePersonalInfo = visit.place!.personalinfo!
+            var placePersonalInfoString = ""
+            var infoCount = 0
+            for key in placePersonalInfo.keys {
+                placePersonalInfoString += "\(key)"
+                if placePersonalInfo[key]!.count > 0 {
+                    placePersonalInfoString += ": \(placePersonalInfo[key]!.joined(separator: ", "))"
+                }
+                infoCount += 1
+                if infoCount < placePersonalInfo.count {
+                    placePersonalInfoString += ", "
+                }
+            }
+            print(placePersonalInfo)
+            print(placePersonalInfoString)
+            let times = "\(arrivalTime) - \(departureTime)"
+            
+            var description = "\(times)"
+            if placeCategory != "" {
+                description += "\n\(placeCategory)"
+            }
+            if placePersonalInfoString != "" {
+                description += "\n\(placePersonalInfoString)"
+            }
+            
             if placeName == "Home" {
-                icon = UIImage(named: "home")!
-            }
-            var lineColor = Constants.primaryDark
-            if count == visits.count-2 || count == 3 {
-                print("line color \(count)")
-                lineColor = Constants.green
+                icon = UIImage(named: "home-1")!.withRenderingMode(.alwaysTemplate)
             }
             
-            let point = ISPoint(title: title, description: placeName, pointColor: Constants.primaryLight, lineColor: lineColor, touchUpInside: touchAction, icon: icon, iconBg: Constants.primaryLight, fill: true)
+            let lineColor = Constants.colors.primaryDark
+            
+            let point = ISPoint(title: placeName, description: description, pointColor: Constants.colors.primaryLight, lineColor: lineColor, touchUpInside: touchAction, icon: icon, iconBg: Constants.colors.primaryLight, fill: true)
+            point.visit = visit
             timelinePoints.append(point)
-            
-            let originalAnnotation = PointAnnotation()
-            originalAnnotation.coordinate = CLLocationCoordinate2D(latitude: visit.latitude, longitude: visit.longitude)
-            originalAnnotation.title = title
-            originalAnnotation.annotationType = .original
-            annotations.append(originalAnnotation)
             
             let matchedAnnotation = PointAnnotation()
             matchedAnnotation.coordinate = CLLocationCoordinate2D(latitude: (visit.place?.latitude)!, longitude: (visit.place?.longitude)!)
@@ -176,9 +203,9 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             annotationView!.frame = CGRect(x: 0, y: 0, width: 15, height: 15)
             
             // Set the annotation view’s background color to a value determined by its longitude.
-            var color = Constants.primaryDark
+            var color = Constants.colors.primaryDark
             if pointAnnotation.annotationType == .matched {
-                color = Constants.primaryLight
+                color = Constants.colors.primaryLight
             }
             annotationView!.backgroundColor = color
         }

@@ -126,10 +126,15 @@ class LocationService: NSObject, CLLocationManagerDelegate {
                     self.delegate.locationDidUpdate(location: bestLocation)
                 }
             }
-            let filename = bestLocation.dateString() + ".csv"
-            FileService.shared.recordLocations([bestLocation], in: filename)
-            NSLog("added location to \(filename)")
-            locations.removeAll(keepingCapacity: false)
+            let filename = DateHandler.dateToDayString(from: bestLocation.timestamp) + ".csv"
+            
+            bestLocation.dumps(to: filename) { [weak self] done in
+                guard let strongSelf = self else { return }
+                if done {
+                    NSLog("added location to \(filename)")
+                    strongSelf.locations.removeAll(keepingCapacity: false)
+                }
+            }
         }
     }
     

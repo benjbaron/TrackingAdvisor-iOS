@@ -17,9 +17,13 @@ class TimelineSwipeViewController: UIViewController, EMPageViewControllerDataSou
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // retrieve the latest data from the server
+        DispatchQueue.global(qos: .background).async {
+            UserUpdateHandler.retrieveLatestUserUpdates(for: "2017-11-21")
+        }
+        
         // get the titles of the pages
         titles = DataStoreService.shared.getUniqueVisitDays()
-        print("viewDidLoad: \(titles)")
         
         // Instantiate EMPageViewController and set the data source and delegate to 'self'
         let pageViewController = EMPageViewController()

@@ -12,14 +12,19 @@
 		B511C4FB1FD5BFBC006A312C /* Eureka.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B511C4F71FD5BF8C006A312C /* Eureka.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B511C4FF1FD5C039006A312C /* GetInTouchFormViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B511C4FE1FD5C039006A312C /* GetInTouchFormViewController.swift */; };
 		B512ED441FBC8EB60062B9E1 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B512ED431FBC8EB60062B9E1 /* Constants.swift */; };
+		B51BAFB01FD961E200BE9CAA /* UserLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51BAFAF1FD961E200BE9CAA /* UserLocation.swift */; };
+		B51BAFBA1FD9621A00BE9CAA /* DateHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51BAFB91FD9621A00BE9CAA /* DateHandler.swift */; };
+		B51BAFBC1FD98D2900BE9CAA /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51BAFBB1FD98D2900BE9CAA /* Settings.swift */; };
 		B51C756A1FB4C643008C4BBF /* TaskService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51C75691FB4C643008C4BBF /* TaskService.swift */; };
 		B52AF1CE1FA8C87D00FDDF2A /* ISPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52AF1CD1FA8C87D00FDDF2A /* ISPoint.swift */; };
 		B52AF1D01FA8C89F00FDDF2A /* ISTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52AF1CF1FA8C89F00FDDF2A /* ISTimeline.swift */; };
+		B53043231FDED92A00DBC7C0 /* UserUpdateHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53043221FDED92A00DBC7C0 /* UserUpdateHandler.swift */; };
+		B530432D1FDEDBD400DBC7C0 /* Networking.swift in Sources */ = {isa = PBXBuildFile; fileRef = B530432C1FDEDBD400DBC7C0 /* Networking.swift */; };
+		B530432F1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B530432E1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift */; };
 		B53F20751FC3341100006B67 /* Mapbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B53F20741FC3341000006B67 /* Mapbox.framework */; };
 		B53F20761FC3341100006B67 /* Mapbox.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B53F20741FC3341000006B67 /* Mapbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B53FB6FB1FAB74630000112E /* ActivityServiceOld.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53FB6FA1FAB74630000112E /* ActivityServiceOld.swift */; };
 		B53FB6FD1FAB9A870000112E /* FileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53FB6FC1FAB9A870000112E /* FileService.swift */; };
-		B53FB6FF1FAB9AB20000112E /* LocationDataStructures.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53FB6FE1FAB9AB20000112E /* LocationDataStructures.swift */; };
 		B55DE5D41FAB582B00CACB47 /* DataStoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55DE5D31FAB582B00CACB47 /* DataStoreService.swift */; };
 		B568D8801FB45D0700E051B1 /* LocationAdaptiveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568D87F1FB45D0700E051B1 /* LocationAdaptiveService.swift */; };
 		B568D8821FB45FD800E051B1 /* ActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568D8811FB45FD800E051B1 /* ActivityService.swift */; };
@@ -38,6 +43,7 @@
 		B599B3B11FA0B57F006D70B4 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B599B3AF1FA0B57F006D70B4 /* LaunchScreen.storyboard */; };
 		B599B3BC1FA0B57F006D70B4 /* TrackingAdvisorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B599B3BB1FA0B57F006D70B4 /* TrackingAdvisorTests.swift */; };
 		B599B3C71FA0B580006D70B4 /* TrackingAdvisorUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B599B3C61FA0B580006D70B4 /* TrackingAdvisorUITests.swift */; };
+		B59ABF681FDAADA300A60066 /* PositionMapModalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59ABF671FDAADA300A60066 /* PositionMapModalViewController.swift */; };
 		B5C347431FB064D50078C12E /* RawCollectedDataViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C347421FB064D50078C12E /* RawCollectedDataViewController.swift */; };
 		B5C347461FB0929F0078C12E /* EMPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C347451FB0929F0078C12E /* EMPageViewController.swift */; };
 		B5C347481FB092D40078C12E /* TimelineSwipeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C347471FB092D40078C12E /* TimelineSwipeViewController.swift */; };
@@ -180,13 +186,18 @@
 		B511C4EA1FD5BF8C006A312C /* Eureka.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Eureka.xcodeproj; path = Eureka/Eureka.xcodeproj; sourceTree = "<group>"; };
 		B511C4FE1FD5C039006A312C /* GetInTouchFormViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetInTouchFormViewController.swift; sourceTree = "<group>"; };
 		B512ED431FBC8EB60062B9E1 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = SOURCE_ROOT; };
+		B51BAFAF1FD961E200BE9CAA /* UserLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLocation.swift; sourceTree = "<group>"; };
+		B51BAFB91FD9621A00BE9CAA /* DateHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateHandler.swift; sourceTree = "<group>"; };
+		B51BAFBB1FD98D2900BE9CAA /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		B51C75691FB4C643008C4BBF /* TaskService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskService.swift; sourceTree = "<group>"; };
 		B52AF1CD1FA8C87D00FDDF2A /* ISPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ISPoint.swift; sourceTree = "<group>"; };
 		B52AF1CF1FA8C89F00FDDF2A /* ISTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ISTimeline.swift; sourceTree = "<group>"; };
+		B53043221FDED92A00DBC7C0 /* UserUpdateHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserUpdateHandler.swift; sourceTree = "<group>"; };
+		B530432C1FDEDBD400DBC7C0 /* Networking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Networking.swift; sourceTree = "<group>"; };
+		B530432E1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OneTimelinePlaceDetailViewController.swift; sourceTree = "<group>"; };
 		B53F20741FC3341000006B67 /* Mapbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Mapbox.framework; sourceTree = "<group>"; };
 		B53FB6FA1FAB74630000112E /* ActivityServiceOld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityServiceOld.swift; sourceTree = "<group>"; };
 		B53FB6FC1FAB9A870000112E /* FileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileService.swift; sourceTree = "<group>"; };
-		B53FB6FE1FAB9AB20000112E /* LocationDataStructures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationDataStructures.swift; sourceTree = "<group>"; };
 		B55DE5D31FAB582B00CACB47 /* DataStoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataStoreService.swift; sourceTree = "<group>"; };
 		B568D87E1FB3827100E051B1 /* TrackingAdvisor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TrackingAdvisor.entitlements; sourceTree = "<group>"; };
 		B568D87F1FB45D0700E051B1 /* LocationAdaptiveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationAdaptiveService.swift; sourceTree = "<group>"; };
@@ -211,6 +222,7 @@
 		B599B3C21FA0B580006D70B4 /* TrackingAdvisorUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TrackingAdvisorUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B599B3C61FA0B580006D70B4 /* TrackingAdvisorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingAdvisorUITests.swift; sourceTree = "<group>"; };
 		B599B3C81FA0B580006D70B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B59ABF671FDAADA300A60066 /* PositionMapModalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PositionMapModalViewController.swift; sourceTree = "<group>"; };
 		B5C347421FB064D50078C12E /* RawCollectedDataViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RawCollectedDataViewController.swift; sourceTree = "<group>"; };
 		B5C347451FB0929F0078C12E /* EMPageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EMPageViewController.swift; sourceTree = "<group>"; };
 		B5C347471FB092D40078C12E /* TimelineSwipeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineSwipeViewController.swift; sourceTree = "<group>"; };
@@ -320,6 +332,7 @@
 				B568D8811FB45FD800E051B1 /* ActivityService.swift */,
 				B51C75691FB4C643008C4BBF /* TaskService.swift */,
 				B57F514D1FD55A5B0018B416 /* NetworkService.swift */,
+				B530432C1FDEDBD400DBC7C0 /* Networking.swift */,
 			);
 			name = Services;
 			sourceTree = "<group>";
@@ -380,6 +393,8 @@
 				B5C347491FB093F50078C12E /* OneTimelineViewController.swift */,
 				B58A6E131FCC4CF9003DA168 /* SettingsTableTableViewController.swift */,
 				B511C4FE1FD5C039006A312C /* GetInTouchFormViewController.swift */,
+				B59ABF671FDAADA300A60066 /* PositionMapModalViewController.swift */,
+				B530432E1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift */,
 			);
 			path = TrackingAdvisor;
 			sourceTree = "<group>";
@@ -413,11 +428,12 @@
 		B5F4B3571FC6D78100ED92EC /* Structures */ = {
 			isa = PBXGroup;
 			children = (
-				B512ED431FBC8EB60062B9E1 /* Constants.swift */,
-				B53FB6FE1FAB9AB20000112E /* LocationDataStructures.swift */,
+				B51BAFAF1FD961E200BE9CAA /* UserLocation.swift */,
+				B53043221FDED92A00DBC7C0 /* UserUpdateHandler.swift */,
 				B5C347451FB0929F0078C12E /* EMPageViewController.swift */,
 				B52AF1CF1FA8C89F00FDDF2A /* ISTimeline.swift */,
 				B52AF1CD1FA8C87D00FDDF2A /* ISPoint.swift */,
+				B51BAFB91FD9621A00BE9CAA /* DateHandler.swift */,
 			);
 			name = Structures;
 			sourceTree = "<group>";
@@ -466,6 +482,8 @@
 			children = (
 				B599B3B21FA0B57F006D70B4 /* Info.plist */,
 				B5FE77BD1FA9D43D002B5F0C /* TrackingAdvisor-Bridging-Header.h */,
+				B512ED431FBC8EB60062B9E1 /* Constants.swift */,
+				B51BAFBB1FD98D2900BE9CAA /* Settings.swift */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -823,18 +841,21 @@
 				B5C347461FB0929F0078C12E /* EMPageViewController.swift in Sources */,
 				B57F514E1FD55A5B0018B416 /* NetworkService.swift in Sources */,
 				B5FE77EF1FA9D442002B5F0C /* FSCalendarHeaderView.m in Sources */,
+				B51BAFBA1FD9621A00BE9CAA /* DateHandler.swift in Sources */,
 				B5C3C9521FB20F750037DD22 /* LocationRegionService.swift in Sources */,
 				B58612751FB0D9C700480DD4 /* NotificationService.swift in Sources */,
-				B53FB6FF1FAB9AB20000112E /* LocationDataStructures.swift in Sources */,
+				B51BAFBC1FD98D2900BE9CAA /* Settings.swift in Sources */,
 				B5FE77B61FA9D1BD002B5F0C /* CalendarViewController.swift in Sources */,
 				B5FE77ED1FA9D442002B5F0C /* FSCalendar+Deprecated.m in Sources */,
 				B5FE77E21FA9D442002B5F0C /* FSCalendarDelegationProxy.m in Sources */,
+				B59ABF681FDAADA300A60066 /* PositionMapModalViewController.swift in Sources */,
 				B52AF1D01FA8C89F00FDDF2A /* ISTimeline.swift in Sources */,
 				B5FE77E01FA9D442002B5F0C /* FSCalendar.m in Sources */,
 				B511C4FF1FD5C039006A312C /* GetInTouchFormViewController.swift in Sources */,
 				B5C347481FB092D40078C12E /* TimelineSwipeViewController.swift in Sources */,
 				B5FE77E11FA9D442002B5F0C /* FSCalendarCollectionViewLayout.m in Sources */,
 				B58A6E141FCC4CF9003DA168 /* SettingsTableTableViewController.swift in Sources */,
+				B530432D1FDEDBD400DBC7C0 /* Networking.swift in Sources */,
 				B53FB6FB1FAB74630000112E /* ActivityServiceOld.swift in Sources */,
 				B568D8821FB45FD800E051B1 /* ActivityService.swift in Sources */,
 				B5FE77E91FA9D442002B5F0C /* FSCalendarConstants.m in Sources */,
@@ -849,6 +870,8 @@
 				B5FE77E61FA9D442002B5F0C /* FSCalendarAppearance.m in Sources */,
 				B58B79211FC734AF007BA1BC /* Place.swift in Sources */,
 				B5FE77E71FA9D442002B5F0C /* FSCalendarScopeHandle.m in Sources */,
+				B530432F1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift in Sources */,
+				B53043231FDED92A00DBC7C0 /* UserUpdateHandler.swift in Sources */,
 				B5FE77EC1FA9D442002B5F0C /* FSCalendarCalculator.m in Sources */,
 				B5C3474C1FB0B4760078C12E /* RawCollectedDataTextViewController.swift in Sources */,
 				B568D8801FB45D0700E051B1 /* LocationAdaptiveService.swift in Sources */,
@@ -856,6 +879,7 @@
 				B5FE77F31FA9F2F6002B5F0C /* MapCalendarContainerViewController.swift in Sources */,
 				B58B79241FC742F9007BA1BC /* Move.swift in Sources */,
 				B53FB6FD1FAB9A870000112E /* FileService.swift in Sources */,
+				B51BAFB01FD961E200BE9CAA /* UserLocation.swift in Sources */,
 				B5FE77EB1FA9D442002B5F0C /* FSCalendarExtensions.m in Sources */,
 				B5FE77E51FA9D442002B5F0C /* FSCalendarCollectionView.m in Sources */,
 				B52AF1CE1FA8C87D00FDDF2A /* ISPoint.swift in Sources */,

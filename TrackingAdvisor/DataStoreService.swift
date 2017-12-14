@@ -36,7 +36,7 @@ class DataStoreService: NSObject {
                 _ = try? Visit.findOrCreateVisit(matching: userVisit, in: context)
             }
             
-            for userMove in userUpdate.movements {
+            for userMove in userUpdate.moves {
                 print("save move")
                 _ = try? Move.findOrCreateMove(matching: userMove, in: context)
             }

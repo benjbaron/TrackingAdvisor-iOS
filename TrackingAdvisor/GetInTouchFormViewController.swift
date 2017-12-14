@@ -96,12 +96,13 @@ class GetInTouchFormViewController: FormViewController {
                         "message": strongSelf.message
                     ]
                     
-                    Alamofire.request("http://semantica.geog.ucl.ac.uk/mail", method: .post, parameters: parameters, encoding: JSONEncoding.default)
+                    Alamofire.request(Constants.urls.sendMailURL, method: .post, parameters: parameters, encoding: JSONEncoding.default)
                         .responseJSON { response in
                             let alert = UIAlertController(title: "Message sent", message: "Thank you for getting in touch with us, we will get back to you shortly.", preferredStyle: UIAlertControllerStyle.alert)
-                            alert.addAction(UIAlertAction(title: "Done", style: UIAlertActionStyle.default, handler: nil))
+                            alert.addAction(UIAlertAction(title: "Done", style: UIAlertActionStyle.default) { alertAction in
+                                strongSelf.navigationController?.popViewController(animated: true)
+                            })
                             strongSelf.present(alert, animated: true, completion: nil)
-                            row.disabled = true
                     }
                 } else {
                     print("form is not valid")

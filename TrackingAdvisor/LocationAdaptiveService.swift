@@ -136,20 +136,29 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
             let loc = UserLocation(id: self.id, location: newLocation, targetAccuracy: self.locationManager.desiredAccuracy)
             self.currentLocation = loc
             
-            let filename = loc.dateString() + ".csv"
-            FileService.shared.recordLocations([loc], in: filename)
-            FileService.shared.log("added location to \(filename)", classname: "LocationAdaptiveService")
-            
-            DispatchQueue.main.async { () -> Void in
-                NSLog("call delegate method for location handler")
-                if self.delegate != nil {
-                    self.delegate.locationDidUpdate(location: loc)
+            let filename = DateHandler.dateToDayString(from: loc.timestamp) + ".csv"
+            loc.dumps(to: filename) { [weak self] done in
+                guard let strongSelf = self else { return }
+                if done {
+                    FileService.shared.log("added location to \(filename)", classname: "LocationAdaptiveService")
+                    
+                    // upload to server
+                    UserLocation.upload() { response in
+                        print("file sent to server")
+                    }
+                    
+                    DispatchQueue.main.async { () -> Void in
+                        NSLog("call delegate method for location handler")
+                        if strongSelf.delegate != nil {
+                            strongSelf.delegate.locationDidUpdate(location: loc)
+                        }
+                    }
+                    
+                    strongSelf.locations.removeAll()
+                    strongSelf.locationManager.stopUpdatingLocation()
+                    strongSelf.updating = false
                 }
             }
-            
-            self.locations.removeAll()
-            self.locationManager.stopUpdatingLocation()
-            self.updating = false
         }
     }
     
@@ -159,7 +168,7 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
             self.bgTask = UIBackgroundTaskInvalid
         })
         
-        FileService.shared.log("didUpdateLocations, updating: \(updating), timer: \(timer.isValid)", classname: "LocationAdaptiveService")
+        FileService.shared.log("didUpdateLocations, updating: \(updating), timer: \(timer.isValid), delayTimer: \(delayTimer.isValid)", classname: "LocationAdaptiveService")
         if !updating {
             return
         }
@@ -177,10 +186,10 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
         
         
         // determine the new timeout
-//        if self.isStationary {
-//            self.timeout = min(self.timeout+self.minTimeout, self.maxTimeout)
-//            self.accuracy = kCLLocationAccuracyThreeKilometers
-//        }
+    //        if self.isStationary {
+    //            self.timeout = min(self.timeout+self.minTimeout, self.maxTimeout)
+    //            self.accuracy = kCLLocationAccuracyThreeKilometers
+    //        }
         
         // Restart the locationManager after "timeout" seconds
         timer = Timer.scheduledTimer(timeInterval: timeout,

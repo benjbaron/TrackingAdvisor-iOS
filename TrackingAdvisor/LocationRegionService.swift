@@ -190,7 +190,11 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
     }
     
     func locationManager(_ manager: CLLocationManager, monitoringDidFailFor region: CLRegion?, withError error: Error) {
-        NSLog("Location Manager FAILED monitoring region \((error as NSError).description)")
+        FileService.shared.log("Location Manager FAILED monitoring region \((error as NSError).description) for region \(String(describing: region))",
+            classname: "LocationRegionService")
+        if let region = region {
+            locationManager.startMonitoring(for: region)
+        }
     }
     
     func locationManager(_ manager: CLLocationManager, didFinishDeferredUpdatesWithError error: Error?) {

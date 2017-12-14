@@ -16,7 +16,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        FileService.shared.log("call -- didFinishLaunchingWithOptions \(UIApplicationLaunchOptionsKey.location)", classname: "AppDelegate")
+        
+        Settings.registerDefaults()
         
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) {
             (permissionGranted, error) in
@@ -27,9 +28,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         LocationRegionService.shared.startUpdatingLocation()
         
         // Override point for customization after application launch.
-        if launchOptions?[UIApplicationLaunchOptionsKey.location] != nil {
-            // something here...
+        if launchOptions?[.location] != nil {
+            FileService.shared.log("App launched (location-triggered)", classname: "AppDelegate")
+        } else if launchOptions?[.remoteNotification] != nil {
+            FileService.shared.log("App launched (pushNotification-triggered)", classname: "AppDelegate")
+        } else {
+            FileService.shared.log("App launched (user-triggered)", classname: "AppDelegate")
         }
+        
+        if let notification = launchOptions?[.remoteNotification] as? [String:Any] {
+            let aps = notification["aps"] as! [String:Any]
+            print(aps)
+        }
+        
+        registerForPushNotifications()
         return true
     }
 
@@ -107,6 +119,48 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
     }
-
+    
+    // MARK: - Push notification registration
+    func registerForPushNotifications() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge]) {
+            (granted, error) in
+            print("Permission granted: \(granted)")
+            
+            guard granted else { return }
+            self.getNotificationSettings()
+        }
+    }
+    
+    func getNotificationSettings() {
+        UNUserNotificationCenter.current().getNotificationSettings { (settings) in
+            print("Notification settings: \(settings)")
+            guard settings.authorizationStatus == .authorized else { return }
+            DispatchQueue.main.async {
+                UIApplication.shared.registerForRemoteNotifications()
+            }
+        }
+    }
+    
+    func application(_ application: UIApplication,
+                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        let tokenParts = deviceToken.map { data -> String in
+            return String(format: "%02.2hhx", data)
+        }
+        
+        let token = tokenParts.joined()
+        let defaults = UserDefaults.standard
+        defaults.set(token, forKey: Constants.defaultsKeys.pushNotificationToken)
+        print("Device Token: \(token)")
+    }
+    
+    func application(_ application: UIApplication,
+                     didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        print("Failed to register: \(error)")
+    }
+    
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        FileService.shared.log("call -- didReceiveRemoteNotification", classname: "AppDelegate")
+        LocationRegionService.shared.restartUpdatingLocation()
+    }
 }
 

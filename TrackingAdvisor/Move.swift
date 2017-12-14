@@ -31,11 +31,11 @@ class Move: NSManagedObject {
         let move = Move(context: context)
         move.id = userMove.moveid
         move.activity = userMove.activity
-        move.arrivalDate = userMove.arrivalDate
-        move.departureDate = userMove.departureDate
-        move.arrivalPlace = try? Place.findOrCreatePlace(matching: userMove.arrivalPlace, in: context)
-        move.departurePlace = try? Place.findOrCreatePlace(matching: userMove.departurePlace, in: context)
-        move.day = dateFormatter.string(from: userMove.arrivalDate)
+        move.arrivalDate = userMove.arrivaldate
+        move.departureDate = userMove.departuredate
+        move.arrivalPlace = try! Place.findPlace(matching: userMove.arrivalplaceid, in: context)
+        move.departurePlace = try! Place.findPlace(matching: userMove.departureplaceid, in: context)
+        move.day = dateFormatter.string(from: userMove.arrivaldate)
         
         return move
     }

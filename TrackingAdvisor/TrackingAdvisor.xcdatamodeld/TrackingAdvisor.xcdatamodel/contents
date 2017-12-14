@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="13533" systemVersion="16G29" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="13772" systemVersion="16G29" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="Move" representedClassName="Move" syncable="YES" codeGenerationType="category">
         <attribute name="activity" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="arrivalDate" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
@@ -17,7 +17,7 @@
         <attribute name="latitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="longitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
-        <attribute name="userEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES" syncable="YES"/>
+        <attribute name="personalinfo" optional="YES" attributeType="Transformable" customClassName="[String:[String]]" syncable="YES"/>
         <relationship name="visit" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Visit" inverseName="place" inverseEntity="Visit" syncable="YES"/>
     </entity>
     <entity name="Visit" representedClassName="Visit" syncable="YES" codeGenerationType="category">
@@ -26,14 +26,12 @@
         <attribute name="day" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="departure" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="id" optional="YES" attributeType="String" syncable="YES"/>
-        <attribute name="latitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES" syncable="YES"/>
-        <attribute name="longitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="placeid" optional="YES" attributeType="String" syncable="YES"/>
         <relationship name="place" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Place" inverseName="visit" inverseEntity="Place" syncable="YES"/>
     </entity>
     <elements>
         <element name="Move" positionX="-531" positionY="63" width="128" height="150"/>
-        <element name="Place" positionX="-324" positionY="92" width="128" height="178"/>
-        <element name="Visit" positionX="-72" positionY="-1" width="128" height="180"/>
+        <element name="Place" positionX="-324" positionY="92" width="128" height="180"/>
+        <element name="Visit" positionX="-72" positionY="-1" width="128" height="150"/>
     </elements>
 </model>

@@ -92,41 +92,41 @@ class MovableLineLayer: MoveableLayer {
     }
 }
 
-class MoveableLabel : Moveable {
-    let label:UILabel?
+class MoveableView : Moveable {
+    let view:UIView?
     var position = -1
     var maxPosition = -1
     
-    init(label:UILabel? = nil, position:Int = -1, maxPosition: Int = -1) {
-        self.label = label
+    init(view:UIView? = nil, position:Int = -1, maxPosition: Int = -1) {
+        self.view = view
         self.position = position
         self.maxPosition = maxPosition
     }
    
     func hide() {
-        guard let label = label else { return }
-        label.alpha = 0
+        guard let view = view else { return }
+        view.alpha = 0
     }
     
     func show() {
-        guard let label = label else { return }
-        label.alpha = 1
+        guard let view = view else { return }
+        view.alpha = 1
     }
     
     func move(to: CGPoint, with delay: CFTimeInterval) {
-        guard let label = label else { return }
+        guard let view = view else { return }
         if self.position > 0 {
             UIView.animate(withDuration: delay) {
-                label.center = to
+                view.center = to
             }
         }
     }
     
     func moveDown(by value: CGFloat, with delay:CFTimeInterval) {
-        guard let label = label else { return }
+        guard let view = view else { return }
         var position = CGPoint()
-        position.x = label.center.x
-        position.y = label.center.y + value
+        position.x = view.center.x
+        position.y = view.center.y + value
         move(to: position, with: delay)
     }
 }
@@ -221,7 +221,7 @@ open class ISTimeline: UIScrollView {
     
     fileprivate var isAnimating = false
     
-    fileprivate var sections:[(point:CGPoint, bubbleRect:CGRect, descriptionRect:CGRect?, titleLabel:UILabel, descriptionLabel:UILabel?, pointColor:CGColor, lineColor:CGColor, fill:Bool, icon:UIImage, iconBg:CGColor, iconCenter:CGPoint)] = []
+    fileprivate var sections:[(point:CGPoint, bubbleRect:CGRect, descriptionRect:CGRect?, titleLabel:UILabel, descriptionLabel:UILabel?, pointColor:CGColor, lineColor:CGColor, fill:Bool, icon:UIImage, iconBg:CGColor, iconCenter:CGPoint, feedbackRect:CGRect)] = []
     
     override public init(frame: CGRect) {
         super.init(frame: frame)
@@ -347,10 +347,10 @@ open class ISTimeline: UIScrollView {
                 // Add button (with opacity = 0)
                 let addIconPosition = CGPoint(x: sections[i].point.x - lineWidth/2,
                                               y: sections[i+1].point.y + CGFloat(i) * 50 - 10)
-                let addIconLayer = drawIcon(addIconPosition, fill: Constants.primaryLight.cgColor, image: UIImage(named: "add")!)
-                addIconLayer.opacity = 0
-                addButtons.append(MoveableLayer(layer: addIconLayer, position: i, maxPosition: sections.count - 2))
-                self.layer.addSublayer(addIconLayer)
+                let addIconView = drawIcon(addIconPosition, fill: Constants.colors.primaryLight.cgColor, image: UIImage(named: "add")!)
+                addIconView.alpha = 0
+                addButtons.append(MoveableView(view: addIconView, position: i, maxPosition: sections.count - 2))
+                self.addSubview(addIconView)
                 
                 // Add text (button)
                 let addTextRect = CGRect(
@@ -360,30 +360,34 @@ open class ISTimeline: UIScrollView {
                     height: 25)
                 let addTextLabel = buildAddLabel(text: "Add an event")
                 
-                let addTextLayer = drawDescription(addTextRect, textColor: Constants.black, descriptionLabel: addTextLabel!)
+                let addTextLayer = drawDescription(addTextRect, textColor: Constants.colors.black, descriptionLabel: addTextLabel!)
                 addTextLayer.alpha = 0
-                addButtons.append(MoveableLabel(label: addTextLayer, position: i, maxPosition: sections.count - 2))
+                addButtons.append(MoveableView(view: addTextLayer, position: i, maxPosition: sections.count - 2))
                 self.addSubview(addTextLayer)
             }
             
-            let iconLayer = drawIcon(sections[i].iconCenter, fill: sections[i].iconBg, image: sections[i].icon)
-            self.layer.addSublayer(iconLayer)
-            layers[i]!.append(MoveableLayer(layer: iconLayer, position: i, maxPosition: sections.count - 1))
+            let iconView = drawIcon(sections[i].iconCenter, fill: sections[i].iconBg, image: sections[i].icon)
+            self.addSubview(iconView)
+            layers[i]!.append(MoveableView(view: iconView, position: i, maxPosition: sections.count - 1))
             
             let pointLayer = drawPoint(sections[i].point, color: sections[i].pointColor, fill: sections[i].fill)
             self.layer.addSublayer(pointLayer)
             layers[i]!.append(MoveableLayer(layer: pointLayer, position: i, maxPosition: sections.count - 1))
             
-            let bubbleLayer = drawBubble(sections[i].bubbleRect, backgroundColor: Constants.primaryLight, textColor: Constants.titleColor, titleLabel: sections[i].titleLabel)
+            let bubbleLayer = drawBubble(sections[i].bubbleRect, backgroundColor: Constants.colors.primaryLight, textColor: Constants.colors.titleColor, titleLabel: sections[i].titleLabel)
             self.addSubview(bubbleLayer)
-            layers[i]!.append(MoveableLabel(label: bubbleLayer, position: i, maxPosition: sections.count - 1))
+            layers[i]!.append(MoveableView(view: bubbleLayer, position: i, maxPosition: sections.count - 1))
             
             let descriptionLabel = sections[i].descriptionLabel
             if (descriptionLabel != nil) {
-                let descriptionLayer = drawDescription(sections[i].descriptionRect!, textColor: Constants.descriptionColor, descriptionLabel: sections[i].descriptionLabel!)
+                let descriptionLayer = drawDescription(sections[i].descriptionRect!, textColor: Constants.colors.descriptionColor, descriptionLabel: sections[i].descriptionLabel!)
                 self.addSubview(descriptionLayer)
-                layers[i]!.append(MoveableLabel(label: descriptionLayer, position: i, maxPosition: sections.count - 1))
+                layers[i]!.append(MoveableView(view: descriptionLayer, position: i, maxPosition: sections.count - 1))
             }
+            
+            let feedbackView = buildFeedbackView(sections[i].feedbackRect)
+            self.addSubview(feedbackView)
+            layers[i]?.append(MoveableView(view: feedbackView, position: i, maxPosition: sections.count - 1))
         }
         
         ctx.restoreGState()
@@ -403,6 +407,7 @@ open class ISTimeline: UIScrollView {
             if descriptionLabel != nil {
                 height += descriptionLabel!.intrinsicContentSize.height
             }
+            height += 1.2 * iconDiameter // feedbackRect
             
             let iconCenter = CGPoint(
                 x: self.bounds.origin.x + self.contentInset.left,
@@ -434,7 +439,11 @@ open class ISTimeline: UIScrollView {
                     height: descriptionLabel!.intrinsicContentSize.height)
             }
             
-            sections.append((point, bubbleRect, descriptionRect, titleLabel, descriptionLabel, points[i].pointColor.cgColor, points[i].lineColor.cgColor, points[i].fill, points[i].icon, points[i].iconBg.cgColor, iconCenter))
+            let rect = descriptionRect != nil ? descriptionRect! : bubbleRect
+            let feebackRect = CGRect(x: rect.origin.x, y: rect.origin.y + rect.height,
+                                     width: calcWidth(), height: 1.2*iconDiameter)
+            
+            sections.append((point, bubbleRect, descriptionRect, titleLabel, descriptionLabel, points[i].pointColor.cgColor, points[i].lineColor.cgColor, points[i].fill, points[i].icon, points[i].iconBg.cgColor, iconCenter, feebackRect))
             
             y += height
             y += ISTimeline.gap * 2.2 // section gap
@@ -469,6 +478,26 @@ open class ISTimeline: UIScrollView {
     fileprivate func buildDescriptionLabel(_ index:Int) -> UILabel? {
         let text = points[index].description
         return buildDescriptionLabel(text: text)
+    }
+    
+    fileprivate func buildFeedbackView(_ rect:CGRect) -> UIView {
+        let feedbackView = UIView()
+        feedbackView.frame = rect
+//        feedbackView.backgroundColor = UIColor.lightGray
+        
+        let thumbUpPoint = CGPoint(x: 0, y: 4)
+        let thumbUpIcon = drawIcon(thumbUpPoint, fill: Constants.colors.primaryDark.cgColor, image: UIImage(named: "thumbs-up")!.withRenderingMode(.alwaysTemplate), scale: 0.6)
+        feedbackView.addSubview(thumbUpIcon)
+        
+        let thumbDownPoint = CGPoint(x: 50, y: 4)
+        let thumbDownIcon = drawIcon(thumbDownPoint, fill: Constants.colors.primaryDark.cgColor, image: UIImage(named: "thumbs-down")!.withRenderingMode(.alwaysTemplate), scale: 0.6)
+        feedbackView.addSubview(thumbDownIcon)
+        
+        let otherPoint = CGPoint(x: 100, y: 4)
+        let otherIcon = drawIcon(otherPoint, fill: Constants.colors.primaryDark.cgColor, image: UIImage(named: "chevron-right")!.withRenderingMode(.alwaysTemplate), scale: 0.6)
+        feedbackView.addSubview(otherIcon)
+        
+        return feedbackView
     }
     
     fileprivate func buildDescriptionLabel(text: String?) -> UILabel? {
@@ -553,28 +582,28 @@ open class ISTimeline: UIScrollView {
         return shapeLayer
     }
     
-    fileprivate func drawIcon(_ point: CGPoint, fill: CGColor, image: UIImage) -> CALayer {
+    fileprivate func drawIcon(_ point: CGPoint, fill: CGColor, image: UIImage, scale: CGFloat = 0.8) -> UIView {
         let path = UIBezierPath(ovalIn: CGRect(x: point.x, y: point.y, width: iconDiameter, height: iconDiameter))
         
+        let iconView = UIView()
         let shapeLayer = CAShapeLayer()
         shapeLayer.path = path.cgPath
         shapeLayer.fillColor = fill
         shapeLayer.lineWidth = 0
+        iconView.layer.addSublayer(shapeLayer)
         
-        let imageLayer = CALayer()
-        imageLayer.backgroundColor = UIColor.clear.cgColor
-        imageLayer.bounds = CGRect(x: point.x, y: point.y , width: 0.8*iconDiameter, height: 0.8*iconDiameter)
-        imageLayer.position = CGPoint(x: point.x + iconDiameter/2 ,y: point.y + iconDiameter/2)
-        imageLayer.contents = image.cgImage
+        let imageView = UIImageView(image: image)
+        imageView.tintColor = UIColor.white
+        imageView.frame = CGRect(x: point.x + (1.0-scale)/2*iconDiameter, y: point.y + (1.0-scale)/2*iconDiameter, width: scale*iconDiameter, height: scale*iconDiameter)
+        iconView.addSubview(imageView)
         
-        shapeLayer.addSublayer(imageLayer)
-        return shapeLayer
+        return iconView
     }
     
     fileprivate func drawBubble(_ rect:CGRect, backgroundColor:UIColor, textColor:UIColor, titleLabel:UILabel) -> UILabel {
         
         let titleRect = CGRect(x: rect.origin.x, y: rect.origin.y, width: rect.size.width - 15, height: rect.size.height - 1)
-        titleLabel.textColor = Constants.black
+        titleLabel.textColor = Constants.colors.black
         titleLabel.frame = titleRect
         
         return titleLabel

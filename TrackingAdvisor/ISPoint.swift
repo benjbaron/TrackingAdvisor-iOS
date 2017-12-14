@@ -18,6 +18,7 @@ open class ISPoint {
     open var fill:Bool = true
     open var icon:UIImage
     open var iconBg: UIColor
+    var visit: Visit?
     
     public init(title:String, description:String, pointColor:UIColor, lineColor:UIColor, touchUpInside:Optional<(_ point:ISPoint) -> Void>, icon:UIImage, iconBg:UIColor, fill:Bool = true) {
         self.title = title
@@ -32,7 +33,7 @@ open class ISPoint {
     
     public convenience init(title:String, description:String, touchUpInside:Optional<(_ point:ISPoint) -> Void>) {
         
-        self.init(title: title, description: description, pointColor: Constants.primaryLight, lineColor: Constants.primaryDark, touchUpInside: touchUpInside, icon: UIImage(named: "location")!, iconBg: Constants.primaryLight, fill: true)
+        self.init(title: title, description: description, pointColor: Constants.colors.primaryLight, lineColor: Constants.colors.primaryDark, touchUpInside: touchUpInside, icon: UIImage(named: "location")!, iconBg: Constants.colors.primaryLight, fill: true)
     }
     
     public convenience init(title:String, touchUpInside:Optional<(_ point:ISPoint) -> Void>) {
