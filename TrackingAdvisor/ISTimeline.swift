@@ -485,18 +485,37 @@ open class ISTimeline: UIScrollView {
         feedbackView.frame = rect
 //        feedbackView.backgroundColor = UIColor.lightGray
         
-        let thumbUpPoint = CGPoint(x: 0, y: 4)
-        let thumbUpIcon = drawIcon(thumbUpPoint, fill: Constants.colors.primaryDark.cgColor, image: UIImage(named: "thumbs-up")!.withRenderingMode(.alwaysTemplate), scale: 0.6)
-        feedbackView.addSubview(thumbUpIcon)
+        let imageView = UIImageView(image: UIImage(named: "chevron-right")!.withRenderingMode(.alwaysTemplate))
+        imageView.tintColor = Constants.colors.primaryLight
+        imageView.contentMode = .scaleAspectFit
+//        imageView.frame = CGRect(x: 0, y: 0, width: 25, height: 25)
+        feedbackView.addSubview(imageView)
+
+        imageView.translatesAutoresizingMaskIntoConstraints = false
         
-        let thumbDownPoint = CGPoint(x: 50, y: 4)
-        let thumbDownIcon = drawIcon(thumbDownPoint, fill: Constants.colors.primaryDark.cgColor, image: UIImage(named: "thumbs-down")!.withRenderingMode(.alwaysTemplate), scale: 0.6)
-        feedbackView.addSubview(thumbDownIcon)
+        let imageViewTrailingConstraint = NSLayoutConstraint(item: imageView, attribute: .trailing, relatedBy: .equal, toItem: feedbackView, attribute: .trailing, multiplier: 1, constant: -15)
+        let imageViewTopConstraint = NSLayoutConstraint(item: imageView, attribute: .top, relatedBy: .equal, toItem: feedbackView, attribute: .top, multiplier: 1, constant: 8)
+        let imageViewWidthContraint = NSLayoutConstraint(item: imageView, attribute: .width, relatedBy: .equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 25)
+        let imageViewHeightConstraint = NSLayoutConstraint(item: imageView, attribute: .height, relatedBy: .equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 25)
+    feedbackView.addConstraints([imageViewTrailingConstraint,imageViewTopConstraint,imageViewWidthContraint, imageViewHeightConstraint])
         
-        let otherPoint = CGPoint(x: 100, y: 4)
-        let otherIcon = drawIcon(otherPoint, fill: Constants.colors.primaryDark.cgColor, image: UIImage(named: "chevron-right")!.withRenderingMode(.alwaysTemplate), scale: 0.6)
-        feedbackView.addSubview(otherIcon)
+        let otherLabel = UILabel()
+        otherLabel.text = "Other"
+        otherLabel.font = UIFont.italicSystemFont(ofSize: 14.0)
+        otherLabel.textAlignment = .right
+        otherLabel.textColor = Constants.colors.primaryLight
+        feedbackView.addSubview(otherLabel)
         
+        otherLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        let otherLabelTrailingConstraint = NSLayoutConstraint(item: otherLabel, attribute: .trailing, relatedBy: .equal, toItem: imageView, attribute: .leading, multiplier: 1, constant: -5)
+        let otherLabelTopConstraint = NSLayoutConstraint(item: otherLabel, attribute: .top, relatedBy: .equal, toItem: feedbackView, attribute: .top, multiplier: 1, constant: 8)
+
+        let otherLabelWidthContraint = NSLayoutConstraint(item: otherLabel, attribute: .width, relatedBy: .equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 100)
+        let otherLabelHeightContraint = NSLayoutConstraint(item: otherLabel, attribute: .height, relatedBy: .equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 25)
+
+        feedbackView.addConstraints([otherLabelTrailingConstraint, otherLabelTopConstraint, otherLabelWidthContraint, otherLabelHeightContraint])
+
         return feedbackView
     }
     
@@ -594,6 +613,7 @@ open class ISTimeline: UIScrollView {
         
         let imageView = UIImageView(image: image)
         imageView.tintColor = UIColor.white
+        imageView.contentMode = .scaleAspectFit
         imageView.frame = CGRect(x: point.x + (1.0-scale)/2*iconDiameter, y: point.y + (1.0-scale)/2*iconDiameter, width: scale*iconDiameter, height: scale*iconDiameter)
         iconView.addSubview(imageView)
         
@@ -619,9 +639,12 @@ open class ISTimeline: UIScrollView {
     override open func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         let point = touches.first!.location(in: self)
         for (index, section) in sections.enumerated() {
-            if (section.bubbleRect.contains(point)) {
+            if (section.bubbleRect.contains(point) ||
+                (section.descriptionRect != nil && section.descriptionRect!.contains(point))) {
                 points[index].touchUpInside?(points[index])
-                break
+            }
+            if (section.feedbackRect.contains(point)) {
+                points[index].feedbackTouchUpInside?(points[index])
             }
         }
     }

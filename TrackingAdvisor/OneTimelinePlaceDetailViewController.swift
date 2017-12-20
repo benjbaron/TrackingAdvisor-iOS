@@ -12,7 +12,13 @@ import Mapbox
 class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate, UITableViewDelegate, UITableViewDataSource {
     
     @IBAction func edit(_ sender: UIBarButtonItem) {
-        print("edit the place")
+        if let controller = storyboard?.instantiateViewController(withIdentifier: "PlaceFinderMapTableViewController") as? UINavigationController {
+            if let viewController = controller.topViewController as? PlaceFinderMapTableViewController {
+                viewController.visit = visit
+                viewController.title = "Edit place"
+                tabBarController?.present(controller, animated: true, completion: nil)
+            }
+        }
     }
     
     @IBAction func back(_ sender: UIBarButtonItem) {

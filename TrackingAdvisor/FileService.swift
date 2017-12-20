@@ -102,7 +102,7 @@ class FileService : NSObject {
     
     class func upload(file: URL, callback: @escaping (DataResponse<Any>) -> Void) {
         NSLog("upload file \(file)")
-        let id: String = UIDevice.current.identifierForVendor!.uuidString
+        let id: String = Settings.getUUID()
         Alamofire.upload(
             multipartFormData: { multipartFormData in
                 multipartFormData.append(file,

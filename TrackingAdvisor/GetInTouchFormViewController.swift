@@ -89,7 +89,8 @@ class GetInTouchFormViewController: FormViewController {
                     let parameters: Parameters = [
                         "device": UIDevice.current.modelName,
                         "version": UIDevice.current.systemVersion,
-                        "uuid": UIDevice.current.identifierForVendor?.uuidString ?? "",
+                        "uuid": Settings.getUUID(),
+                        "userid": Settings.getUserId(),
                         "name": strongSelf.name,
                         "email": strongSelf.email,
                         "reason": strongSelf.reason,
@@ -98,11 +99,13 @@ class GetInTouchFormViewController: FormViewController {
                     
                     Alamofire.request(Constants.urls.sendMailURL, method: .post, parameters: parameters, encoding: JSONEncoding.default)
                         .responseJSON { response in
-                            let alert = UIAlertController(title: "Message sent", message: "Thank you for getting in touch with us, we will get back to you shortly.", preferredStyle: UIAlertControllerStyle.alert)
-                            alert.addAction(UIAlertAction(title: "Done", style: UIAlertActionStyle.default) { alertAction in
-                                strongSelf.navigationController?.popViewController(animated: true)
-                            })
-                            strongSelf.present(alert, animated: true, completion: nil)
+                            if response.result.isSuccess {
+                                let alert = UIAlertController(title: "Message sent", message: "Thank you for getting in touch with us, we will get back to you shortly.", preferredStyle: UIAlertControllerStyle.alert)
+                                alert.addAction(UIAlertAction(title: "Done", style: UIAlertActionStyle.default) { alertAction in
+                                    strongSelf.navigationController?.popViewController(animated: true)
+                                })
+                                strongSelf.present(alert, animated: true, completion: nil)
+                            }
                     }
                 } else {
                     print("form is not valid")

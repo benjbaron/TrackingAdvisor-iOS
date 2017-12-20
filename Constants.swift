@@ -14,6 +14,7 @@ struct Constants {
         static let lastLocationUpdate = "lastLocationUpdate"
         static let lastFileUpdate = "lastFileUpdate"
         static let pushNotificationToken = "pushNotificationToken"
+        static let userid = "userid"
     }
     
     struct variables {
@@ -40,6 +41,7 @@ struct Constants {
         static let locationUploadURL = "http://semantica.geog.ucl.ac.uk/uploader"
         static let sendMailURL = "http://semantica.geog.ucl.ac.uk/mail"
         static let userUpdateURL = "http://semantica.geog.ucl.ac.uk/userupdate"
+        static let placeAutcompleteURL = "http://semantica.geog.ucl.ac.uk/autocomplete"
     }
     
 }

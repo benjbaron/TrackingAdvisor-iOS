@@ -32,7 +32,7 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
     
     var currentLocation:UserLocation? = nil
     var currentRegions: [CLCircularRegion] = []
-    var id: String = UIDevice.current.identifierForVendor!.uuidString
+    var id: String = Settings.getUUID()
     var locationUpdateType: LocationRegionUpdateType = .significant
     
     var regions:[CLCircularRegion] = []

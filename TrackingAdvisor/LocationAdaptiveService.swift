@@ -35,7 +35,7 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
     
     var updating = false
     var isStationary = false
-    var id: String = UIDevice.current.identifierForVendor!.uuidString
+    var id: String = Settings.getUUID()
     var bgTask = UIBackgroundTaskInvalid
     
     override init() {

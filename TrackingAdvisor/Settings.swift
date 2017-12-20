@@ -9,7 +9,7 @@
 import Foundation
 
 open class Settings {
-    open class func registerDefaults(){
+    open class func registerDefaults() {
         let defaults = UserDefaults.standard
         // Install defaults
         if (!defaults.bool(forKey: "DEFAULTS_INSTALLED")) {
@@ -18,5 +18,14 @@ open class Settings {
             defaults.set(Date(), forKey: Constants.defaultsKeys.lastLocationUpdate)
             defaults.set(String(), forKey: Constants.defaultsKeys.pushNotificationToken)
         }
+    }
+    
+    open class func getUserId() -> String {
+        let defaults = UserDefaults.standard
+        return defaults.string(forKey: Constants.defaultsKeys.userid) ?? ""
+    }
+    
+    open class func getUUID() -> String {
+        return UIDevice.current.identifierForVendor?.uuidString ?? ""
     }
 }

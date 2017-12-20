@@ -55,13 +55,24 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         
         let touchAction = { [weak self] (point:ISPoint) in
             guard let strongSelf = self else { return }
-            print("point \(point.title)")
+            print("touch action for point \(point.title)")
             print("Show map button tapped")
             // show the place detail view
             if let controller = strongSelf.storyboard?.instantiateViewController(withIdentifier: "OneTimelinePlaceDetailViewController") as? UINavigationController {
                 if let viewController = controller.topViewController as? OneTimelinePlaceDetailViewController {
                     viewController.visit = point.visit
                     print("Show OneTimelinePlaceDetailViewController")
+                    strongSelf.tabBarController?.present(controller, animated: true, completion: nil)
+                }
+            }
+        }
+        
+        let feebackTouchAction = { [weak self] (point: ISPoint) in
+            guard let strongSelf = self else { return }
+            if let controller = strongSelf.storyboard?.instantiateViewController(withIdentifier: "PlaceFinderMapTableViewController") as? UINavigationController {
+                if let viewController = controller.topViewController as? PlaceFinderMapTableViewController {
+                    viewController.visit = point.visit
+                    viewController.title = "Edit place"
                     strongSelf.tabBarController?.present(controller, animated: true, completion: nil)
                 }
             }
@@ -109,7 +120,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             
             let lineColor = Constants.colors.primaryDark
             
-            let point = ISPoint(title: placeName, description: description, pointColor: Constants.colors.primaryLight, lineColor: lineColor, touchUpInside: touchAction, icon: icon, iconBg: Constants.colors.primaryLight, fill: true)
+            let point = ISPoint(title: placeName, description: description, pointColor: Constants.colors.primaryLight, lineColor: lineColor, touchUpInside: touchAction, feedbackTouchUpInside: feebackTouchAction, icon: icon, iconBg: Constants.colors.primaryLight, fill: true)
             point.visit = visit
             timelinePoints.append(point)
             

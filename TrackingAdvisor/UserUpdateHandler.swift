@@ -49,8 +49,8 @@ struct UserUpdate: Codable {
 
 class UserUpdateHandler {
     class func retrieveLatestUserUpdates(for day: String) {
-        let userid = UIDevice.current.identifierForVendor!.uuidString
-        let day = "2017-11-21"
+        let userid = Settings.getUUID()
+        let day = "2017-11-21" // TODO: Change
         // 1 - Retreieve the data from the server
         let parameters: Parameters = ["userid": userid, "day": day]
         Alamofire.request(Constants.urls.userUpdateURL, method: .get, parameters: parameters).responseJSON { response in
@@ -61,7 +61,6 @@ class UserUpdateHandler {
                     let decoder = JSONDecoder()
                     decoder.dateDecodingStrategy = .secondsSince1970
                     let userUpdate = try decoder.decode(UserUpdate.self, from: data)
-                    //                print(userUpdate)
                     DataStoreService.shared.updateDatabase(with: userUpdate)
                 } catch {
                     print("Error serializing the json", error)
