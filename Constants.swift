@@ -31,6 +31,8 @@ struct Constants {
         static let white = UIColor.white
         static let green = UIColor.init(red: 76/255, green: 175/255, blue: 80/255, alpha: 1)
         static let noColor = UIColor.clear.cgColor
+        static let superLightGray = UIColor(red: 0.95, green: 0.95, blue: 0.95, alpha: 1.0)
+        static let darkRed = UIColor(red: 0.698, green: 0.1529, blue: 0.1529, alpha: 1.0)
     }
     
     struct filenames {

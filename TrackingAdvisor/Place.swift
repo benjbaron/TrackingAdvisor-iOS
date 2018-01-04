@@ -66,4 +66,11 @@ class Place: NSManagedObject {
         
         return place
     }
+    
+    func formatAddressString() -> String {
+        let addressString = address ?? ""
+        let cityString = city ?? ""
+        let sep = addressString != "" && cityString != "" ? ", " : ""
+        return addressString + sep + cityString
+    }
 }

@@ -15,15 +15,28 @@ class PlaceFinderTableViewCell: UITableViewCell {
     @IBOutlet weak var placeAddress: UILabel!
     @IBOutlet weak var placeName: UILabel!
     @IBOutlet weak var icon: UIImageView!
+    var place: PlaceSearchResultDetail?
+    var name: String?
+    var city: String?
+    var street: String?
 }
 
 struct PlaceSearchResult: Codable {
+    let street: String?
+    let city: String?
+    let places: [PlaceSearchResultDetail]
+}
+
+struct PlaceSearchResultDetail: Codable {
     let name: String
     let placeid: String
     let category: String
     let city: String
+    let address: String
     let distance: Float
     let origin: String
+    let longitude: Double
+    let latitude: Double
 }
 
 class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate {
@@ -49,13 +62,14 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         visitEndDate.text = DateHandler.dateToLetterAndPeriod(from: sender.date)
     }
     
-    @IBOutlet weak var mapHeightContraint: NSLayoutConstraint!
+    @IBOutlet var mapHeightContraint: NSLayoutConstraint!
     @IBOutlet weak var searchbar: UISearchBar!
     @IBOutlet weak var table: UITableView!
     @IBOutlet weak var map: MGLMapView!
     
     // IBOutlets for the visit identity view
     @IBOutlet weak var placeName: UILabel!
+    @IBOutlet weak var placeAddress: UILabel!
     @IBOutlet weak var visitStartDate: UILabel!
     @IBOutlet weak var visitEndDate: UILabel!
     @IBOutlet weak var startDatePicker: UIDatePicker!
@@ -74,7 +88,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     var searchActive: Bool = false
     var marker = UIImageView()
     var isFetchingFromServer = false
-    var places:[PlaceSearchResult] = []
+    var searchResult:PlaceSearchResult? = nil
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -97,13 +111,17 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         
         // set up the visit identity view
         if let visit = visit {
-            placeName.text = visit.place?.name
+            if let place = visit.place {
+                placeName.text = place.name
+                placeAddress.text = place.formatAddressString()
+            }
             visitStartDate.text = DateHandler.dateToLetterAndPeriod(from: visit.arrival!)
             visitStartDate.textColor = Constants.colors.primaryDark
             visitEndDate.text = DateHandler.dateToLetterAndPeriod(from: visit.departure!)
             visitEndDate.textColor = Constants.colors.primaryDark
         }
         visitIdentityHeightConstraint.isActive = false
+        mapHeightContraint.isActive = false
         
         // set up the gesture recognizer to enable the start and end date pickers
         let startDatePickerGesture = UITapGestureRecognizer(target: self, action: #selector (self.toggleStartDatePicker (_:)))
@@ -144,6 +162,8 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         // Enable keyboard notifications
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+        
+        view.layoutIfNeeded()
     }
 
     override func didReceiveMemoryWarning() {
@@ -154,18 +174,68 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     // MARK: - UITableViewDataSource delegate
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return places.count
+        let offset = (searchbar.text ?? "") == "" ? 0 : 1
+        if let places = searchResult?.places {
+            return places.count+offset
+        } else {
+            return offset
+        }
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "locationSearchResult", for: indexPath) as! PlaceFinderTableViewCell
-        let place = places[indexPath.row]
-        cell.placeName.text = place.name
-        cell.placeAddress.text = place.city
-        cell.icon.image = UIImage(named: "map-marker")!.withRenderingMode(.alwaysTemplate)
-        cell.icon.tintColor = Constants.colors.primaryLight
-        cell.icon.contentMode = .scaleAspectFit
+        let offset = (searchbar.text ?? "") == "" ? 0 : 1
+        guard let searchResult = searchResult else { return cell }
+        if let searchText = searchbar.text, offset == 1 && indexPath.row == 0  {
+            // this is a user-custom place
+            let formattedString = NSMutableAttributedString()
+            formattedString
+                .normal("Enter new place ")
+                .bold("\(searchText)")
+            cell.placeName.attributedText = formattedString
+            cell.placeAddress.text = "Near \(formatAddress(street: searchResult.street, city: searchResult.city))"
+            cell.icon.image = UIImage(named: "plus-circle")!.withRenderingMode(.alwaysTemplate)
+            cell.icon.tintColor = Constants.colors.primaryDark
+            cell.icon.contentMode = .scaleAspectFit
+            cell.place = nil
+            cell.name = searchText
+            cell.city = searchResult.city
+            cell.street = searchResult.street
+        } else {
+            // this is a search result place
+            let place = searchResult.places[indexPath.row-offset]
+            cell.placeName.text = place.name
+            cell.placeAddress.text = place.city
+            cell.icon.image = UIImage(named: "map-marker")!.withRenderingMode(.alwaysTemplate)
+            cell.icon.tintColor = Constants.colors.primaryLight
+            cell.icon.contentMode = .scaleAspectFit
+            cell.place = place
+        }
+        
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if let cell = table.cellForRow(at: indexPath) as? PlaceFinderTableViewCell {
+            if let place = cell.place {
+                print("clicked on cell \(place.name)")
+                // select the place
+                placeName.text = place.name
+                placeAddress.text = formatAddress(street: place.address, city: place.city)
+                map.centerCoordinate = CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude)
+            } else {
+                if indexPath.row == 0 {
+                    // selec the new place
+                    placeName.text = cell.name ?? ""
+                    placeAddress.text = formatAddress(street: cell.street, city: cell.city)
+                }
+            }
+            tableView.deselectRow(at: indexPath, animated: true)
+            if isFolded {
+                unfoldMapView()
+            }
+        }
+            
     }
     
     // MARK: - UISearchBarDelegate Delegate
@@ -183,14 +253,12 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         searchActive = false
         searchBar.text = ""
         if isFolded {
-            view.endEditing(true)
             unfoldMapView()
         }
     }
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         searchActive = false
-        view.endEditing(true)
         unfoldMapView()
     }
     
@@ -236,7 +304,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()
-                        strongSelf.places = try decoder.decode([PlaceSearchResult].self, from: data)
+                        strongSelf.searchResult = try decoder.decode(PlaceSearchResult.self, from: data)
                         strongSelf.table.reloadData()
                     } catch {
                         print("Error serializing the json", error)
@@ -252,7 +320,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         isAnimating = true
         UIView.animate(withDuration: 0.5, animations: { [weak self] in
             guard let strongSelf = self else { return }
-            strongSelf.mapHeightContraint?.constant = 100
+            strongSelf.mapHeightContraint.isActive = true
             strongSelf.visitIdentityHeightConstraint.isActive = true
 //            strongSelf.marker.frame = mapHeightContraint.constant / 2 - strongSelf.marker.frame.height
             strongSelf.view.layoutIfNeeded()
@@ -266,10 +334,11 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     }
     
     private func unfoldMapView() {
+        view.endEditing(true)
         isAnimating = true
         UIView.animate(withDuration: 0.5, animations: { [weak self] in
             guard let strongSelf = self else { return }
-            strongSelf.mapHeightContraint.constant = 250
+            strongSelf.mapHeightContraint.isActive = false
             strongSelf.visitIdentityHeightConstraint.isActive = false
 //            strongSelf.marker.frame.y = mapHeightContraint.constant / 2 - strongSelf.marker.frame.height
             strongSelf.view.layoutIfNeeded()
@@ -331,6 +400,13 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                 }
         })
     }
+    
+    private func formatAddress(street: String?, city: String?) -> String {
+        let addressString = street ?? ""
+        let cityString = city ?? ""
+        let sep = addressString != "" && cityString != "" ? ", " : ""
+        return addressString + sep + cityString
+    }
 
     // MARK: - Keyboard notifications
     @objc func keyboardWillShow(_ notification: NSNotification){
@@ -359,18 +435,4 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     }
     */
 
-}
-
-
-extension UITableView {
-    func keyboardRaised(height: CGFloat){
-        self.contentInset.bottom = height
-        self.scrollIndicatorInsets.bottom = height
-    }
-    
-    func keyboardClosed(){
-        self.contentInset.bottom = 0
-        self.scrollIndicatorInsets.bottom = 0
-        self.scrollRectToVisible(CGRect.zero, animated: true)
-    }
 }
