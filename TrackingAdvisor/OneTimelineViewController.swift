@@ -55,16 +55,15 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         
         let touchAction = { [weak self] (point:ISPoint) in
             guard let strongSelf = self else { return }
-            print("touch action for point \(point.title)")
-            print("Show map button tapped")
-            // show the place detail view
-            if let controller = strongSelf.storyboard?.instantiateViewController(withIdentifier: "OneTimelinePlaceDetailViewController") as? UINavigationController {
-                if let viewController = controller.topViewController as? OneTimelinePlaceDetailViewController {
-                    viewController.visit = point.visit
-                    print("Show OneTimelinePlaceDetailViewController")
-                    strongSelf.tabBarController?.present(controller, animated: true, completion: nil)
-                }
-            }
+            
+            // Load the place detail view and the navigation controller
+            let controller: OneTimelinePlaceDetailViewController? = OneTimelinePlaceDetailViewController()
+            controller?.visit = point.visit
+            let controllerNavigation = UINavigationController(rootViewController: controller!)
+            controllerNavigation.modalTransitionStyle = .crossDissolve
+            controllerNavigation.modalPresentationStyle = .fullScreen
+            strongSelf.present(controllerNavigation, animated: true, completion: nil)
+            // TODO: Implement a push-style animation
         }
         
         let feebackTouchAction = { [weak self] (point: ISPoint) in

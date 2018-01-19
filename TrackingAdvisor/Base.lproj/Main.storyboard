@@ -53,8 +53,8 @@
                     </tabBar>
                     <connections>
                         <segue destination="6Zi-sN-QSn" kind="relationship" relationship="viewControllers" id="dPF-jm-r3h"/>
-                        <segue destination="z95-xf-Auk" kind="relationship" relationship="viewControllers" id="9Ng-Pp-9tW"/>
                         <segue destination="yzb-Jj-agW" kind="relationship" relationship="viewControllers" id="Lrb-QS-ZBh"/>
+                        <segue destination="wcP-Qi-EBO" kind="relationship" relationship="viewControllers" id="D5D-EB-iHf"/>
                         <segue destination="gB2-OU-cZi" kind="relationship" relationship="viewControllers" id="fc5-vb-wjA"/>
                     </connections>
                 </tabBarController>
@@ -388,13 +388,13 @@
                                 </connections>
                             </view>
                             <containerView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="0Kz-yk-IkG">
-                                <rect key="frame" x="0.0" y="371" width="375" height="247"/>
+                                <rect key="frame" x="0.0" y="371" width="375" height="296"/>
                                 <connections>
                                     <segue destination="qvv-3w-mfW" kind="embed" id="Hud-xf-26d"/>
                                 </connections>
                             </containerView>
                             <containerView opaque="NO" alpha="0.0" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="5kN-L0-bnV">
-                                <rect key="frame" x="0.0" y="371" width="375" height="247"/>
+                                <rect key="frame" x="0.0" y="371" width="375" height="296"/>
                                 <connections>
                                     <segue destination="A76-Li-jOv" kind="embed" id="73D-10-WkM"/>
                                 </connections>
@@ -458,14 +458,14 @@
             <objects>
                 <viewController id="qvv-3w-mfW" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="pLo-14-OTZ">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="247"/>
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="296"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ZwL-nT-aSq">
-                                <rect key="frame" x="67" y="59" width="240" height="128"/>
+                                <rect key="frame" x="67" y="59" width="240" height="177"/>
                                 <subviews>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Hello" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="WCB-QJ-GHs">
-                                        <rect key="frame" x="91" y="54" width="58" height="21"/>
+                                        <rect key="frame" x="91" y="54" width="58" height="70"/>
                                         <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
                                         <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                         <nil key="highlightedColor"/>
@@ -499,11 +499,11 @@
             <objects>
                 <viewController id="A76-Li-jOv" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="ayg-U6-A8a">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="247"/>
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="296"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="vBx-rp-tgB">
-                                <rect key="frame" x="0.0" y="0.0" width="375" height="247"/>
+                                <rect key="frame" x="0.0" y="0.0" width="375" height="296"/>
                             </mapView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -521,21 +521,31 @@
             <point key="canvasLocation" x="-690.39999999999998" y="1873.313343328336"/>
         </scene>
         <!--Profile-->
+        <scene sceneID="fU5-Xi-1Wf">
+            <objects>
+                <viewController id="wcP-Qi-EBO" customClass="ProfileViewController" customModule="TrackingAdvisor" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="75v-pQ-TwU">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <viewLayoutGuide key="safeArea" id="ocO-BK-rnJ"/>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Profile" image="profile" id="Ygt-8L-FMs"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="y65-4a-CFT" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="845.60000000000002" y="-1486.5067466266867"/>
+        </scene>
+        <!--Review-->
         <scene sceneID="cHO-1Y-9cq">
             <objects>
-                <viewController id="yzb-Jj-agW" customClass="ProfileViewController" customModule="TrackingAdvisor" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="yzb-Jj-agW" customClass="PlaceReviewViewController" customModule="TrackingAdvisor" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="QTm-Ay-PkC">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Places to review" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YQg-1j-7Jp">
-                                <rect key="frame" x="16" y="56" width="283" height="43"/>
-                                <fontDescription key="fontDescription" type="system" weight="heavy" pointSize="36"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="Ve2-ON-vWx">
-                                <rect key="frame" x="0.0" y="107" width="375" height="511"/>
+                                <rect key="frame" x="0.0" y="120" width="375" height="498"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                 <collectionViewLayout key="collectionViewLayout" id="OlA-87-uwl" customClass="PlaceReviewLayout" customModule="TrackingAdvisor" customModuleProvider="target"/>
                                 <cells>
@@ -554,22 +564,20 @@
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="Ve2-ON-vWx" firstAttribute="leading" secondItem="MOS-JZ-012" secondAttribute="leading" id="3Ra-hg-szC"/>
-                            <constraint firstItem="YQg-1j-7Jp" firstAttribute="top" secondItem="MOS-JZ-012" secondAttribute="top" constant="36" id="75I-B9-Ubr"/>
+                            <constraint firstItem="Ve2-ON-vWx" firstAttribute="top" secondItem="MOS-JZ-012" secondAttribute="top" constant="100" id="5nv-s7-KAs"/>
                             <constraint firstItem="Ve2-ON-vWx" firstAttribute="trailing" secondItem="MOS-JZ-012" secondAttribute="trailing" id="O2u-y5-ZcQ"/>
-                            <constraint firstItem="YQg-1j-7Jp" firstAttribute="leading" secondItem="MOS-JZ-012" secondAttribute="leading" constant="16" id="QtV-n6-yN1"/>
                             <constraint firstItem="Ve2-ON-vWx" firstAttribute="bottom" secondItem="MOS-JZ-012" secondAttribute="bottom" id="Y3h-dQ-qmG"/>
-                            <constraint firstItem="Ve2-ON-vWx" firstAttribute="top" secondItem="YQg-1j-7Jp" secondAttribute="bottom" constant="8" id="p6U-wN-sN6"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="MOS-JZ-012"/>
                     </view>
-                    <tabBarItem key="tabBarItem" title="Profile" image="profile" id="7V7-Vp-ngT"/>
+                    <tabBarItem key="tabBarItem" title="Review" image="check-tabbar" selectedImage="check-tabbar" id="7V7-Vp-ngT"/>
                     <connections>
                         <outlet property="collectionView" destination="Ve2-ON-vWx" id="dC9-Py-cAt"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3u9-jd-v0K" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="789.60000000000002" y="-854.1229385307347"/>
+            <point key="canvasLocation" x="846" y="-694"/>
         </scene>
         <!--Settings-->
         <scene sceneID="dx7-t7-TJ1">
@@ -634,7 +642,7 @@
         <!--Home-->
         <scene sceneID="14o-sH-3Ow">
             <objects>
-                <viewController id="fxK-4h-o4s" customClass="OneTimelinePlaceDetailViewController" customModule="TrackingAdvisor" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="fxK-4h-o4s" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="iVz-eh-71t">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -1066,6 +1074,7 @@
     <resources>
         <image name="angle-left" width="32" height="32"/>
         <image name="calendar" width="30" height="30"/>
+        <image name="check-tabbar" width="30" height="30"/>
         <image name="profile" width="24" height="24"/>
         <image name="settings" width="30" height="30"/>
         <image name="timeline" width="24" height="24"/>

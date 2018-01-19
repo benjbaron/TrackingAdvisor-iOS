@@ -20,13 +20,19 @@ class DateHandler {
         formatter.dateFormat = "HH:mm:ss"
         return formatter.string(from: date)
     }
+    
     class func dateToLetterAndPeriod(from date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d, yyyy"
-        var str = formatter.string(from: date)
-        formatter.dateFormat = "h:mm a"
-        str += " at " + formatter.string(from: date)
+        var str = Formatter.customDateLetter.string(from: date)
+        str += " at " + Formatter.timePeriod.string(from: date)
         return str
+    }
+    
+    class func dateToDayLetterString(from date: Date) -> String {
+        return Formatter.customFullDateLetter.string(from: date)
+    }
+    
+    class func dateToTimePeriodString(from date: Date) -> String {
+        return Formatter.timePeriod.string(from: date)
     }
 }
 
@@ -39,6 +45,11 @@ extension Formatter {
     static let customDateLetter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d, yyyy"
+        return formatter
+    }()
+    static let customFullDateLetter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM d, yyyy"
         return formatter
     }()
     static let time:DateFormatter = {
@@ -109,12 +120,46 @@ extension Date {
         let date = Calendar.current.date(byAdding: components, to: self.startOfDay)
         return (date?.addingTimeInterval(-1))!
     }
-
-
 }
 
 extension String {
     var customDate: Date? {
         return Formatter.customDate.date(from: self)
+    }
+}
+
+extension TimeInterval {
+    func timeIntervalToString() -> String {
+        let ti = Int(self)
+        
+        let seconds = ti % 60
+        let minutes = (ti / 60) % 60
+        let hours = (ti / 3600)
+        
+        if hours != 0 {
+            let hour_string = hours > 1 ? "hours" : "hour"
+            if 0 ... 10 ~= minutes {
+                return "just over \(hours) \(hour_string)"
+            } else if 10 ... 50 ~= minutes {
+                return "\(hours) \(hour_string) and \(minutes) minutes"
+            } else {
+                return "almost \(hours+1) \(hour_string)"
+            }
+        } else if minutes != 0 {
+            if 0 ... 10 ~= minutes {
+                return "a few minutes"
+            } else if 10 ... 50 ~= minutes {
+                return "\(minutes) minutes"
+            } else {
+                return "almost one hour"
+            }
+        } else if seconds != 0 {
+            if 0 ... 30 ~= seconds {
+                return "a few seconds"
+            } else {
+                return "almost a minute"
+            }
+        }
+        return ""
     }
 }

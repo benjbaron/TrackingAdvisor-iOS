@@ -2,45 +2,67 @@
 //  ProfileViewController.swift
 //  TrackingAdvisor
 //
-//  Created by Benjamin BARON on 12/22/17.
-//  Copyright © 2017 Benjamin BARON. All rights reserved.
+//  Created by Benjamin BARON on 1/5/18.
+//  Copyright © 2018 Benjamin BARON. All rights reserved.
 //
 
 import UIKit
 
-class ProfileViewController: UIViewController, UICollectionViewDataSource {
+class ProfileViewController: UIViewController, UIScrollViewDelegate {
     
-    @IBOutlet weak var collectionView: UICollectionView!
+    // From https://developer.apple.com/library/content/technotes/tn2154/_index.html
+
+    var scrollView : UIScrollView!
+    var contentView : UIView!
     
-    var flowLayout: PlaceReviewLayout!
+    var mainTitle: UILabel = {
+        let label = UILabel()
+        label.text = "About you"
+        label.textAlignment = .left
+        label.font = UIFont.systemFont(ofSize: 36, weight: .heavy)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
     
-    let placeReviews = PlaceReview.getSamplePlaceReviews()
-    let cellId = "PlaceReviewCell"
+    var studySummary: InfoCardView = {
+        return InfoCardView(bigText: BigText(bigText: "28", smallBottomText: "DAYS"),
+                            descriptionText: "You have been participating in the study for 28 days!")
+    }()
+    
+    var studyStats: StatsCardView = {
+        return StatsCardView(statsOne: BigText(bigText: "28.1", smallBottomText: "DAYS AND\nNIGHTS"),
+                             statsTwo: BigText(bigText: "28", smallBottomText: "DAYS"),
+                             statsThree: BigText(bigText: "28", smallBottomText: "DAYS"))
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        collectionView.dataSource = self
-        flowLayout = collectionView.collectionViewLayout as! PlaceReviewLayout
+        self.view = UIView(frame: CGRect.zero)
+        scrollView = UIScrollView(frame:CGRect.zero)
+        scrollView.sizeToFit()
+        scrollView.alwaysBounceVertical = true
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.backgroundColor = UIColor.white
+        self.view.addSubview(scrollView)
         
-        let collectionViewBounds = collectionView.bounds
-        flowLayout.cellWidth = floor(collectionViewBounds.width * flowLayout.xCellFrameScaling)
-        flowLayout.cellHeight = floor(collectionViewBounds.height * flowLayout.yCellFrameScaling)
+        contentView = UIView()
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.backgroundColor = UIColor.white
+        scrollView.addSubview(contentView)
         
-        let insetX = floor((collectionViewBounds.width - flowLayout.cellWidth) / 2.0)
-        let insetY = floor((collectionViewBounds.height - flowLayout.cellHeight) / 2.0)
+        self.view.addVisualConstraint("H:|[scrollView]|", views: ["scrollView" : scrollView])
+        self.view.addVisualConstraint("V:|[scrollView]|", views: ["scrollView" : scrollView])
         
-        print("collectionview width: \(collectionViewBounds.width)")
-        print("insetX: \(insetX)")
-        print("cell width: \(flowLayout.cellWidth)")
+        scrollView.addVisualConstraint("H:|[contentView]|", views: ["contentView" : contentView])
+        scrollView.addVisualConstraint("V:|[contentView]|", views: ["contentView" : contentView])
         
-        // configure the flow layout
-        flowLayout.itemSize = CGSize(width: flowLayout.cellWidth, height: flowLayout.cellHeight)
-        flowLayout.minimumInteritemSpacing = insetX - 25.0 // to show the next cell
-        flowLayout.minimumLineSpacing = insetX - 25 // to show the next cell
-        collectionView.isPagingEnabled = false
-        
-        collectionView.contentInset = UIEdgeInsets(top: insetY, left: insetX, bottom: insetY, right: insetX)
+        // make the width of content view to be the same as that of the containing view.
+        self.view.addVisualConstraint("H:[contentView(==mainView)]", views: ["contentView" : contentView, "mainView" : self.view])
+
+
+        scrollView.delegate = self
+        setupViews()
     }
     
     override func didReceiveMemoryWarning() {
@@ -48,32 +70,21 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource {
         // Dispose of any resources that can be recreated.
     }
     
-    
-    // MARK: - UICollectionViewDataSource deleagte methods
-    func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return 1
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return placeReviews.count
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! PlaceReviewCell
-        cell.parent = collectionView
-        cell.indexPath = indexPath
-        cell.last = indexPath.item + 1 == collectionView.numberOfItems(inSection: indexPath.section)
-        cell.placeReview = placeReviews[indexPath.item]
-        cell.answerQuestionPlace = placeReviews[indexPath.item].answerQuestionPlace
-        cell.answerQuestionPersonalInformation = placeReviews[indexPath.item].answerQuestionPersonalInformation
-        cell.answerQuestionExplanation = placeReviews[indexPath.item].answerQuestionExplanation
-        cell.answerQuestionPrivacy = placeReviews[indexPath.item].answerQuestionPrivacy
+    func setupViews() {
+        contentView.addSubview(mainTitle)
+        contentView.addVisualConstraint("H:|-16-[v0]-|", views: ["v0": mainTitle])
+        contentView.addVisualConstraint("V:|-48-[v0(40)]", views: ["v0": mainTitle])
+
+        contentView.addSubview(studySummary)
+        contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0":studySummary])
+        contentView.addVisualConstraint("V:[v0]-16-[v1]", views: ["v0": mainTitle, "v1":studySummary])
         
-        return cell
+        contentView.addSubview(studyStats)
+        contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0":studyStats])
+        contentView.addVisualConstraint("V:[v0]-16-[v1]|", views: ["v0": studySummary, "v1":studyStats])
     }
     
-    
-    
+
     /*
     // MARK: - Navigation
 
@@ -86,425 +97,237 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource {
 
 }
 
-class PlaceReview {
-    var backgroundColor: UIColor = .clear
-    var placeName: String = ""
-    var placeAddress: String = ""
-    var placePersonalInformation: String = ""
-    var answerQuestionPlace: QuestionAnswer = .none
-    var answerQuestionPersonalInformation: QuestionAnswer = .none
-    var answerQuestionExplanation: QuestionAnswer = .none
-    var answerQuestionPrivacy: QuestionAnswer = .none
-    
-    init(backgroundColor: UIColor, placeName: String, placeAddress: String, placePersonalInformation: String) {
-        self.backgroundColor = backgroundColor
-        self.placeName = placeName
-        self.placeAddress = placeAddress
-        self.placePersonalInformation = placePersonalInformation
+class InfoCardView: UIView {
+    var bigTextColor: UIColor = Constants.colors.primaryDark {
+        didSet {
+            bigTextLabel.color = bigTextColor
+        }
+    }
+    var bigText: BigText = BigText() {
+        didSet {
+            bigTextLabel.bigText = bigText
+        }
+    }
+    var descriptionTextColor: UIColor = Constants.colors.primaryLight {
+        didSet {
+            descriptionTextLabel.textColor = descriptionTextColor
+        }
+    }
+    var descriptionText: String = "" {
+        didSet {
+            descriptionTextLabel.text = descriptionText
+        }
     }
     
-    class func getSamplePlaceReviews() -> [PlaceReview] {
-        let placeReviews = [
-            PlaceReview(backgroundColor: Constants.colors.darkRed, placeName: "UCL", placeAddress: "Gower St", placePersonalInformation: "Occupation"),
-            PlaceReview(backgroundColor: .orange, placeName: "Tap No 114", placeAddress: "Tottenam Court Road", placePersonalInformation: "Activity, Interest, Social status"),
-            PlaceReview(backgroundColor: .blue, placeName: "Stick'n'Sushi", placeAddress: "Henrietta St", placePersonalInformation: "Activity, Interest, Social status"),
-            PlaceReview(backgroundColor: .red, placeName: "Subway", placeAddress: "Tottenam Court Road", placePersonalInformation: "Activity"),
-            PlaceReview(backgroundColor: .purple, placeName: "Google", placeAddress: "St Pancras Sq", placePersonalInformation: "Occupation, Social status"),
-            PlaceReview(backgroundColor: .gray, placeName: "Euston Station", placeAddress: "Euston Road", placePersonalInformation: "Activity")
-        ]
-        return placeReviews
-    }
-}
-
-class PlaceReviewCell: UICollectionViewCell {
-    weak var parent: UICollectionView?
-    var indexPath: IndexPath?
-    var last: Bool = false
+    lazy var bigTextLabel: BigLabel = {
+        return BigLabel(bigText: bigText, color: bigTextColor)
+    }()
     
-    let placeNameLabel: UILabel = {
+    lazy var descriptionTextLabel: UILabel = {
         let label = UILabel()
-        label.text = "place name"
-        label.font = UIFont.boldSystemFont(ofSize: 20.0)
-        label.textColor = UIColor.white
-        label.textAlignment = .center
+        label.text = descriptionText
+        label.textAlignment = .left
+        label.numberOfLines = 0
+        label.font = UIFont.systemFont(ofSize: 18, weight: .bold)
+        label.textColor = descriptionTextColor
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-    let placeAddressLabel: UILabel = {
-        let label = UILabel()
-        label.text = "place address"
-        label.font = UIFont.systemFont(ofSize: 14)
-        label.textColor = Constants.colors.white
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    let placePersonalInformationLabel: UILabel = {
-        let label = UILabel()
-        label.text = "place personal information"
-        label.font = UIFont.systemFont(ofSize: 16)
-        label.textColor = Constants.colors.superLightGray
-        label.textAlignment = .center
-        label.numberOfLines = 0 // as many lines as necessary
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    let headerView: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor.lightGray
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-    
-    lazy var questionPlaceView: QuestionRow = {
-        return QuestionRow(with: "Did you visit this place?", yesAction: { [weak self] in
-            self?.answerQuestionPlace = .yes
-        }, noAction: { [weak self] in
-            self?.answerQuestionPlace = .no
-        })
-    }()
-    
-    var answerQuestionPlace: QuestionAnswer = .none {
-        didSet {
-            placeReview?.answerQuestionPlace = answerQuestionPlace
-            questionPlaceView.selected = answerQuestionPlace
-            switch answerQuestionPlace {
-            case .yes:
-                UIView.animate(withDuration: 0.1) {
-                    self.placeEditViewHeight?.constant = 0
-                    self.placeEditViewTopMargin?.constant = 0
-                    self.questionPersonalInformationViewHeight?.constant = 40
-                    self.questionPersonalInformationViewTopMargin?.constant = 8
-                    self.questionExplanationViewHeight?.constant = 40
-                    self.questionExplanationViewTopMargin?.constant = 8
-                    self.questionPrivacyViewHeight?.constant = 40
-                    self.questionPrivacyViewTopMargin?.constant = 8
-                    self.layoutIfNeeded()
-                }
-            case .no:
-                UIView.animate(withDuration: 0.1) {
-                    self.placeEditViewHeight?.constant = 40
-                    self.placeEditViewTopMargin?.constant = 8
-                    self.questionPersonalInformationViewHeight?.constant = 0
-                    self.questionPersonalInformationViewTopMargin?.constant = 0
-                    self.questionExplanationViewHeight?.constant = 0
-                    self.questionExplanationViewTopMargin?.constant = 0
-                    self.questionPrivacyViewHeight?.constant = 0
-                    self.questionPrivacyViewTopMargin?.constant = 0
-                    self.layoutIfNeeded()
-                }
-            case .none:
-                self.placeEditViewHeight?.constant = 0
-                self.placeEditViewTopMargin?.constant = 0
-                self.questionPersonalInformationViewHeight?.constant = 0
-                self.questionPersonalInformationViewTopMargin?.constant = 0
-                self.questionExplanationViewHeight?.constant = 0
-                self.questionExplanationViewTopMargin?.constant = 0
-                self.questionPrivacyViewHeight?.constant = 0
-                self.questionPrivacyViewTopMargin?.constant = 0
-                self.layoutIfNeeded()
-            }
-        }
+    override init(frame: CGRect) {
+        super.init(frame: frame)
     }
     
-    let placeEditView: CommentRow = {
-        return CommentRow(with: "It would be great if you could tell us what place you visited", icon: "chevron-right", backgroundColor: UIColor.clear) {
-            print("tapped on place edit")
-        }
-    }()
-    var placeEditViewHeight: NSLayoutConstraint?
-    var placeEditViewTopMargin: NSLayoutConstraint?
-    
-    lazy var questionPersonalInformationView: QuestionRow = {
-        return QuestionRow(with: "Is the personal information correct?", yesAction: { [weak self] in
-            self?.answerQuestionPersonalInformation = .yes
-        }, noAction: { [weak self] in
-            self?.answerQuestionPersonalInformation = .no
-        })
-    }()
-    var questionPersonalInformationViewHeight: NSLayoutConstraint?
-    var questionPersonalInformationViewTopMargin: NSLayoutConstraint?
-    
-    var answerQuestionPersonalInformation: QuestionAnswer = .none {
-        didSet {
-            placeReview?.answerQuestionPersonalInformation = answerQuestionPersonalInformation
-            questionPersonalInformationView.selected = answerQuestionPersonalInformation
-        }
-    }
-    
-    lazy var questionExplanationView: QuestionRow = {
-        return QuestionRow(with: "Is the explanation informative?", yesAction: { [weak self] in
-            self?.answerQuestionExplanation = .yes
-            }, noAction: { [weak self] in
-                self?.answerQuestionExplanation = .no
-        })
-    }()
-    var questionExplanationViewHeight: NSLayoutConstraint?
-    var questionExplanationViewTopMargin: NSLayoutConstraint?
-    
-    var answerQuestionExplanation: QuestionAnswer = .none {
-        didSet {
-            placeReview?.answerQuestionExplanation = answerQuestionExplanation
-            questionExplanationView.selected = answerQuestionExplanation
-        }
-    }
-    
-    lazy var questionPrivacyView: QuestionRow = {
-        return QuestionRow(with: "Is the inferred information sensitive to you?", yesAction: { [weak self] in
-            self?.answerQuestionPrivacy = .yes
-            }, noAction: { [weak self] in
-                self?.answerQuestionPrivacy = .no
-        })
-    }()
-    var questionPrivacyViewHeight: NSLayoutConstraint?
-    var questionPrivacyViewTopMargin: NSLayoutConstraint?
-    
-    var answerQuestionPrivacy: QuestionAnswer = .none {
-        didSet {
-            placeReview?.answerQuestionPrivacy = answerQuestionPrivacy
-            questionPrivacyView.selected = answerQuestionPrivacy
-        }
-    }
-    
-    lazy var nextPlaceView: BottomCell = {
-        var text = "Next place"
-        return BottomCell(with: text, backgroundColor: Constants.colors.primaryDark) { [weak self] in
-            guard let strongSelf = self else { return }
-            if let indexPath = strongSelf.indexPath {
-                if !strongSelf.last {
-                    strongSelf.parent?.scrollToItem(at: IndexPath(item: indexPath.item+1, section:indexPath.section), at: .centeredHorizontally, animated: true)
-                }
-            }
-        }
-    }()
-    
-    func clearAllQuestions() {
-        questionPlaceView.selected = .none
-        questionPersonalInformationView.selected = .none
-        questionExplanationView.selected = .none
-        questionPrivacyView.selected = .none
-    }
-    
-    var placeReview: PlaceReview? {
-        didSet {
-            self.updateUI()
-        }
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
+    convenience init(bigText: BigText, descriptionText: String) {
+        self.init(frame: CGRect.zero)
+        
+        self.bigText = bigText
+        self.descriptionText = descriptionText
         setupViews()
     }
     
-    private func updateUI() {
-        if let review = placeReview {
-            self.placeNameLabel.text = review.placeName
-            self.placeAddressLabel.text = review.placeAddress
-            self.placePersonalInformationLabel.text = "This place gives personal information about \(review.placePersonalInformation)"
-            self.headerView.backgroundColor = review.backgroundColor
-            self.nextPlaceView.backgroundColor = review.backgroundColor.withAlphaComponent(0.5)
-            self.nextPlaceView.text = last ? "Thank You!" : "Next place"
-        } else {
-            self.headerView.backgroundColor = .clear
-            self.nextPlaceView.backgroundColor = Constants.colors.primaryDark
-            self.placeNameLabel.text = ""
-            self.placeAddressLabel.text = ""
-            self.placePersonalInformationLabel.text = ""
-            self.nextPlaceView.text = ""
-        }
-    }
-    
-    func setupViews() {
-        addSubview(headerView)
-        headerView.addSubview(placeNameLabel)
-        headerView.addSubview(placeAddressLabel)
-        headerView.addSubview(placePersonalInformationLabel)
-        addSubview(questionPlaceView)
-        addSubview(placeEditView)
-        addSubview(questionPersonalInformationView)
-        addSubview(questionExplanationView)
-        addSubview(questionPrivacyView)
-        addSubview(nextPlaceView)
-        
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[v0(150)]", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": headerView]))
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": headerView]))
-        
-        headerView.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|-15-[title(30)][address]-15-[info]", options: NSLayoutFormatOptions(), metrics: nil, views: ["title": placeNameLabel, "address": placeAddressLabel, "info": placePersonalInformationLabel]))
-        
-        headerView.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-10-[title]-10-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["title": placeNameLabel]))
-        headerView.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-10-[address]-10-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["address": placeAddressLabel]))
-        headerView.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-10-[info]-10-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["info": placePersonalInformationLabel]))
-        
-        
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:[header]-[v0(40)]", options: NSLayoutFormatOptions(), metrics: nil, views: ["header": headerView, "v0": questionPlaceView]))
-        
-        placeEditViewHeight = NSLayoutConstraint(item: placeEditView, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: 0)
-        placeEditViewHeight?.priority = UILayoutPriority(rawValue: 1000)
-        placeEditViewHeight?.isActive = true
-        
-        placeEditViewTopMargin = NSLayoutConstraint(item: placeEditView, attribute: .top, relatedBy: .equal, toItem: questionPlaceView, attribute: .bottom, multiplier: 1, constant: 0)
-        placeEditViewTopMargin?.priority = UILayoutPriority(rawValue: 1000)
-        placeEditViewTopMargin?.isActive = true
-        
-        questionPersonalInformationViewHeight = NSLayoutConstraint(item: questionPersonalInformationView, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: 0)
-        questionPersonalInformationViewHeight?.priority = UILayoutPriority(rawValue: 1000)
-        questionPersonalInformationViewHeight?.isActive = true
-        
-        questionPersonalInformationViewTopMargin = NSLayoutConstraint(item: questionPersonalInformationView, attribute: .top, relatedBy: .equal, toItem: placeEditView, attribute: .bottom, multiplier: 1, constant: 0)
-        questionPersonalInformationViewTopMargin?.priority = UILayoutPriority(rawValue: 1000)
-        questionPersonalInformationViewTopMargin?.isActive = true
-
-        questionExplanationViewHeight = NSLayoutConstraint(item: questionExplanationView, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: 0)
-        questionExplanationViewHeight?.priority = UILayoutPriority(rawValue: 1000)
-        questionExplanationViewHeight?.isActive = true
-        
-        questionExplanationViewTopMargin = NSLayoutConstraint(item: questionExplanationView, attribute: .top, relatedBy: .equal, toItem: questionPersonalInformationView, attribute: .bottom, multiplier: 1, constant: 0)
-        questionExplanationViewTopMargin?.priority = UILayoutPriority(rawValue: 1000)
-        questionExplanationViewTopMargin?.isActive = true
-        
-        questionPrivacyViewHeight = NSLayoutConstraint(item: questionPrivacyView, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: 0)
-        questionPrivacyViewHeight?.priority = UILayoutPriority(rawValue: 1000)
-        questionPrivacyViewHeight?.isActive = true
-        
-        questionPrivacyViewTopMargin = NSLayoutConstraint(item: questionPrivacyView, attribute: .top, relatedBy: .equal, toItem: questionExplanationView, attribute: .bottom, multiplier: 1, constant: 0)
-        questionPrivacyViewTopMargin?.priority = UILayoutPriority(rawValue: 1000)
-        questionPrivacyViewTopMargin?.isActive = true
-
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": questionPlaceView]))
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": placeEditView]))
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": questionPersonalInformationView]))
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": questionExplanationView]))
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": questionPrivacyView]))
-        
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:[v0(50)]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": nextPlaceView]))
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": nextPlaceView]))
+    required init(coder aDecoder: NSCoder) {
+        fatalError("This class does not support NSCoding")
     }
     
     override func layoutSubviews() {
         super.layoutSubviews()
         
         self.layer.cornerRadius = 3.0
-        self.layer.shadowRadius = 2.0
+        self.layer.shadowRadius = 3.0
         self.layer.shadowOpacity = 0.4
         self.layer.shadowOffset = CGSize(width: 5, height: 5)
-        self.layer.backgroundColor = Constants.colors.superLightGray.cgColor
+        self.backgroundColor = Constants.colors.superLightGray
         
-        self.clipsToBounds = false
+        self.clipsToBounds = true
         self.layer.masksToBounds = true
     }
     
-}
-
-class PlaceReviewLayout: UICollectionViewFlowLayout {
-    var cellWidth: CGFloat = 250
-    var cellHeight: CGFloat = 400
-    var xCellFrameScaling: CGFloat = 0.8
-    var yCellFrameScaling: CGFloat = 0.9
-    var cellScaling: CGFloat = 0.95
-    
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-
-        scrollDirection = .horizontal
-        itemSize = CGSize(width: cellWidth, height: cellHeight)
-        minimumInteritemSpacing = 10
-        minimumLineSpacing = 10
-    }
-    
-    override func prepare() {
-        super.prepare()
+    func setupViews() {
+        addSubview(bigTextLabel)
+        addSubview(descriptionTextLabel)
         
-        // rate at which we scroll the collection view
-        collectionView?.decelerationRate = UIScrollViewDecelerationRateFast
-    }
-    
-    override func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
-        let array = super.layoutAttributesForElements(in: rect)!
+         // setup contraints
+        addVisualConstraint("V:|-[v0]-|", views: ["v0": bigTextLabel])
+        addVisualConstraint("V:|-[v0]-|", views: ["v0": descriptionTextLabel])
+        addVisualConstraint("H:|-16-[v0]-16-[v1]-16-|", views: ["v0": bigTextLabel, "v1": descriptionTextLabel])
         
-        for attributes in array {
-            let frame = attributes.frame
-            let distance = abs(collectionView!.contentOffset.x + collectionView!.contentInset.left - frame.origin.x)
-            let scale = cellScaling * min(max(1 - distance / (4 * collectionView!.bounds.width), cellScaling), 1)
-            attributes.transform = CGAffineTransform(scaleX: scale, y: scale)
-        }
-        
-        return array
-    }
-    
-    override func shouldInvalidateLayout(forBoundsChange newBounds: CGRect) -> Bool {
-        // forces to recalculate the attribtues every time the collection view's bounds changes
-        return true
-    }
-    
-    override func targetContentOffset(forProposedContentOffset proposedContentOffset: CGPoint, withScrollingVelocity velocity: CGPoint) -> CGPoint {
-        guard let collectionView = collectionView else { return super.targetContentOffset(forProposedContentOffset: proposedContentOffset, withScrollingVelocity: velocity) }
-        
-        var newOffset = CGPoint()
-        let width = itemSize.width + minimumLineSpacing
-        
-        var offset = proposedContentOffset.x + collectionView.contentInset.left
-        
-        if velocity.x > 0 {
-            // user is scrolling to the right
-            offset = width * ceil(offset / width)
-        } else if velocity.x == 0 {
-            // user did not scroll strongly enough
-            offset = width * round(offset / width)
-        } else if velocity.x < 0 {
-            // user is scrolling to the left
-            offset = width * floor(offset / width)
-        }
-        
-        newOffset.x = offset - collectionView.contentInset.left
-        newOffset.y = proposedContentOffset.y // does not change
-        
-        return newOffset
+        translatesAutoresizingMaskIntoConstraints = false
     }
 }
 
-enum QuestionAnswer {
-    case yes
-    case no
-    case none
-}
-
-class QuestionRow : UIView {
-    var question: String?
-    var yesAction: (() -> ())?
-    var noAction: (() -> ())?
-    var yesView: UIView?
-    var noView: UIView?
-    var selected: QuestionAnswer = .none {
+class StatsCardView: UIView {
+    var statsOne: BigText! {
         didSet {
-            switch selected {
-            case .none:
-                (yesView?.subviews[0] as! UIImageView).tintColor = Constants.colors.primaryLight
-                (noView?.subviews[0] as! UIImageView).tintColor = Constants.colors.primaryLight
-                layoutIfNeeded()
-            case .yes:
-                (yesView?.subviews[0] as! UIImageView).tintColor = Constants.colors.primaryDark
-                (noView?.subviews[0] as! UIImageView).tintColor = Constants.colors.primaryLight
-                layoutIfNeeded()
-            case .no:
-                (yesView?.subviews[0] as! UIImageView).tintColor = Constants.colors.primaryLight
-                (noView?.subviews[0] as! UIImageView).tintColor = Constants.colors.primaryDark
-                layoutIfNeeded()
-            }
+            statsOneLabel.bigText = statsOne
         }
     }
+    var statsOneColor: UIColor = Constants.colors.primaryDark {
+        didSet {
+            statsOneLabel.color = statsOneColor
+        }
+    }
+    lazy var statsOneLabel: BigLabel = {
+        return BigLabel(bigText: statsOne, color: statsOneColor)
+    }()
+    
+    var statsTwo: BigText! {
+        didSet {
+            statsTwoLabel.bigText = statsTwo
+        }
+    }
+    var statsTwoColor: UIColor = Constants.colors.primaryDark {
+        didSet {
+            statsTwoLabel.color = statsTwoColor
+        }
+    }
+    lazy var statsTwoLabel: BigLabel = {
+        return BigLabel(bigText: statsTwo, color: statsTwoColor)
+    }()
+    
+    var statsThree: BigText! {
+        didSet {
+            statsThreeLabel.bigText = statsThree
+        }
+    }
+    var statsThreeColor: UIColor = Constants.colors.primaryDark {
+        didSet {
+            statsThreeLabel.color = statsThreeColor
+        }
+    }
+    lazy var statsThreeLabel: BigLabel = {
+        return BigLabel(bigText: statsThree, color: statsThreeColor)
+    }()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
     }
     
-    convenience init(with question: String, yesAction: @escaping () -> (), noAction: @escaping () -> ()) {
+    convenience init(statsOne: BigText, statsTwo: BigText, statsThree: BigText) {
         self.init(frame: CGRect.zero)
-        self.question = question
-        self.yesAction = yesAction
-        self.noAction = noAction
+        
+        self.statsOne = statsOne
+        self.statsTwo = statsTwo
+        self.statsThree = statsThree
+        
+        setupViews()
+    }
+    
+    required init(coder aDecoder: NSCoder) {
+        fatalError("This class does not support NSCoding")
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        self.layer.cornerRadius = 3.0
+        self.layer.shadowRadius = 3.0
+        self.layer.shadowOpacity = 0.4
+        self.layer.shadowOffset = CGSize(width: 5, height: 5)
+        self.backgroundColor = Constants.colors.superLightGray
+        
+        self.clipsToBounds = true
+        self.layer.masksToBounds = true
+    }
+    
+    func setupViews() {
+        addSubview(statsOneLabel)
+        addSubview(statsTwoLabel)
+        addSubview(statsThreeLabel)
+        
+        // setup contraints
+        addVisualConstraint("V:|-[v0]", views: ["v0": statsOneLabel])
+        addVisualConstraint("V:|-[v0]", views: ["v0": statsTwoLabel])
+        addVisualConstraint("V:|-[v0]", views: ["v0": statsThreeLabel])
+        addVisualConstraint("H:|-16-[v0]->=16-[v1]->=16-[v2]-16-|", views: ["v0": statsOneLabel, "v1": statsTwoLabel, "v2": statsThreeLabel], options: .alignAllTop)
+        NSLayoutConstraint(item: statsTwoLabel, attribute: .centerX, relatedBy: .equal, toItem: self, attribute: .centerX, multiplier: 1, constant: 0).isActive = true
+        
+        var tallestBigLabel:BigLabel = statsOneLabel
+        if statsTwoLabel.height > statsOneLabel.height && statsTwoLabel.height > statsThreeLabel.height {
+            tallestBigLabel = statsTwoLabel
+        } else if statsThreeLabel.height > statsOneLabel.height && statsThreeLabel.height > statsTwoLabel.height {
+            tallestBigLabel = statsThreeLabel
+        }
+        addVisualConstraint("V:[v0]-|", views: ["v0": tallestBigLabel])
+        
+        translatesAutoresizingMaskIntoConstraints = false
+    }
+}
+
+struct BigText {
+    var bigText: String
+    var topExponent: String?
+    var smallBottomText: String?
+    
+    init() {
+        self.bigText = ""
+    }
+    
+    init(bigText: String) {
+        self.bigText = bigText
+    }
+    
+    init(bigText: String, smallBottomText: String) {
+        self.bigText = bigText
+        self.smallBottomText = smallBottomText
+    }
+    
+    init(bigText: String, topExponent: String?, smallBottomText: String?) {
+        self.bigText = bigText
+        self.topExponent = topExponent
+        self.smallBottomText = smallBottomText
+    }
+    
+}
+
+class BigLabel: UIView {
+    var bigText: BigText! {
+        didSet {
+            bigTextLabel.text = bigText.bigText
+            topExponentLabel.text = bigText.topExponent ?? ""
+            smallBottomTextLabel.text = bigText.smallBottomText ?? ""
+        }
+    }
+    var color: UIColor! {
+        didSet {
+            bigTextLabel.textColor = color
+            topExponentLabel.textColor = color.withAlphaComponent(0.7)
+            smallBottomTextLabel.textColor = color
+        }
+    }
+    var bigTextLabel: UILabel!
+    var topExponentLabel: UILabel!
+    var smallBottomTextLabel: UILabel!
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+    
+    convenience init(bigText: BigText, color: UIColor) {
+        self.init(frame: CGRect.zero)
+        
+        self.bigText = bigText
+        self.color = color
         setupViews()
     }
     
@@ -513,182 +336,49 @@ class QuestionRow : UIView {
     }
     
     func setupViews() {
-        let questionLabel = UILabel()
-        questionLabel.text = question
-        questionLabel.font = UIFont.systemFont(ofSize: 16)
-        questionLabel.numberOfLines = 0
-        questionLabel.textAlignment = .left
-        questionLabel.translatesAutoresizingMaskIntoConstraints = false
+        bigTextLabel = UILabel()
+        bigTextLabel.text = bigText.bigText
+        bigTextLabel.textAlignment = .left
+        bigTextLabel.font = UIFont.systemFont(ofSize: 36, weight: .heavy)
+        bigTextLabel.textColor = color
+        bigTextLabel.sizeToFit()
+        bigTextLabel.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(bigTextLabel)
         
-        //        let yesView = createIconWithText(icon: "check", text: "YES")
-        //        let noView = createIconWithText(icon: "times", text: "NO")
+        topExponentLabel = UILabel()
+        topExponentLabel!.text = bigText.topExponent ?? ""
+        topExponentLabel!.textAlignment = .left
+        topExponentLabel!.font = UIFont.systemFont(ofSize: 12, weight: .bold)
+        topExponentLabel!.textColor = color.withAlphaComponent(0.7)
+        topExponentLabel!.sizeToFit()
+        topExponentLabel!.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(topExponentLabel!)
         
-        yesView = createIcon(icon: "check")
-        noView = createIcon(icon: "times")
+        smallBottomTextLabel = UILabel()
+        smallBottomTextLabel!.text = bigText.smallBottomText ?? ""
+        smallBottomTextLabel!.textAlignment = .left
+        smallBottomTextLabel!.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+        smallBottomTextLabel!.textColor = color
+        smallBottomTextLabel.numberOfLines = 0
+        smallBottomTextLabel!.sizeToFit()
+        smallBottomTextLabel!.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(smallBottomTextLabel!)
         
-        guard let yesView = yesView, let noView = noView else { return }
-        
-        yesView.addTapGestureRecognizer {
-            self.selected = .yes
-            self.yesAction!()
-        }
-        noView.addTapGestureRecognizer {
-            self.selected = .no
-            self.noAction!()
-        }
-        
-        addSubview(questionLabel)
-        addSubview(yesView)
-        addSubview(noView)
-        
-        // add constraints
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": questionLabel]))
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|-(5@999)-[v0]-(5@999)-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": yesView]))
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|-(5@999)-[v0]-(5@999)-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": noView]))
-        
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-14-[v0]-10-[yes(30)]-14-[no(30)]-14-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": questionLabel, "yes": yesView, "no": noView]))
-        
+        // set up the constraints
+        addVisualConstraint("V:|[v0]", views: ["v0": bigTextLabel])
+        addVisualConstraint("H:|[v0][v1]|", views: ["v0": bigTextLabel, "v1": topExponentLabel!])
+        addVisualConstraint("V:|-7-[v0]", views: ["v0": topExponentLabel!])
+        addVisualConstraint("H:|[v0]", views: ["v0": smallBottomTextLabel!])
+        addVisualConstraint("V:|[v0]-(==-5)-[v1]|", views: ["v0": bigTextLabel, "v1": smallBottomTextLabel!])
+
         translatesAutoresizingMaskIntoConstraints = false
     }
+    
+    lazy var height:CGFloat = {
+        return bigTextLabel.bounds.height + smallBottomTextLabel.bounds.height - 5
+    }()
+    
+    lazy var width:CGFloat = {
+        return max(bigTextLabel.bounds.width + topExponentLabel.bounds.width, smallBottomTextLabel.bounds.width)
+    }()
 }
-
-class CommentRow : UIView {
-    var action: (() -> ())?
-    var text: String?
-    var icon: String?
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        
-    }
-    
-    convenience init(with text: String, icon: String, backgroundColor: UIColor, action: @escaping () -> ()) {
-        self.init(frame: CGRect.zero)
-        self.text = text
-        self.icon = icon
-        self.action = action
-        self.backgroundColor = backgroundColor
-        setupView()
-    }
-    
-    required init(coder aDecoder: NSCoder) {
-        fatalError("This class does not support NSCoding")
-    }
-    
-    func setupView() {
-        let label = UILabel()
-        label.text = text
-        label.numberOfLines = 2
-        label.textColor = Constants.colors.primaryLight
-        label.font = UIFont.italicSystemFont(ofSize: 14.0)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(label)
-        
-        let icon = createIcon(icon: self.icon!)
-        addSubview(icon)
-        
-        // add constraints
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": label]))
-//        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|-8@999-[icon(25@999)]-8@999-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["icon": icon]))
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|-(5@999)-[icon]-(5@999)-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["icon": icon]))
-//        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:[icon(25@750)]", options: NSLayoutFormatOptions(), metrics: nil, views: ["icon": icon]))
-        
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-14-[v0]-14-[icon(25)]-14-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": label, "icon": icon]))
-        
-        translatesAutoresizingMaskIntoConstraints = false
-        addTapGestureRecognizer {
-            self.action!()
-        }
-    }
-}
-
-class BottomCell : UIView {
-    var action: (() -> ())?
-    var text: String? {
-        didSet {
-            label?.text = text
-        }
-    }
-    var label: UILabel?
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-    }
-    
-    convenience init(with text: String, backgroundColor: UIColor, action: @escaping () -> ()) {
-        self.init(frame: CGRect.zero)
-        self.text = text
-        self.action = action
-        self.backgroundColor = backgroundColor.withAlphaComponent(0.7)
-        setupView()
-    }
-    
-    required init(coder aDecoder: NSCoder) {
-        fatalError("This class does not support NSCoding")
-    }
-    
-    func setupView() {
-        label = UILabel()
-        guard let label = label else { return }
-        label.text = text
-        label.numberOfLines = 2
-        label.textAlignment = .center
-        label.textColor = Constants.colors.white
-        label.font = UIFont.boldSystemFont(ofSize: 20.0)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(label)
-        
-        // add constraints
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": label]))
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": label]))
-        
-        translatesAutoresizingMaskIntoConstraints = false
-        addTapGestureRecognizer {
-            self.action!()
-        }
-    }
-}
-
-// MARK: - helper functions
-
-fileprivate func createIcon(icon: String) -> UIView {
-    let view = UIView()
-    let imageView = UIImageView(image: UIImage(named: icon)!.withRenderingMode(.alwaysTemplate))
-    imageView.tintColor = Constants.colors.primaryLight
-    imageView.contentMode = .scaleAspectFit
-    imageView.translatesAutoresizingMaskIntoConstraints = false
-    view.addSubview(imageView)
-    
-    view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": imageView]))
-    view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": imageView]))
-    
-    view.translatesAutoresizingMaskIntoConstraints = false
-    return view
-}
-
-private func createIconWithText(icon: String, text: String) -> UIView {
-    let view = UIView()
-    let imageView = UIImageView(image: UIImage(named: icon)!.withRenderingMode(.alwaysTemplate))
-    imageView.tintColor = Constants.colors.primaryLight
-    imageView.contentMode = .scaleAspectFit
-    imageView.translatesAutoresizingMaskIntoConstraints = false
-    
-    let label = UILabel()
-    label.text = text
-    label.font = UIFont.italicSystemFont(ofSize: 14.0)
-    label.textAlignment = .right
-    label.textColor = Constants.colors.primaryLight
-    label.translatesAutoresizingMaskIntoConstraints = false
-    
-    view.addSubview(imageView)
-    view.addSubview(label)
-    
-    // add constraints
-    view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": imageView]))
-    view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": label]))
-    view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|[icon]-8-[text(30)]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["icon": imageView, "text": label]))
-    
-    view.translatesAutoresizingMaskIntoConstraints = false
-    return view
-}
-

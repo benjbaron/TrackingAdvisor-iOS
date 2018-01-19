@@ -26,18 +26,38 @@ class Visit: NSManagedObject {
             throw error
         }
         
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "dd-MM-yyyy"
-        
         let visit = Visit(context: context)
         visit.id = userVisit.visitid
         visit.confidence = userVisit.confidence
         visit.departure = userVisit.departure
         visit.arrival = userVisit.arrival
         visit.placeid = userVisit.placeid
-        visit.day = dateFormatter.string(from: userVisit.arrival)
+        visit.day = DateHandler.dateToDayString(from: userVisit.arrival)
         visit.place = try! Place.findPlace(matching: userVisit.placeid, in: context)
         
         return visit
+    }
+    
+    func getPersonalInformationCategories() -> [PersonalInformationCategory] {
+        var categories: [PersonalInformationCategory] = []
+        if let personalinfo = place?.personalinfo {
+            for (personalInfoName, personalInfoList) in personalinfo {
+                var cat = PersonalInformationCategory(name: personalInfoName)
+                for personalInfo in personalInfoList {
+                    let p = PersonalInformation(name: personalInfo)
+                    cat.personalInfo?.append(p)
+                }
+                categories.append(cat)
+            }
+        }
+        return categories
+    }
+    
+    func getTimesPhrase() -> String {
+        
+        guard let arrival = arrival, let departure = departure else { return "" }
+        
+        let timeDiff = departure.timeIntervalSince(arrival)
+        return "You were at this place on \(DateHandler.dateToDayLetterString(from: arrival)) for \(timeDiff.timeIntervalToString()) from \(DateHandler.dateToTimePeriodString(from: arrival)) to \(DateHandler.dateToTimePeriodString(from: departure))"
     }
 }

@@ -15,7 +15,7 @@ protocol LocationAdaptiveUpdateProtocol {
 
 class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
     static let shared = LocationAdaptiveService()
-    var delegate:LocationAdaptiveUpdateProtocol!
+    var delegate: LocationAdaptiveUpdateProtocol!
     
     let locationManager = CLLocationManager()
     let activityService = ActivityService.shared

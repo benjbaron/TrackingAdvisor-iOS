@@ -91,6 +91,19 @@ extension UIView {
     }
 }
 
+extension UIView {
+    // From: https://gist.github.com/inder/40178b9c2ca798dd3427
+    func addVisualConstraint(_ visualConstraints: String, views: [String:UIView]) {
+        let constraints = NSLayoutConstraint.constraints(withVisualFormat: visualConstraints, options: NSLayoutFormatOptions(), metrics: nil, views: views)
+        self.addConstraints(constraints)
+    }
+    
+    func addVisualConstraint(_ visualConstraints: String, views: [String:UIView], options: NSLayoutFormatOptions) {
+        let constraints = NSLayoutConstraint.constraints(withVisualFormat: visualConstraints, options: options, metrics: nil, views: views)
+        self.addConstraints(constraints)
+    }
+}
+
 extension UICollectionView {
     func nextItem() {
         let cellSize = CGSize(width: frame.width, height: frame.height)

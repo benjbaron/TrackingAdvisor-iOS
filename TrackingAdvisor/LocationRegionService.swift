@@ -139,10 +139,6 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
             regionLocations[identifier] = loc
             locationManager.startMonitoring(for: region)
         }
-        
-        for region in locationManager.monitoredRegions {
-            locationManager.requestState(for: region)
-        }
     }
     
     // MARK - Delegate methods
