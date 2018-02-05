@@ -9,13 +9,11 @@
 import UIKit
 import Mapbox
 
-class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, PersonalInformationCategoryDelegate, FooterMoreInformationDelegate {
     
     @objc func edit(_ sender: UIBarButtonItem) {
-        print("edit place")
         let viewController = PlaceFinderMapTableViewController()
         viewController.visit = visit
-        
         navigationController?.pushViewController(viewController, animated: true)
     }
     
@@ -30,22 +28,29 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
     }()
     let cellId = "CellId"
     let headerCellId = "HeaderCellId"
-    var color = UIColor.white // TODO: Associate the color to a Place
+    let footerCellId = "FooterCellId"
+    var color = Constants.colors.orange
     
     var visit: Visit? {
         didSet {
-            headerView.placeAddress = visit?.place?.address
-            headerView.placeName = visit?.place?.name
-            headerView.placeCity = visit?.place?.city
-            headerView.placeTimes = visit?.getTimesPhrase()
-            color = UIColor.orange // TODO: Associate the color to a Place
+            guard let visit = visit, let place = visit.place else { return }
+            headerView.placeAddress = place.address
+            headerView.placeName = place.name
+            headerView.placeCity = place.city
+            headerView.placeTimes = visit.getTimesPhrase()
+            color = place.getPlaceColor()
             headerView.backgroundColor = color
+            personalInformation = place.getPersonalInformation()
         }
     }
+    
+    var personalInformation: [PersonalInformationCategory: [PersonalInformation]]?
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.tabBarController?.tabBar.isHidden = false
+        
+        setupNavBarButtons()
     }
     
     override func viewDidLoad() {
@@ -68,8 +73,11 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.alwaysBounceVertical = true
+        
+        // Register cells types
         collectionView.register(PersonalInformationCategoryCell.self, forCellWithReuseIdentifier: cellId)
         collectionView.register(HeaderPersonalInformationCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, withReuseIdentifier: headerCellId)
+        collectionView.register(FooterMoreInformationCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionFooter, withReuseIdentifier: footerCellId)
         
         // configure map
         let annotation = MGLPointAnnotation()
@@ -87,8 +95,7 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
         // Dispose of any resources that can be recreated.
     }
     
-    
-    func setupViews() {
+    func setupNavBarButtons() {
         let editButton = UIBarButtonItem(barButtonSystemItem: .edit, target: self, action: #selector(edit))
         editButton.tintColor = Constants.colors.superLightGray
         self.navigationItem.rightBarButtonItem = editButton
@@ -100,7 +107,10 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
         backButton.addTarget(self, action: #selector(back), for: .touchUpInside)
         let leftBarButton = UIBarButtonItem(customView: backButton)
         self.navigationItem.leftBarButtonItem = leftBarButton
-        
+
+    }
+    
+    func setupViews() {
         self.view.addSubview(headerView)
         self.view.addVisualConstraint("H:|[header]|", views: ["header" : headerView])
         self.view.addVisualConstraint("V:|[header]", views: ["header" : headerView])
@@ -112,19 +122,18 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
         self.view.addVisualConstraint("H:|[map]|", views: ["map" : mapView!])
         self.view.addVisualConstraint("V:[header][map(150)]", views: ["header": headerView, "map" : mapView!])
         
+        collectionView.backgroundColor = UIColor.white
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        self.view.addSubview(collectionView)
         
-        collectionView?.backgroundColor = UIColor.white
-        collectionView?.translatesAutoresizingMaskIntoConstraints = false
-        self.view.addSubview(collectionView!)
-        
-        self.view.addVisualConstraint("H:|[collection]|", views: ["collection" : collectionView!])
-        self.view.addVisualConstraint("V:[map][collection]|", views: ["collection" : collectionView!, "map": mapView!])
+        self.view.addVisualConstraint("H:|[collection]|", views: ["collection" : collectionView])
+        self.view.addVisualConstraint("V:[map][collection]|", views: ["collection" : collectionView, "map": mapView])
     }
     
     // MARK: - UICollectionViewDataSource delegate methods
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if let count = visit?.getPersonalInformationCategories().count {
+        if let count = personalInformation?.count {
             return count
         }
         return 0
@@ -133,7 +142,11 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell: PersonalInformationCategoryCell
         cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! PersonalInformationCategoryCell
-        cell.personalInformationCategory = visit?.getPersonalInformationCategories()[indexPath.item]
+        guard let pi = personalInformation else { return cell }
+        let category = Array(pi.keys)[indexPath.section]
+        cell.personalInformationCategory = category
+        cell.personalInformation = pi[category]
+        cell.delegate = self
         return cell
     }
     
@@ -143,8 +156,13 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         if kind == UICollectionElementKindSectionHeader {
-            let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerCellId, for: indexPath) as! HeaderPersonalInformationCell
-            return headerView
+            let headerCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerCellId, for: indexPath) as! HeaderPersonalInformationCell
+            return headerCell
+        } else if kind == UICollectionElementKindSectionFooter {
+            let footerCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: footerCellId, for: indexPath) as! FooterMoreInformationCell
+            footerCell.delegate = self
+            footerCell.color = color
+            return footerCell
         } else {
             assert(false, "Unexpected element kind")
         }
@@ -167,6 +185,10 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
         
         // 4 - return the correct size
         return CGSize(width: collectionView.frame.width, height: height)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForFooterInSection section: Int) -> CGSize {
+        return CGSize(width: collectionView.frame.width, height: 45)
     }
 
     
@@ -198,6 +220,85 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
         return annotationView
     }
     
+    // MARK: - PersonalInformationCategoryDelegate method
+    func didPressPersonalInformation(type: PersonalInformationCategoryType, name: String) {
+        print("Did press button in category \(name)")
+    }
+    
+    // MARK: - FooterMoreInformationDelegate method
+    func didPressMoreInformation() {
+        let viewController = PlacePersonalInformationController()
+        viewController.visit = visit
+        navigationController?.pushViewController(viewController, animated: true)
+    }
+    
+}
+
+protocol FooterMoreInformationDelegate {
+    func didPressMoreInformation()
+}
+
+class FooterMoreInformationCell: UICollectionViewCell {
+    var delegate: FooterMoreInformationDelegate?
+    var color: UIColor? {
+        didSet {
+            backgroundColor = color
+            moreInformationLabel.textColor = .white
+            moreInformationIcon.tintColor = .white
+        }
+    }
+    var text: String? {
+        didSet {
+            moreInformationLabel.text = text
+        }
+    }
+    private var moreInformationView: UIView!
+    private let moreInformationLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Get more information on how we inferred the personal information"
+        label.font = UIFont.boldSystemFont(ofSize: 14.0)
+        label.textColor = Constants.colors.black
+        label.lineBreakMode = .byWordWrapping
+        label.numberOfLines = 2
+        label.textAlignment = .left
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    private let moreInformationIcon: UIImageView = {
+        let imageView = UIImageView(image: UIImage(named: "chevron-right")!.withRenderingMode(.alwaysTemplate))
+        imageView.tintColor = Constants.colors.black
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+    }()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupViews()
+    }
+    
+    required init(coder aDecoder: NSCoder) {
+        fatalError("This class does not support NSCoding")
+    }
+    
+    func setupViews() {
+        backgroundColor = .red
+        addSubview(moreInformationLabel)
+        addSubview(moreInformationIcon)
+        addTapGestureRecognizer {
+            self.delegate?.didPressMoreInformation()
+        }
+        
+        addVisualConstraint("H:|-14-[label]-[icon]-14-|", views: ["label": moreInformationLabel, "icon": moreInformationIcon])
+        addVisualConstraint("V:|[label]|", views: ["label": moreInformationLabel])
+        addVisualConstraint("V:|-[icon]-|", views: ["icon": moreInformationIcon])
+        
+        translatesAutoresizingMaskIntoConstraints = false
+    }
+    
+    func height() -> CGFloat {
+        return 45
+    }
 }
 
 
@@ -252,56 +353,3 @@ class HeaderPersonalInformationCell : UICollectionViewCell {
     }
 }
 
-
-class HeaderPlaceDetail : HeaderPlace {
-    var placeCity: String? {
-        didSet {
-            placeCityLabel.text = placeCity
-        }
-    }
-    
-    var placeTimes: String? {
-        didSet {
-            placeTimesLabel.text = placeTimes
-        }
-    }
-    
-    internal let placeCityLabel: UILabel = {
-        let label = UILabel()
-        label.text = "place city"
-        label.font = UIFont.systemFont(ofSize: 14.0)
-        label.textColor = Constants.colors.superLightGray
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    internal let placeTimesLabel: UILabel = {
-        let label = UILabel()
-        label.text = "place times"
-        label.font = UIFont.italicSystemFont(ofSize: 14.0)
-        label.textColor = Constants.colors.superLightGray
-        label.textAlignment = .center
-        label.lineBreakMode = .byWordWrapping
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    override func setupViews() {
-        addSubview(placeNameLabel)
-        addSubview(placeAddressLabel)
-        addSubview(placeCityLabel)
-        addSubview(placeTimesLabel)
-        
-        // add constraints
-        addVisualConstraint("V:|-(28@750)-[title][address][city]-(12@750)-[times]-(18@750)-|", views: ["title": placeNameLabel, "address": placeAddressLabel, "city": placeCityLabel, "times": placeTimesLabel])
-        
-        addVisualConstraint("H:|-75-[title]-75-|", views: ["title": placeNameLabel])
-        addVisualConstraint("H:|-25-[address]-25-|", views: ["address": placeAddressLabel])
-        addVisualConstraint("H:|-25-[city]-25-|", views: ["city": placeCityLabel])
-        addVisualConstraint("H:|-25-[times]-25-|", views: ["times": placeTimesLabel])
-        
-        translatesAutoresizingMaskIntoConstraints = false
-    }
-}

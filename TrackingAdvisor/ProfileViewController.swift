@@ -7,9 +7,10 @@
 //
 
 import UIKit
+import Mapbox
 
-class ProfileViewController: UIViewController, UIScrollViewDelegate {
-    
+class ProfileViewController: UIViewController, UIScrollViewDelegate, MGLMapViewDelegate {
+    // set a content view inside the scroll view
     // From https://developer.apple.com/library/content/technotes/tn2154/_index.html
 
     var scrollView : UIScrollView!
@@ -25,8 +26,56 @@ class ProfileViewController: UIViewController, UIScrollViewDelegate {
     }()
     
     var studySummary: InfoCardView = {
-        return InfoCardView(bigText: BigText(bigText: "28", smallBottomText: "DAYS"),
+        return InfoCardView(bigText: BigText(bigText: "28", topExponent: "%", smallBottomText: "DAYS"),
                             descriptionText: "You have been participating in the study for 28 days!")
+    }()
+    
+    var studySummary2: InfoCardView = {
+        return InfoCardView(bigText: BigText(bigText: "28", topExponent: "%", smallBottomText: "DAYS"),
+                            descriptionText: "You have been participating")
+    }()
+    
+    var mapView: MGLMapView = {
+        let map = MGLMapView(frame: CGRect(), styleURL: MGLStyle.lightStyleURL())
+        map.zoomLevel = 15
+        map.translatesAutoresizingMaskIntoConstraints = false
+        map.layer.cornerRadius = 5.0
+        map.layer.shadowRadius = 5.0
+        map.layer.shadowOpacity = 0.5
+        map.layer.shadowOffset = CGSize(width: 5, height: 5)
+        map.backgroundColor = Constants.colors.superLightGray
+        map.allowsZooming = false
+        map.allowsTilting = false
+        map.allowsRotating = false
+        map.allowsScrolling = false
+        
+        map.attributionButton.alpha = 0
+        map.logoView.alpha = 0
+        
+        map.clipsToBounds = true
+        map.layer.masksToBounds = true
+        
+        // Center the map on the visit coordinates
+        let coordinates = CLLocationCoordinate2D(latitude: 51.524528, longitude: -0.134524)
+        map.centerCoordinate = coordinates
+        return map
+    }()
+    
+    var zoomMapView: MGLMapView = {
+        let map = MGLMapView(frame: CGRect(), styleURL: MGLStyle.lightStyleURL())
+        map.zoomLevel = 15
+        map.backgroundColor = Constants.colors.superLightGray
+        map.attributionButton.alpha = 0
+        map.logoView.alpha = 0
+        
+        // Center the map on the visit coordinates
+        let coordinates = CLLocationCoordinate2D(latitude: 51.524528, longitude: -0.134524)
+        map.centerCoordinate = coordinates
+        return map
+    }()
+    
+    var iconExitMapView: IconView = {
+        return IconView(image: UIImage(named: "times")!, color: Constants.colors.primaryDark, imageColor: .white)
     }()
     
     var studyStats: StatsCardView = {
@@ -35,11 +84,14 @@ class ProfileViewController: UIViewController, UIScrollViewDelegate {
                              statsThree: BigText(bigText: "28", smallBottomText: "DAYS"))
     }()
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view = UIView(frame: CGRect.zero)
-        scrollView = UIScrollView(frame:CGRect.zero)
+        scrollView = UIScrollView(frame: self.view.frame)
         scrollView.sizeToFit()
         scrollView.alwaysBounceVertical = true
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -51,8 +103,12 @@ class ProfileViewController: UIViewController, UIScrollViewDelegate {
         contentView.backgroundColor = UIColor.white
         scrollView.addSubview(contentView)
         
+        let margins = self.view.layoutMarginsGuide
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: margins.topAnchor)
+        ])
         self.view.addVisualConstraint("H:|[scrollView]|", views: ["scrollView" : scrollView])
-        self.view.addVisualConstraint("V:|[scrollView]|", views: ["scrollView" : scrollView])
+        self.view.addVisualConstraint("V:[scrollView]|",  views: ["scrollView" : scrollView])
         
         scrollView.addVisualConstraint("H:|[contentView]|", views: ["contentView" : contentView])
         scrollView.addVisualConstraint("V:|[contentView]|", views: ["contentView" : contentView])
@@ -60,8 +116,8 @@ class ProfileViewController: UIViewController, UIScrollViewDelegate {
         // make the width of content view to be the same as that of the containing view.
         self.view.addVisualConstraint("H:[contentView(==mainView)]", views: ["contentView" : contentView, "mainView" : self.view])
 
-
         scrollView.delegate = self
+        mapView.delegate = self
         setupViews()
     }
     
@@ -79,9 +135,54 @@ class ProfileViewController: UIViewController, UIScrollViewDelegate {
         contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0":studySummary])
         contentView.addVisualConstraint("V:[v0]-16-[v1]", views: ["v0": mainTitle, "v1":studySummary])
         
+        contentView.addSubview(studySummary2)
+        contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0":studySummary2])
+        contentView.addVisualConstraint("V:[v0]-16-[v1]", views: ["v0": studySummary, "v1":studySummary2])
+        
         contentView.addSubview(studyStats)
         contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0":studyStats])
-        contentView.addVisualConstraint("V:[v0]-16-[v1]|", views: ["v0": studySummary, "v1":studyStats])
+        contentView.addVisualConstraint("V:[v0]-16-[v1]", views: ["v0": studySummary2, "v1":studyStats])
+        
+        contentView.addSubview(mapView)
+        mapView.addTapGestureRecognizer {
+            self.animateMapViewIn()
+        }
+        contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0":mapView])
+        contentView.addVisualConstraint("V:[v0]-16-[v1(250)]-32-|", views: ["v0": studyStats, "v1":mapView])
+    }
+    
+    func animateMapViewIn() {
+        if let startingFrame = mapView.superview?.convert(mapView.frame, to: nil) {
+            mapView.alpha = 0
+            zoomMapView.frame = startingFrame
+            self.view.addSubview(zoomMapView)
+            
+            UIView.animate(withDuration: 0.75, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 0.5, options: .curveEaseOut, animations: {
+                self.zoomMapView.frame = CGRect(x: 0, y: -1 * UIApplication.shared.statusBarFrame.height, width: self.view.frame.width, height: self.view.frame.height)
+            }, completion: { didComplete in
+                if didComplete {
+                    self.iconExitMapView.frame = CGRect(x: 20, y: UIApplication.shared.statusBarFrame.height + 10, width: 30, height: 30)
+                    self.iconExitMapView.addTapGestureRecognizer {
+                        self.animateMapViewOut()
+                    }
+                    self.view.addSubview(self.iconExitMapView)
+                }
+            })
+        }
+    }
+    
+    func animateMapViewOut() {
+        if let startingFrame = mapView.superview?.convert(mapView.frame, to: nil) {
+            self.iconExitMapView.removeFromSuperview()
+            UIView.animate(withDuration: 0.75, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 0.5, options: .curveEaseOut, animations: {
+                self.zoomMapView.frame = startingFrame
+            }, completion: { didComplete in
+                if didComplete {
+                    self.zoomMapView.removeFromSuperview()
+                    self.mapView.alpha = 1
+                }
+            })
+        }
     }
     
 
@@ -153,9 +254,9 @@ class InfoCardView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        self.layer.cornerRadius = 3.0
-        self.layer.shadowRadius = 3.0
-        self.layer.shadowOpacity = 0.4
+        self.layer.cornerRadius = 5.0
+        self.layer.shadowRadius = 5.0
+        self.layer.shadowOpacity = 0.5
         self.layer.shadowOffset = CGSize(width: 5, height: 5)
         self.backgroundColor = Constants.colors.superLightGray
         
@@ -167,10 +268,15 @@ class InfoCardView: UIView {
         addSubview(bigTextLabel)
         addSubview(descriptionTextLabel)
         
+        // set content compression resistance
+        // see: https://krakendev.io/blog/autolayout-magic-like-harry-potter-but-real
+        bigTextLabel.setContentCompressionResistancePriority(UILayoutPriority(rawValue: 1000), for: .horizontal)
+        descriptionTextLabel.setContentCompressionResistancePriority(UILayoutPriority(rawValue: 250), for: .horizontal)
+        
          // setup contraints
-        addVisualConstraint("V:|-[v0]-|", views: ["v0": bigTextLabel])
-        addVisualConstraint("V:|-[v0]-|", views: ["v0": descriptionTextLabel])
-        addVisualConstraint("H:|-16-[v0]-16-[v1]-16-|", views: ["v0": bigTextLabel, "v1": descriptionTextLabel])
+        addVisualConstraint("V:|-[v0]-12-|", views: ["v0": bigTextLabel])
+        addVisualConstraint("V:|-[v0]-12-|", views: ["v0": descriptionTextLabel])
+        addVisualConstraint("H:|-16-[v0]-8-[v1]-16-|", views: ["v0": bigTextLabel, "v1": descriptionTextLabel])
         
         translatesAutoresizingMaskIntoConstraints = false
     }
@@ -268,7 +374,7 @@ class StatsCardView: UIView {
         } else if statsThreeLabel.height > statsOneLabel.height && statsThreeLabel.height > statsTwoLabel.height {
             tallestBigLabel = statsThreeLabel
         }
-        addVisualConstraint("V:[v0]-|", views: ["v0": tallestBigLabel])
+        addVisualConstraint("V:[v0]-12-|", views: ["v0": tallestBigLabel])
         
         translatesAutoresizingMaskIntoConstraints = false
     }
@@ -311,8 +417,8 @@ class BigLabel: UIView {
     var color: UIColor! {
         didSet {
             bigTextLabel.textColor = color
-            topExponentLabel.textColor = color.withAlphaComponent(0.7)
-            smallBottomTextLabel.textColor = color
+            topExponentLabel.textColor = color
+            smallBottomTextLabel.textColor = color.withAlphaComponent(0.7)
         }
     }
     var bigTextLabel: UILabel!
@@ -349,7 +455,8 @@ class BigLabel: UIView {
         topExponentLabel!.text = bigText.topExponent ?? ""
         topExponentLabel!.textAlignment = .left
         topExponentLabel!.font = UIFont.systemFont(ofSize: 12, weight: .bold)
-        topExponentLabel!.textColor = color.withAlphaComponent(0.7)
+        topExponentLabel!.textColor = color
+        topExponentLabel.numberOfLines = 1
         topExponentLabel!.sizeToFit()
         topExponentLabel!.translatesAutoresizingMaskIntoConstraints = false
         addSubview(topExponentLabel!)
@@ -358,7 +465,7 @@ class BigLabel: UIView {
         smallBottomTextLabel!.text = bigText.smallBottomText ?? ""
         smallBottomTextLabel!.textAlignment = .left
         smallBottomTextLabel!.font = UIFont.systemFont(ofSize: 14, weight: .bold)
-        smallBottomTextLabel!.textColor = color
+        smallBottomTextLabel!.textColor = color.withAlphaComponent(0.7)
         smallBottomTextLabel.numberOfLines = 0
         smallBottomTextLabel!.sizeToFit()
         smallBottomTextLabel!.translatesAutoresizingMaskIntoConstraints = false
@@ -381,4 +488,67 @@ class BigLabel: UIView {
     lazy var width:CGFloat = {
         return max(bigTextLabel.bounds.width + topExponentLabel.bounds.width, smallBottomTextLabel.bounds.width)
     }()
+}
+
+class IconView: UIView {
+    
+    var iconDiameter: CGFloat = 30.0
+    var scale: CGFloat = 0.75
+
+    var color: UIColor! {
+        didSet {
+            shapeLayer.fillColor = color.cgColor
+        }
+    }
+    
+    var image: UIImage! {
+        didSet {
+            imageView.image = image.withRenderingMode(.alwaysTemplate)
+        }
+    }
+    
+    var imageColor: UIColor! {
+        didSet {
+            imageView.tintColor = imageColor
+        }
+    }
+    
+    lazy var shapeLayer: CAShapeLayer = {
+        let path = UIBezierPath(ovalIn: CGRect(x: 0, y: 0, width: iconDiameter, height: iconDiameter))
+        let shapeLayer = CAShapeLayer()
+        shapeLayer.path = path.cgPath
+        shapeLayer.fillColor = Constants.colors.primaryDark.cgColor
+        shapeLayer.lineWidth = 0
+        return shapeLayer
+    }()
+    
+    lazy var imageView: UIImageView = {
+        let imageView = UIImageView(image: UIImage(named: "times")!.withRenderingMode(.alwaysTemplate))
+        imageView.tintColor = UIColor.white
+        imageView.contentMode = .scaleAspectFit
+        imageView.frame = CGRect(x: (1.0-scale)/2*iconDiameter, y: (1.0-scale)/2*iconDiameter, width: scale*iconDiameter, height: scale*iconDiameter)
+        return imageView
+    }()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+    
+    convenience init(image: UIImage, color: UIColor, imageColor: UIColor) {
+        self.init(frame: CGRect.zero)
+        
+        self.image = image
+        self.color = color
+        self.imageColor = imageColor
+        setupViews()
+    }
+    
+    required init(coder aDecoder: NSCoder) {
+        fatalError("This class does not support NSCoding")
+    }
+    
+    func setupViews() {
+        self.layer.addSublayer(shapeLayer)
+        self.addSubview(imageView)
+    }
 }

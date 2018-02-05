@@ -1,157 +1,121 @@
 //
-//  InterestCell.swift
+//  PersonalInformationCategory.swift
 //  TrackingAdvisor
 //
-//  Created by Benjamin BARON on 1/16/18.
+//  Created by Benjamin BARON on 2/5/18.
 //  Copyright © 2018 Benjamin BARON. All rights reserved.
 //
 
-import UIKit
+import Foundation
+import Alamofire
 
-class PersonalInformationCategoryCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+class PersonalInformationCategory: NSObject, NSCoding, Decodable {
     
-    var personalInformationCategory: PersonalInformationCategory? {
-        didSet {
-            if let name = personalInformationCategory?.name {
-                nameLabel.text = name
+    // MARK: Properties
+    var picid: String  // Equivalent to an acronym
+    var name: String
+    var desc: String
+    var explanation: String
+    var icon: String
+    
+    // MARK: Archiving Paths
+    static let DocumentsDirectory = FileManager().urls(for: .documentDirectory, in: .userDomainMask).first!
+    static let ArchiveURL = DocumentsDirectory.appendingPathComponent("personalInformationCategories")
+    
+    // MARK: Types
+    struct PropertyKey {
+        static let picid = "picid"
+        static let name = "name"
+        static let desc = "description"
+        static let explanation = "explanation"
+        static let icon = "icon"
+    }
+    
+    // MARK: Initialization
+    init?(picid: String, name: String, desc: String, explanation: String, icon: String) {
+        self.picid = picid
+        self.name = name
+        self.desc = desc
+        self.explanation = explanation
+        self.icon = icon
+    }
+    
+    // MARK: NSCoding
+    func encode(with aCoder: NSCoder) {
+        aCoder.encode(picid, forKey: PropertyKey.picid)
+        aCoder.encode(name, forKey: PropertyKey.name)
+        aCoder.encode(description, forKey: PropertyKey.desc)
+        aCoder.encode(explanation, forKey: PropertyKey.explanation)
+        aCoder.encode(icon, forKey: PropertyKey.icon)
+    }
+    
+    required convenience init?(coder aDecoder: NSCoder) {
+        // this retrieves our saved picid and casts it as a String
+        guard let picid = aDecoder.decodeObject(forKey: PropertyKey.picid) as? String else {
+            return nil // initializer should fail
+        }
+        let name = aDecoder.decodeObject(forKey: PropertyKey.name) as! String
+        let desc = aDecoder.decodeObject(forKey: PropertyKey.desc) as! String
+        let explanation = aDecoder.decodeObject(forKey: PropertyKey.explanation) as! String
+        let icon = aDecoder.decodeObject(forKey: PropertyKey.icon) as! String
+        
+        self.init(picid: picid, name: name, desc: desc, explanation: explanation, icon: icon)
+    }
+    
+    // MARK: Class functions to save and load the personal information categories
+    class func savePersonalInformationCategories(pics: [PersonalInformationCategory]) -> Bool {
+        let isSuccessfulSave = NSKeyedArchiver.archiveRootObject(pics, toFile: PersonalInformationCategory.ArchiveURL.path)
+        return isSuccessfulSave
+    }
+    
+    class func loadPersonalInformationCategories() -> [PersonalInformationCategory]? {
+        return NSKeyedUnarchiver.unarchiveObject(withFile: PersonalInformationCategory.ArchiveURL.path) as? [PersonalInformationCategory]
+    }
+    
+    class func getPersonalInformationCategory(with picid: String) -> PersonalInformationCategory? {
+        if let pics = loadPersonalInformationCategories() {
+            for pic in pics {
+                if pic.picid == picid {
+                    return pic
+                }
             }
-            infoCollectionView.reloadData()
-        }
-    }
-    
-    fileprivate let cellId = "infoCellId"
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupViews()
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    let nameLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Personal information"
-        label.font = UIFont.systemFont(ofSize: 20, weight: .heavy)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    let infoCollectionView: UICollectionView = {
-        let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .horizontal
-        
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.alwaysBounceHorizontal = true
-        collectionView.backgroundColor = UIColor.clear
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-        
-        return collectionView
-    }()
-    
-    let dividerLineView: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor(white: 0.4, alpha: 0.4)
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-    
-    func setupViews() {
-        backgroundColor = UIColor.clear
-        
-        addSubview(infoCollectionView)
-        addSubview(dividerLineView)
-        addSubview(nameLabel)
-        
-        infoCollectionView.dataSource = self
-        infoCollectionView.delegate = self
-        
-        infoCollectionView.register(PersonalInformationCell.self, forCellWithReuseIdentifier: cellId)
-        
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-14-[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": nameLabel]))
-        
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-14-[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": dividerLineView]))
-        
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": infoCollectionView]))
-        
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[nameLabel(30)][v0][v1(0.5)]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": infoCollectionView, "v1": dividerLineView, "nameLabel": nameLabel]))
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if let count = personalInformationCategory?.personalInfo?.count {
-            return count
-        }
-        return 0
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! PersonalInformationCell
-        cell.personalInfo = personalInformationCategory?.personalInfo?[indexPath.item]
-        return cell
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 100, height: frame.height - 32)
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-        return UIEdgeInsetsMake(0, 14, 0, 14)
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        if let personalInfo = personalInformationCategory?.personalInfo?[indexPath.item] {
-            print("Clicked on \(personalInfo)")
-        }
-    }
-}
 
-fileprivate class PersonalInformationCell: UICollectionViewCell {
-    var personalInfo: PersonalInformation? {
-        didSet {
-            if let name = personalInfo?.name {
-                nameLabel.text = name
+        }
+        return nil
+    }
+    
+    // MARK: udpate the personal information categories from the server
+    class func retrieveLatestPersonalInformationCategories() {
+        let userid = Settings.getUUID()
+        let parameters: Parameters = ["userid": userid]
+        Alamofire.request(Constants.urls.personalInformationCategoriesURL, method: .get, parameters: parameters).responseJSON { response in
+            if response.result.isSuccess {
+                print(response)
+                guard let data = response.data else { return }
+                do {
+                    let decoder = JSONDecoder()
+                    decoder.dateDecodingStrategy = .secondsSince1970
+                    let pics = try decoder.decode([PersonalInformationCategory].self, from: data)
+                    _ = savePersonalInformationCategories(pics: pics)
+                    FileService.shared.log("Retrieved latest personal information categories from server", classname: "PersonalInformationCategory")
+                } catch {
+                    print("Error serializing the json", error)
+                }
             }
         }
     }
     
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupViews()
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    let imageView: UIImageView = {
-        let iv = UIImageView()
-        iv.contentMode = .scaleAspectFill
-        iv.layer.cornerRadius = 16
-        iv.layer.masksToBounds = true
-        iv.translatesAutoresizingMaskIntoConstraints = false
-        iv.backgroundColor = UIColor.orange.withAlphaComponent(0.4)
-        return iv
-    }()
-    
-    let nameLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Personal information"
-        label.font = UIFont.boldSystemFont(ofSize: 14)
-        label.numberOfLines = 2
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    func setupViews() {
-        addSubview(imageView)
-        addSubview(nameLabel)
-        
-        addVisualConstraint("H:|-[v0]-|", views: ["v0": nameLabel])
-        addVisualConstraint("V:|-[v0]-|", views: ["v0": nameLabel])
-        addVisualConstraint("H:|[v0]|", views: ["v0": imageView])
-        addVisualConstraint("V:|-[v0]-14-|", views: ["v0": imageView])
+    class func updateIfNeeded() {
+        let defaults = UserDefaults.standard
+        if let lastUpdate = defaults.object(forKey: Constants.defaultsKeys.lastPersonalInformationCategoryUpdate) as? Date {
+            let pics = loadPersonalInformationCategories()
+            if pics == nil || pics?.count == 0 || abs(lastUpdate.timeIntervalSinceNow) > Constants.variables.minimumDurationBetweenPersonalInformationCategoryUpdates {
+                FileService.shared.log("update the personal information categories in the background", classname: "PersonalInformationCategory")
+                DispatchQueue.global(qos: .background).async {
+                    PersonalInformationCategory.retrieveLatestPersonalInformationCategories()
+                }
+            }
+        }
     }
 }
 

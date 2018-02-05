@@ -110,3 +110,56 @@ extension UICollectionView {
         scrollRectToVisible(CGRect(x: contentOffset.x + cellSize.width, y: contentOffset.y, width: cellSize.width, height: cellSize.height), animated: true)
     }
 }
+
+extension UIColor {
+    convenience init(red: Int, green: Int, blue: Int, a: CGFloat = 1.0) {
+        self.init(
+            red: CGFloat(red) / 255.0,
+            green: CGFloat(green) / 255.0,
+            blue: CGFloat(blue) / 255.0,
+            alpha: a
+        )
+    }
+    
+    convenience init(rgb: Int, a: CGFloat = 1.0) {
+        self.init(
+            red: (rgb >> 16) & 0xFF,
+            green: (rgb >> 8) & 0xFF,
+            blue: rgb & 0xFF,
+            a: a
+        )
+    }
+    
+    convenience init?(hex: String) {
+        var hexNormalized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        hexNormalized = hexNormalized.replacingOccurrences(of: "#", with: "")
+        
+        // Helpers
+        var rgb: UInt32 = 0
+        var r: CGFloat = 0.0
+        var g: CGFloat = 0.0
+        var b: CGFloat = 0.0
+        var a: CGFloat = 1.0
+        let length = hexNormalized.count
+        
+        // Create Scanner
+        Scanner(string: hexNormalized).scanHexInt32(&rgb)
+        
+        if length == 6 {
+            r = CGFloat((rgb & 0xFF0000) >> 16) / 255.0
+            g = CGFloat((rgb & 0x00FF00) >> 8) / 255.0
+            b = CGFloat(rgb & 0x0000FF) / 255.0
+            
+        } else if length == 8 {
+            r = CGFloat((rgb & 0xFF000000) >> 24) / 255.0
+            g = CGFloat((rgb & 0x00FF0000) >> 16) / 255.0
+            b = CGFloat((rgb & 0x0000FF00) >> 8) / 255.0
+            a = CGFloat(rgb & 0x000000FF) / 255.0
+            
+        } else {
+            return nil
+        }
+        
+        self.init(red: r, green: g, blue: b, alpha: a)
+    }
+}

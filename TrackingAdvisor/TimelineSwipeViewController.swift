@@ -19,25 +19,26 @@ class TimelineSwipeViewController: UIViewController, EMPageViewControllerDataSou
         
         // retrieve the latest data from the server
         DispatchQueue.global(qos: .background).async {
+            print("Getting the latest user update")
             UserUpdateHandler.retrieveLatestUserUpdates(for: "2017-11-21")
         }
         
         // get the titles of the pages
         titles = DataStoreService.shared.getUniqueVisitDays()
-        
+
         // Instantiate EMPageViewController and set the data source and delegate to 'self'
         let pageViewController = EMPageViewController()
-        
+
         // Or, for a vertical orientation
         // let pageViewController = EMPageViewController(navigationOrientation: .Vertical)
         pageViewController.dataSource = self
         pageViewController.delegate = self
-        
+
         // Set the initially selected view controller
         // IMPORTANT: If you are using a dataSource, make sure you set it BEFORE calling selectViewController:direction:animated:completion
         guard let currentViewController = self.viewController(at: 0) else { return }
         pageViewController.selectViewController(currentViewController, direction: .forward, animated: false, completion: nil)
-        
+
         // Add EMPageViewController to the root view controller
         self.addChildViewController(pageViewController)
         self.view.insertSubview(pageViewController.view, at: 0) // Insert the page controller view below the navigation buttons
@@ -78,10 +79,8 @@ class TimelineSwipeViewController: UIViewController, EMPageViewControllerDataSou
             return nil
         }
         
-        print("viewController at index \(index)")
         let viewController = self.storyboard!.instantiateViewController(withIdentifier: "OneTimelineViewController") as! OneTimelineViewController
         viewController.timelineTitle = self.titles[index]
-        print("viewController(at index): \(viewController.timelineTitle)")
         return viewController
     }
     

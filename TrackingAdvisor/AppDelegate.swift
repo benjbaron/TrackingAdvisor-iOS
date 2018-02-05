@@ -42,6 +42,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         
         registerForPushNotifications()
+        
+        // update the personal categories if needed
+        PersonalInformationCategory.updateIfNeeded()
         return true
     }
 

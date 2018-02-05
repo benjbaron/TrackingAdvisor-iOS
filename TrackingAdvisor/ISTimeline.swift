@@ -500,7 +500,7 @@ open class ISTimeline: UIScrollView {
     feedbackView.addConstraints([imageViewTrailingConstraint,imageViewTopConstraint,imageViewWidthContraint, imageViewHeightConstraint])
         
         let otherLabel = UILabel()
-        otherLabel.text = "Other"
+        otherLabel.text = "Not the right place?"
         otherLabel.font = UIFont.italicSystemFont(ofSize: 14.0)
         otherLabel.textAlignment = .right
         otherLabel.textColor = Constants.colors.primaryLight
@@ -511,7 +511,7 @@ open class ISTimeline: UIScrollView {
         let otherLabelTrailingConstraint = NSLayoutConstraint(item: otherLabel, attribute: .trailing, relatedBy: .equal, toItem: imageView, attribute: .leading, multiplier: 1, constant: -5)
         let otherLabelTopConstraint = NSLayoutConstraint(item: otherLabel, attribute: .top, relatedBy: .equal, toItem: feedbackView, attribute: .top, multiplier: 1, constant: 8)
 
-        let otherLabelWidthContraint = NSLayoutConstraint(item: otherLabel, attribute: .width, relatedBy: .equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 100)
+        let otherLabelWidthContraint = NSLayoutConstraint(item: otherLabel, attribute: .width, relatedBy: .equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 200)
         let otherLabelHeightContraint = NSLayoutConstraint(item: otherLabel, attribute: .height, relatedBy: .equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 25)
 
         feedbackView.addConstraints([otherLabelTrailingConstraint, otherLabelTopConstraint, otherLabelWidthContraint, otherLabelHeightContraint])

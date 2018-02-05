@@ -14,7 +14,7 @@ class Visit: NSManagedObject {
     
     class func findOrCreateVisit(matching userVisit: UserVisit, in context: NSManagedObjectContext) throws -> Visit {
         let request: NSFetchRequest<Visit> = Visit.fetchRequest()
-        request.predicate = NSPredicate(format: "id = %@", userVisit.visitid)
+        request.predicate = NSPredicate(format: "id = %@", userVisit.vid)
         
         do {
             let matches = try context.fetch(request)
@@ -27,34 +27,43 @@ class Visit: NSManagedObject {
         }
         
         let visit = Visit(context: context)
-        visit.id = userVisit.visitid
-        visit.confidence = userVisit.confidence
-        visit.departure = userVisit.departure
-        visit.arrival = userVisit.arrival
-        visit.placeid = userVisit.placeid
-        visit.day = DateHandler.dateToDayString(from: userVisit.arrival)
-        visit.place = try! Place.findPlace(matching: userVisit.placeid, in: context)
+        visit.id = userVisit.vid
+        visit.confidence = userVisit.c
+        visit.departure = userVisit.d
+        visit.arrival = userVisit.a
+        visit.placeid = userVisit.pid
+        visit.day = DateHandler.dateToDayString(from: userVisit.a)
+        if let place = try! Place.findPlace(matching: userVisit.pid, in: context) {
+            visit.place = place
+            place.addToVisits(visit)
+        }
+        
+//        visit.personalInformation = NSSet(array: userVisit.personalinformationids.map {
+//            try! PersonalInformation.findPersonalInformation(matching: $0, in: context)!
+//        })
         
         return visit
     }
     
-    func getPersonalInformationCategories() -> [PersonalInformationCategory] {
-        var categories: [PersonalInformationCategory] = []
-        if let personalinfo = place?.personalinfo {
-            for (personalInfoName, personalInfoList) in personalinfo {
-                var cat = PersonalInformationCategory(name: personalInfoName)
-                for personalInfo in personalInfoList {
-                    let p = PersonalInformation(name: personalInfo)
-                    cat.personalInfo?.append(p)
-                }
-                categories.append(cat)
+    class func findVisit(matching userVisitId: String, in context: NSManagedObjectContext) throws -> Visit? {
+        let request: NSFetchRequest<Visit> = Visit.fetchRequest()
+        request.predicate = NSPredicate(format: "id = %@", userVisitId)
+        
+        do {
+            let matches = try context.fetch(request)
+            if matches.count > 0 {
+                assert(matches.count == 1, "Visit.findVisit -- database inconsistency")
+                return matches[0]
             }
+        } catch {
+            throw error
         }
-        return categories
+        
+        return nil
     }
     
     func getTimesPhrase() -> String {
-        
+
         guard let arrival = arrival, let departure = departure else { return "" }
         
         let timeDiff = departure.timeIntervalSince(arrival)

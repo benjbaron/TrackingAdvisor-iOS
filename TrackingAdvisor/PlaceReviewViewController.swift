@@ -25,8 +25,8 @@ class PlaceReviewViewController: UIViewController, UICollectionViewDataSource, P
     }()
     
     var flowLayout: PlaceReviewLayout!
-    
-    let placeReviews = PlaceReview.getSamplePlaceReviews()
+    var reviewChallenge: ReviewChallenge!
+    var personalInformationPlaces: [PersonalInformation]?
     let cellId = "PlaceReviewCell"
     
     override func viewDidLoad() {
@@ -65,6 +65,17 @@ class PlaceReviewViewController: UIViewController, UICollectionViewDataSource, P
         // Dispose of any resources that can be recreated.
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        reviewChallenge = DataStoreService.shared.getLatestReviewChallenge()
+        if reviewChallenge != nil {
+            personalInformationPlaces = reviewChallenge.getPersonalInformationPlaces()
+        } else {
+            // TODO: Display a message saying that a challenge will be soon available
+        }
+    }
+    
     
     // MARK: - UICollectionViewDataSource deleagte methods
     func numberOfSections(in collectionView: UICollectionView) -> Int {
@@ -72,21 +83,20 @@ class PlaceReviewViewController: UIViewController, UICollectionViewDataSource, P
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return placeReviews.count
+        if let count = personalInformationPlaces?.count {
+            return count
+        }
+        return 0
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! PlaceReviewCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! PlaceReviewChallengeCell
         
         cell.delegate = self
         cell.parent = collectionView
         cell.indexPath = indexPath
         cell.last = indexPath.item + 1 == collectionView.numberOfItems(inSection: indexPath.section)
-        cell.placeReview = placeReviews[indexPath.item]
-        cell.answerQuestionPlace = placeReviews[indexPath.item].answerQuestionPlace
-        cell.answerQuestionPersonalInformation = placeReviews[indexPath.item].answerQuestionPersonalInformation
-        cell.answerQuestionExplanation = placeReviews[indexPath.item].answerQuestionExplanation
-        cell.answerQuestionPrivacy = placeReviews[indexPath.item].answerQuestionPrivacy
+        cell.personalInformation = personalInformationPlaces?[indexPath.item]
         
         return cell
     }
@@ -152,15 +162,15 @@ class PlaceReviewViewController: UIViewController, UICollectionViewDataSource, P
 
 }
 
-class PlaceReview {
+fileprivate class PlaceReview {
     var backgroundColor: UIColor = .clear
     var placeName: String = ""
     var placeAddress: String = ""
     var placePersonalInformation: String = ""
-    var answerQuestionPlace: QuestionAnswer = .none
-    var answerQuestionPersonalInformation: QuestionAnswer = .none
-    var answerQuestionExplanation: QuestionAnswer = .none
-    var answerQuestionPrivacy: QuestionAnswer = .none
+    var answerQuestionPlace: ReviewAnswer = .none
+    var answerQuestionPersonalInformation: ReviewAnswer = .none
+    var answerQuestionExplanation: ReviewAnswer = .none
+    var answerQuestionPrivacy: ReviewAnswer = .none
     
     init(backgroundColor: UIColor, placeName: String, placeAddress: String, placePersonalInformation: String) {
         self.backgroundColor = backgroundColor
@@ -182,10 +192,32 @@ class PlaceReview {
     }
 }
 
-class PlaceReviewCell: UICollectionViewCell {
+class PlaceReviewChallengeCell: UICollectionViewCell {
     weak var parent: UICollectionView?
     var delegate: PlaceReviewCellDelegate!
-
+    
+    var personalInformation: PersonalInformation? {
+        didSet {
+            self.headerView.placeName = personalInformation?.place?.name
+            self.headerView.placeAddress = personalInformation?.place?.formatAddressString()
+            self.headerView.placePersonalInformation = personalInformation?.getPersonalInformationPhrase()
+            self.headerView.backgroundColor = personalInformation?.place?.getPlaceColor()
+            
+            self.nextPlaceView.backgroundColor = personalInformation?.place?.getPlaceColor().withAlphaComponent(0.5)
+            self.nextPlaceView.text = last ? "Thank You!" : "Next place"
+            
+            self.reviewPlace = personalInformation?.getReview(of: .place)
+            self.reviewPersonalInformation = personalInformation?.getReview(of: .personalInformation)
+            self.reviewExplanation = personalInformation?.getReview(of: .explanation)
+            self.reviewPrivacy = personalInformation?.getReview(of: .privacy)
+        }
+    }
+    
+    var reviewPlace: Review?
+    var reviewPersonalInformation: Review?
+    var reviewExplanation: Review?
+    var reviewPrivacy: Review?
+    
     var indexPath: IndexPath?
     var last: Bool = false
     
@@ -201,11 +233,11 @@ class PlaceReviewCell: UICollectionViewCell {
         })
     }()
     
-    var answerQuestionPlace: QuestionAnswer = .none {
+    var answerQuestionPlace: ReviewAnswer = .none {
         didSet {
             checkIfEverythingIsAnswered()
-            placeReview?.answerQuestionPlace = answerQuestionPlace
-            questionPlaceView.selected = answerQuestionPlace
+            reviewPlace?.answer = answerQuestionPlace
+//            questionPlaceView.selected = answerQuestionPlace
             switch answerQuestionPlace {
             case .yes:
                 UIView.animate(withDuration: 0.1) {
@@ -223,6 +255,7 @@ class PlaceReviewCell: UICollectionViewCell {
                 answerQuestionPersonalInformation = .none
                 answerQuestionPrivacy = .none
                 answerQuestionExplanation = .none
+                
                 UIView.animate(withDuration: 0.1) {
                     self.placeEditViewHeight?.constant = 40
                     self.placeEditViewTopMargin?.constant = 8
@@ -254,7 +287,7 @@ class PlaceReviewCell: UICollectionViewCell {
     
     let placeEditView: CommentRow = {
         return CommentRow(with: "It would be great if you could tell us what place you visited", icon: "chevron-right", backgroundColor: UIColor.clear) {
-            print("tapped on place edit")
+            print("tapped on place edit") // TODO: - Present the modal view PlaceFinderMapTableViewController
         }
     }()
     var placeEditViewHeight: NSLayoutConstraint?
@@ -273,16 +306,17 @@ class PlaceReviewCell: UICollectionViewCell {
     let personalInformationEditView: CommentRow = {
         return CommentRow(with: "It would be great if you could tell us the correct personal information", icon: "chevron-right", backgroundColor: UIColor.clear) {
             print("tapped on personal information edit")
+            // TODO: - present PlacePersonalInformationController
         }
     }()
     var personalInformationViewHeight: NSLayoutConstraint?
     var personalInformationViewTopMargin: NSLayoutConstraint?
 
-    var answerQuestionPersonalInformation: QuestionAnswer = .none {
+    var answerQuestionPersonalInformation: ReviewAnswer = .none {
         didSet {
             checkIfEverythingIsAnswered()
-            placeReview?.answerQuestionPersonalInformation = answerQuestionPersonalInformation
-            questionPersonalInformationView.selected = answerQuestionPersonalInformation
+            reviewPersonalInformation?.answer = answerQuestionPersonalInformation
+//            questionPersonalInformationView.selected = answerQuestionPersonalInformation
             switch answerQuestionPersonalInformation {
             case .yes:
                 self.personalInformationViewHeight?.constant = 0
@@ -307,17 +341,17 @@ class PlaceReviewCell: UICollectionViewCell {
     var questionExplanationViewHeight: NSLayoutConstraint?
     var questionExplanationViewTopMargin: NSLayoutConstraint?
     
-    var answerQuestionExplanation: QuestionAnswer = .none {
+    var answerQuestionExplanation: ReviewAnswer = .none {
         didSet {
             checkIfEverythingIsAnswered()
-            placeReview?.answerQuestionExplanation = answerQuestionExplanation
-            questionExplanationView.selected = answerQuestionExplanation
+            reviewExplanation?.answer = answerQuestionExplanation
+//            questionExplanationView.selected = answerQuestionExplanation
         }
     }
     
     lazy var questionPrivacyView: QuestionRow = {
         return QuestionRow(with: "Is the inferred information sensitive to you?", yesAction: { [weak self] in
-            self?.answerQuestionPrivacy = .yes
+                self?.answerQuestionPrivacy = .yes
             }, noAction: { [weak self] in
                 self?.answerQuestionPrivacy = .no
         })
@@ -325,11 +359,11 @@ class PlaceReviewCell: UICollectionViewCell {
     var questionPrivacyViewHeight: NSLayoutConstraint?
     var questionPrivacyViewTopMargin: NSLayoutConstraint?
     
-    var answerQuestionPrivacy: QuestionAnswer = .none {
+    var answerQuestionPrivacy: ReviewAnswer = .none {
         didSet {
             checkIfEverythingIsAnswered()
-            placeReview?.answerQuestionPrivacy = answerQuestionPrivacy
-            questionPrivacyView.selected = answerQuestionPrivacy
+            reviewPrivacy?.answer = answerQuestionPrivacy
+//            questionPrivacyView.selected = answerQuestionPrivacy
         }
     }
     
@@ -355,33 +389,9 @@ class PlaceReviewCell: UICollectionViewCell {
         questionPrivacyView.selected = .none
     }
     
-    var placeReview: PlaceReview? {
-        didSet {
-            self.updateUI()
-        }
-    }
-    
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         setupViews()
-    }
-    
-    private func updateUI() {
-        if let review = placeReview {
-            self.headerView.placeName = review.placeName
-            self.headerView.placeAddress = review.placeAddress
-            self.headerView.placePersonalInformation = "This place gives personal information about \(review.placePersonalInformation)"
-            self.headerView.backgroundColor = review.backgroundColor
-            self.nextPlaceView.backgroundColor = review.backgroundColor.withAlphaComponent(0.5)
-            self.nextPlaceView.text = last ? "Thank You!" : "Next place"
-        } else {
-            self.headerView.backgroundColor = .clear
-            self.nextPlaceView.backgroundColor = Constants.colors.primaryDark
-            self.headerView.placeName = ""
-            self.headerView.placeAddress = ""
-            self.headerView.placePersonalInformation = ""
-            self.nextPlaceView.text = ""
-        }
     }
     
     func setupViews() {
@@ -542,32 +552,40 @@ class PlaceReviewLayout: UICollectionViewFlowLayout {
     }
 }
 
-enum QuestionAnswer {
-    case yes
-    case no
-    case none
-}
 
 class QuestionRow : UIView {
     var question: String?
     var yesAction: (() -> ())?
     var noAction: (() -> ())?
-    var yesView: UIView?
-    var noView: UIView?
-    var selected: QuestionAnswer = .none {
+    var selectedColor: UIColor = Constants.colors.primaryDark {
+        didSet {
+            let tmp = selected
+            selected = tmp
+        }
+    }
+    var unselectedColor: UIColor = Constants.colors.primaryLight {
+        didSet {
+            let tmp = selected
+            selected = tmp
+        }
+    }
+    private var yesView: UIView?
+    private var noView: UIView?
+
+    var selected: ReviewAnswer = .none {
         didSet {
             switch selected {
             case .none:
-                (yesView?.subviews[0] as! UIImageView).tintColor = Constants.colors.primaryLight
-                (noView?.subviews[0] as! UIImageView).tintColor = Constants.colors.primaryLight
+                (yesView?.subviews[0] as! UIImageView).tintColor = unselectedColor
+                (noView?.subviews[0] as! UIImageView).tintColor = unselectedColor
                 layoutIfNeeded()
             case .yes:
-                (yesView?.subviews[0] as! UIImageView).tintColor = Constants.colors.primaryDark
-                (noView?.subviews[0] as! UIImageView).tintColor = Constants.colors.primaryLight
+                (yesView?.subviews[0] as! UIImageView).tintColor = selectedColor
+                (noView?.subviews[0] as! UIImageView).tintColor = unselectedColor
                 layoutIfNeeded()
             case .no:
-                (yesView?.subviews[0] as! UIImageView).tintColor = Constants.colors.primaryLight
-                (noView?.subviews[0] as! UIImageView).tintColor = Constants.colors.primaryDark
+                (yesView?.subviews[0] as! UIImageView).tintColor = unselectedColor
+                (noView?.subviews[0] as! UIImageView).tintColor = selectedColor
                 layoutIfNeeded()
             }
         }
@@ -592,13 +610,10 @@ class QuestionRow : UIView {
     func setupViews() {
         let questionLabel = UILabel()
         questionLabel.text = question
-        questionLabel.font = UIFont.systemFont(ofSize: 16)
+        questionLabel.font = UIFont.systemFont(ofSize: 14)
         questionLabel.numberOfLines = 0
         questionLabel.textAlignment = .left
         questionLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        //        let yesView = createIconWithText(icon: "check", text: "YES")
-        //        let noView = createIconWithText(icon: "times", text: "NO")
         
         yesView = createIcon(icon: "check")
         noView = createIcon(icon: "times")
@@ -633,10 +648,29 @@ class CommentRow : UIView {
     var action: (() -> ())?
     var text: String?
     var icon: String?
+    var color: UIColor = Constants.colors.primaryLight {
+        didSet {
+            textLabel.textColor = color
+            (iconView.subviews[0] as! UIImageView).tintColor = color
+        }
+    }
+    
+    private lazy var textLabel: UILabel = {
+        let label = UILabel()
+        label.text = text
+        label.numberOfLines = 2
+        label.textColor = Constants.colors.primaryLight
+        label.font = UIFont.italicSystemFont(ofSize: 14.0)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private lazy var iconView: UIView = {
+        return createIcon(icon: self.icon!)
+    }()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        
     }
     
     convenience init(with text: String, icon: String, backgroundColor: UIColor, action: @escaping () -> ()) {
@@ -653,22 +687,14 @@ class CommentRow : UIView {
     }
     
     func setupView() {
-        let label = UILabel()
-        label.text = text
-        label.numberOfLines = 2
-        label.textColor = Constants.colors.primaryLight
-        label.font = UIFont.italicSystemFont(ofSize: 14.0)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(label)
-        
-        let icon = createIcon(icon: self.icon!)
-        addSubview(icon)
+        addSubview(textLabel)
+        addSubview(iconView)
         
         // add constraints
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": label]))
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|-(5@999)-[icon]-(5@999)-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["icon": icon]))
+        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": textLabel]))
+        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|-(5@999)-[icon]-(5@999)-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["icon": iconView]))
         
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-14-[v0]-14-[icon(25)]-14-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": label, "icon": icon]))
+        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-14-[v0]-14-[icon(25)]-14-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": textLabel, "icon": iconView]))
         
         translatesAutoresizingMaskIntoConstraints = false
         addTapGestureRecognizer {
@@ -678,6 +704,7 @@ class CommentRow : UIView {
 }
 
 class HeaderRow : UIView {
+    
     var placePersonalInformation: String? {
         didSet {
             placePersonalInformationLabel.text = placePersonalInformation

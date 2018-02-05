@@ -50,7 +50,24 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     
     @objc func back(_ sender: UIBarButtonItem) {
         view.endEditing(true)
-        presentingViewController?.dismiss(animated: true)
+        
+        guard let controllers = navigationController?.viewControllers else { return }
+        let count = controllers.count
+        if count == 2 {
+            // get the previous place detail controller
+            if let vc = controllers[0] as? OneTimelinePlaceDetailViewController {
+                vc.visit = visit
+                navigationController?.popToViewController(vc, animated: true)
+            }
+        } else if count == 1 {
+            // return to the timeline
+            presentingViewController?.dismiss(animated: true)
+        }
+    }
+    
+    @objc func deletePlace(_ sender: Any) {
+        // TODO: - do a delete action and present a confirmation alert
+        print("Clicked on the delete button")
     }
     
     var searchbarView: UISearchBar!
@@ -62,14 +79,24 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     lazy var startVisitTimesEditView: VisitTimesEditRow = {
         let vter = VisitTimesEditRow()
         vter.type = .start
+        vter.textLabel.text = "Start time of the visit"
         vter.delegate = self
         return vter
     }()
     lazy var endVisitTimesEditView: VisitTimesEditRow = {
         let vter = VisitTimesEditRow()
         vter.type = .end
+        vter.textLabel.text = "End time of the visit"
         vter.delegate = self
         return vter
+    }()
+    lazy var deleteButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Delete the place", for: .normal)
+        button.setTitleColor(Constants.colors.darkRed, for: .normal)
+        button.setTitleColor(Constants.colors.darkRed.withAlphaComponent(0.5), for: .highlighted)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
     }()
     
     let cellId = "locationSearchResultCell"
@@ -77,6 +104,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     // height constraints
     var mapHeightContraint: NSLayoutConstraint!
     var headerHeightConstraint: NSLayoutConstraint!
+    var deleteButtonHeightConstraint: NSLayoutConstraint!
     
     var color = UIColor.white // TODO: Associate the color to a Place
     
@@ -137,6 +165,9 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         searchbarView.delegate = self
         searchbarView.translatesAutoresizingMaskIntoConstraints = false
         
+        // set up the delete button
+        deleteButton.addTarget(self, action: #selector(deletePlace), for: .touchUpInside)
+        
         // set up the map view
         mapView = MGLMapView(frame: view.bounds, styleURL: MGLStyle.lightStyleURL())
         mapView.tintColor = color
@@ -170,6 +201,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         
         self.view.addSubview(startVisitTimesEditView)
         self.view.addSubview(endVisitTimesEditView)
+        self.view.addSubview(deleteButton)
         self.view.addSubview(headerView)
         self.view.addSubview(mapView)
         self.view.addSubview(searchbarView)
@@ -178,10 +210,11 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         self.view.addVisualConstraint("H:|[v0]|", views: ["v0": headerView])
         self.view.addVisualConstraint("H:|[v0]|", views: ["v0": startVisitTimesEditView])
         self.view.addVisualConstraint("H:|[v0]|", views: ["v0": endVisitTimesEditView])
+        self.view.addVisualConstraint("H:|[v0]|", views: ["v0": deleteButton])
         self.view.addVisualConstraint("H:|[v0]|", views: ["v0": mapView])
         self.view.addVisualConstraint("H:|[v0]|", views: ["v0": searchbarView])
         self.view.addVisualConstraint("H:|[v0]|", views: ["v0": tableView])
-        self.view.addVisualConstraint("V:|[header][start][end][map][search][table]|", views: ["header": headerView, "start": startVisitTimesEditView, "end": endVisitTimesEditView, "map": mapView, "search": searchbarView, "table": tableView])
+        self.view.addVisualConstraint("V:|[header][start][end][delete(40@750)][map][search][table]|", views: ["header": headerView, "start": startVisitTimesEditView, "end": endVisitTimesEditView, "delete": deleteButton, "map": mapView, "search": searchbarView, "table": tableView])
         
         // set up the overlaying map marker
         marker = UIImageView(image: UIImage(named: "map-marker")!.withRenderingMode(.alwaysTemplate))
@@ -203,6 +236,10 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         mapHeightContraint = NSLayoutConstraint(item: mapView, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 100)
         view.addConstraint(mapHeightContraint)
         mapHeightContraint.isActive = false
+        
+        deleteButtonHeightConstraint = NSLayoutConstraint(item: deleteButton, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 0)
+        view.addConstraint(deleteButtonHeightConstraint)
+        deleteButtonHeightConstraint.isActive = false
     }
 
     override func didReceiveMemoryWarning() {
@@ -413,6 +450,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         UIView.animate(withDuration: 0.5, animations: { [weak self] in
             guard let strongSelf = self else { return }
             strongSelf.mapHeightContraint.isActive = true
+            strongSelf.deleteButtonHeightConstraint.isActive = true
 //            strongSelf.headerHeightConstraint.isActive = true
             strongSelf.startVisitTimesEditView.hide()
             strongSelf.endVisitTimesEditView.hide()
@@ -432,6 +470,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         UIView.animate(withDuration: 0.5, animations: { [weak self] in
             guard let strongSelf = self else { return }
             strongSelf.mapHeightContraint.isActive = false
+            strongSelf.deleteButtonHeightConstraint.isActive = false
 //            strongSelf.headerHeightConstraint.isActive = false
             strongSelf.startVisitTimesEditView.show()
             strongSelf.endVisitTimesEditView.show()
@@ -470,66 +509,6 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     }
 }
 
-class HeaderPlace: UIView {
-    var placeName : String? {
-        didSet {
-            placeNameLabel.text = placeName
-        }
-    }
-    var placeAddress : String? {
-        didSet {
-            placeAddressLabel.text = placeAddress
-        }
-    }
-    
-    internal let placeNameLabel: UILabel = {
-        let label = UILabel()
-        label.text = "place name"
-        label.font = UIFont.systemFont(ofSize: 25, weight: .heavy)
-        label.textColor = Constants.colors.white
-        label.lineBreakMode = .byWordWrapping
-        label.numberOfLines = 0
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    internal let placeAddressLabel: UILabel = {
-        let label = UILabel()
-        label.text = "place address"
-        label.font = UIFont.systemFont(ofSize: 14.0)
-        label.textColor = Constants.colors.superLightGray
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-    }
-    
-    convenience init() {
-        self.init(frame: CGRect.zero)
-        setupViews()
-    }
-    
-    required init(coder aDecoder: NSCoder) {
-        fatalError("This class does not support NSCoding")
-    }
-    
-    func setupViews() {
-        addSubview(placeNameLabel)
-        addSubview(placeAddressLabel)
-        
-        // add constraints
-        addVisualConstraint("V:|-(28@750)-[title][address]-(18@750)-|", views: ["title": placeNameLabel, "address": placeAddressLabel])
-        
-        addVisualConstraint("H:|-75-[title]-75-|", views: ["title": placeNameLabel])
-        addVisualConstraint("H:|-25-[address]-25-|", views: ["address": placeAddressLabel])
-        
-        translatesAutoresizingMaskIntoConstraints = false
-    }
-}
 
 class VisitTimesEditRow : UIView {
     
@@ -569,7 +548,7 @@ class VisitTimesEditRow : UIView {
     var datePicker: UIDatePicker = {
         let dp = UIDatePicker()
         dp.datePickerMode = .time
-        dp.addTarget(self, action: #selector(VisitTimesEditRow.datePickerValueChanged(_:)), for: .valueChanged)
+        dp.addTarget(self, action: #selector(VisitTimesEditRow.datePickerValueChanged), for: .valueChanged)
         dp.translatesAutoresizingMaskIntoConstraints = false
         return dp
     }()

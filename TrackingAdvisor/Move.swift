@@ -13,7 +13,7 @@ import CoreData
 class Move: NSManagedObject {
     class func findOrCreateMove(matching userMove: UserMove, in context: NSManagedObjectContext) throws -> Move {
         let request: NSFetchRequest<Move> = Move.fetchRequest()
-        request.predicate = NSPredicate(format: "id = %@", userMove.moveid)
+        request.predicate = NSPredicate(format: "id = %@", userMove.mid)
         
         do {
             let matches = try context.fetch(request)
@@ -29,13 +29,13 @@ class Move: NSManagedObject {
         dateFormatter.dateFormat = "dd-MM-yyyy"
         
         let move = Move(context: context)
-        move.id = userMove.moveid
-        move.activity = userMove.activity
-        move.arrivalDate = userMove.arrivaldate
-        move.departureDate = userMove.departuredate
-        move.arrivalPlace = try! Place.findPlace(matching: userMove.arrivalplaceid, in: context)
-        move.departurePlace = try! Place.findPlace(matching: userMove.departureplaceid, in: context)
-        move.day = dateFormatter.string(from: userMove.arrivaldate)
+        move.id = userMove.mid
+        move.activity = userMove.a
+        move.arrivalDate = userMove.ad
+        move.departureDate = userMove.dd
+        move.arrivalPlace = try! Place.findPlace(matching: userMove.apid, in: context)
+        move.departurePlace = try! Place.findPlace(matching: userMove.dpid, in: context)
+        move.day = dateFormatter.string(from: userMove.ad)
         
         return move
     }

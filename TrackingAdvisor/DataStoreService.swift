@@ -12,12 +12,13 @@ import CoreData
 
 protocol DataStoreUpdateProtocol {
     func dataStoreDidUpdate(update: UserUpdate)
+    func dataStoreDidAddReviewChallenge(reviewChallenge: UserReviewChallenge)
 }
 
 
 class DataStoreService: NSObject {
     static let shared = DataStoreService()
-    var delegate: DataStoreUpdateProtocol? = nil
+    var delegate: DataStoreUpdateProtocol?
     var container: NSPersistentContainer? = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer
     
     override init() {
@@ -25,22 +26,38 @@ class DataStoreService: NSObject {
     }
     
     func updateDatabase(with userUpdate: UserUpdate) {
+        
         container?.performBackgroundTask { [weak self] context in
-            for userPlace in userUpdate.places {
+            for userPlace in userUpdate.p {
                 print("save place")
                 _ = try? Place.findOrCreatePlace(matching: userPlace, in: context)
             }
-            
-            for userVisit in userUpdate.visits {
+
+            for userVisit in userUpdate.v {
                 print("save visit")
                 _ = try? Visit.findOrCreateVisit(matching: userVisit, in: context)
             }
-            
-            for userMove in userUpdate.moves {
+
+            for userMove in userUpdate.m {
                 print("save move")
                 _ = try? Move.findOrCreateMove(matching: userMove, in: context)
             }
-            
+
+            for userPI in userUpdate.pi {
+                print("save personal information")
+                _ = try? PersonalInformation.findOrCreatePersonalInformation(matching: userPI, in: context)
+            }
+
+            for userReview in userUpdate.rv {
+                print("save reviews for visits")
+                _ = try? ReviewVisit.findOrCreateReviewVisit(matching: userReview, question: userUpdate.q[userReview.q], in: context)
+            }
+
+            for userReview in userUpdate.rpi {
+                print("save reviews for personal information")
+                _ = try? ReviewPersonalInformation.findOrCreateReviewPersonalInformation(matching: userReview, question: userUpdate.q[userReview.q], in: context)
+            }
+
             do {
                 try context.save()
             } catch {
@@ -50,6 +67,23 @@ class DataStoreService: NSObject {
             
             DispatchQueue.main.async { () -> Void in
                 self?.delegate?.dataStoreDidUpdate(update: userUpdate)
+            }
+        }
+    }
+    
+    func updateDataBase(with reviewChallenge: UserReviewChallenge) {
+        container?.performBackgroundTask { [weak self] context in
+            _ = try? ReviewChallenge.findOrCreateReviewChallenge(matching: reviewChallenge, in: context)
+            
+            do {
+                try context.save()
+            } catch {
+                print("error saving the database")
+            }
+            self?.stats()
+            
+            DispatchQueue.main.async { () -> Void in
+                self?.delegate?.dataStoreDidAddReviewChallenge(reviewChallenge: reviewChallenge)
             }
         }
     }
@@ -65,6 +99,15 @@ class DataStoreService: NSObject {
                 }
                 if let moveCount = try? context.count(for: Move.fetchRequest()) {
                     print("\(moveCount) moves")
+                }
+                if let piCount = try? context.count(for: PersonalInformation.fetchRequest()) {
+                    print("\(piCount) personal information")
+                }
+                if let rcCount = try? context.count(for: ReviewChallenge.fetchRequest()) {
+                    print("\(rcCount) review challenges")
+                }
+                if let reviewCount = try? context.count(for: Review.fetchRequest()) {
+                    print("\(reviewCount) reviews")
                 }
             }
         }
@@ -146,5 +189,25 @@ class DataStoreService: NSObject {
         } catch {
             print("error when deleting places", error)
         }
+    }
+    
+    func getLatestReviewChallenge() -> ReviewChallenge? {
+        guard let context = container?.viewContext else { return nil }
+        
+        // create the fetch request
+        let request: NSFetchRequest<ReviewChallenge> = ReviewChallenge.fetchRequest()
+        
+        // Add Sort Descriptor
+        let sortDescriptor = NSSortDescriptor(key: "date", ascending: false)
+        request.sortDescriptors = [sortDescriptor]
+        
+        do {
+            let matches = try context.fetch(request)
+            return matches.first
+        } catch {
+            print("Could not fetch visits. \(error)")
+        }
+        
+        return nil
     }
 }

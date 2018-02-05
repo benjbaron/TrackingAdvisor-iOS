@@ -52,14 +52,15 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         guard let timeline = self.timeline else { return }
         
         let visits = DataStoreService.shared.getVisits(for: timelineTitle)
-        
+                
         let touchAction = { [weak self] (point:ISPoint) in
             guard let strongSelf = self else { return }
             
             // Load the place detail view and the navigation controller
-            let controller: OneTimelinePlaceDetailViewController? = OneTimelinePlaceDetailViewController()
-            controller?.visit = point.visit
-            let controllerNavigation = UINavigationController(rootViewController: controller!)
+            let controller = OneTimelinePlaceDetailViewController()
+            controller.visit = point.visit
+            
+            let controllerNavigation = UINavigationController(rootViewController: controller)
             controllerNavigation.modalTransitionStyle = .crossDissolve
             controllerNavigation.modalPresentationStyle = .fullScreen
             strongSelf.present(controllerNavigation, animated: true, completion: nil)
@@ -68,13 +69,13 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         
         let feebackTouchAction = { [weak self] (point: ISPoint) in
             guard let strongSelf = self else { return }
-            if let controller = strongSelf.storyboard?.instantiateViewController(withIdentifier: "PlaceFinderMapTableViewController") as? UINavigationController {
-                if let viewController = controller.topViewController as? PlaceFinderMapTableViewController {
-                    viewController.visit = point.visit
-                    viewController.title = "Edit place"
-                    strongSelf.tabBarController?.present(controller, animated: true, completion: nil)
-                }
-            }
+            let controller = PlaceFinderMapTableViewController()
+            controller.visit = point.visit
+            
+            let controllerNavigation = UINavigationController(rootViewController: controller)
+            controllerNavigation.modalTransitionStyle = .crossDissolve
+            controllerNavigation.modalPresentationStyle = .fullScreen
+            strongSelf.present(controllerNavigation, animated: true, completion: nil)
         }
         
         let dateFormatter = DateFormatter()
@@ -87,30 +88,12 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             let departureTime = dateFormatter.string(from: visit.departure!)
             var icon = UIImage(named: "location")!
             let placeName = visit.place!.name!
-            let placeCategory = visit.place!.category!
-            let placePersonalInfo = visit.place!.personalinfo!
-            var placePersonalInfoString = ""
-            var infoCount = 0
-            for key in placePersonalInfo.keys {
-                placePersonalInfoString += "\(key)"
-                if placePersonalInfo[key]!.count > 0 {
-                    placePersonalInfoString += ": \(placePersonalInfo[key]!.joined(separator: ", "))"
-                }
-                infoCount += 1
-                if infoCount < placePersonalInfo.count {
-                    placePersonalInfoString += ", "
-                }
-            }
-            print(placePersonalInfo)
-            print(placePersonalInfoString)
+            let placePersonalInformationString = visit.place!.getPersonalInformationPhrase()
             let times = "\(arrivalTime) - \(departureTime)"
             
             var description = "\(times)"
-            if placeCategory != "" {
-                description += "\n\(placeCategory)"
-            }
-            if placePersonalInfoString != "" {
-                description += "\n\(placePersonalInfoString)"
+            if placePersonalInformationString != "" {
+                description += "\n\(placePersonalInformationString)"
             }
             
             if placeName == "Home" {
