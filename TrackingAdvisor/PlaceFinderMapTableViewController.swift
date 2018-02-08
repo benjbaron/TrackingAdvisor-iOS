@@ -17,12 +17,21 @@ struct PlaceSearchResult: Codable {
     let places: [PlaceSearchResultDetail]
 }
 
+struct VisitRawTrace: Codable {
+    let lon: Double
+    let lat: Double
+    let ts: Int
+}
+
 struct PlaceSearchResultDetail: Codable {
     let name: String
     let placeid: String
+    let venueid: String
     let category: String
     let city: String
     let address: String
+    let checkins: Int
+    let score: Float
     let distance: Float
     let origin: String
     let longitude: Double
@@ -34,14 +43,23 @@ enum VisitTimesEditType {
     case end
 }
 
+enum VisitActionType: Int {
+    case add  = 0
+    case edit = 1
+}
+
 protocol VisitTimesEditDelegate {
-    func didPress(visitTimesEditType: VisitTimesEditType)
+    func didPress(visitTimesEditType: VisitTimesEditType?)
+    func hasChangedDate(visitTimesEditType: VisitTimesEditType?, oldDate: Date?, newDate: Date?)
 }
 
 class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate, VisitTimesEditDelegate {
 
     @objc func done(_ sender: Any) {
-        // TODO: - save the changes and notify the backend server
+        // create a user place from the different information
+        updateVisit {
+            print("Done")
+        }
         
         // quit the modal window
         view.endEditing(true)
@@ -50,6 +68,8 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     
     @objc func back(_ sender: UIBarButtonItem) {
         view.endEditing(true)
+        
+        // TODO: - ask if user is sure to leave the screen if there was any changes
         
         guard let controllers = navigationController?.viewControllers else { return }
         let count = controllers.count
@@ -68,6 +88,22 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     @objc func deletePlace(_ sender: Any) {
         // TODO: - do a delete action and present a confirmation alert
         print("Clicked on the delete button")
+        let alertController = UIAlertController(title: "Delete this place", message: "This will delete this place from your timeline", preferredStyle: UIAlertControllerStyle.alert)
+        
+        let deletePlaceAction = UIAlertAction(title: "Delete this place",
+                                            style: UIAlertActionStyle.destructive) {
+            (result : UIAlertAction) -> Void in
+            print("Delete the place -- proceed")
+                                                
+        }
+        let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel) {
+            (result : UIAlertAction) -> Void in
+            print("Cancel delete the place")
+        }
+        
+        alertController.addAction(deletePlaceAction)
+        alertController.addAction(cancelAction)
+        self.present(alertController, animated: true, completion: nil)
     }
     
     var searchbarView: UISearchBar!
@@ -92,7 +128,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     }()
     lazy var deleteButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Delete the place", for: .normal)
+        button.setTitle("Delete this place", for: .normal)
         button.setTitleColor(Constants.colors.darkRed, for: .normal)
         button.setTitleColor(Constants.colors.darkRed.withAlphaComponent(0.5), for: .highlighted)
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -106,18 +142,65 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     var headerHeightConstraint: NSLayoutConstraint!
     var deleteButtonHeightConstraint: NSLayoutConstraint!
     
-    var color = UIColor.white // TODO: Associate the color to a Place
+    var name: String? {
+        didSet { headerView.placeName = name }
+    }
+    var formatedAddress: String? {
+        didSet { headerView.placeAddress = formatedAddress }
+    }
+    var address: String?
+    var city: String?
+    var color = UIColor.white {
+        didSet { headerView.backgroundColor = color
+                 marker.tintColor = color }
+    }
+    var longitude: Double?
+    var latitude: Double?
+    var startDate: Date? {
+        didSet { startVisitTimesEditView.date = startDate }
+    }
+    var endDate: Date? {
+        didSet { endVisitTimesEditView.date = endDate }
+    }
+    var type: VisitActionType = .edit
     
     var visit: Visit? {
         didSet {
-            color = UIColor.orange // TODO: Associate the color to a Place
+            if let visit = visit, let place = visit.place {
+                color = place.getPlaceColor()
+                name = place.name
+                address = place.address
+                city = place.city
+                formatedAddress = place.formatAddressString()
+                longitude = place.longitude
+                latitude = place.latitude
+                startDate = visit.arrival
+                endDate = visit.departure
+            }
+        }
+    }
+    
+    var showDeleteButton: Bool = true {
+        didSet { if let constraint = deleteButtonHeightConstraint {
+            constraint.isActive = !showDeleteButton
+            deleteButton.isHidden = true
+        } }
+    }
+    
+    var rawTrace: [VisitRawTrace]? {
+        didSet {
+            var annotations: [CustomPointAnnotation] = []
+            for point in rawTrace! {
+                let count = annotations.count + 1
+                let pointAnnotation = CustomPointAnnotation(coordinate: CLLocationCoordinate2D(latitude: point.lon, longitude: point.lat), title: nil, subtitle: nil)
+                pointAnnotation.reuseIdentifier = "customAnnotation\(count)"
+                // This dot image grows in size as more annotations are added to the array.
+                pointAnnotation.image = dot(size:15, color: color)
+                
+                annotations.append(pointAnnotation)
+            }
             
-            headerView.placeName = visit!.place?.name
-            headerView.placeAddress = visit!.place?.formatAddressString()
-            headerView.backgroundColor = color
-            
-            startVisitTimesEditView.date = visit!.arrival
-            endVisitTimesEditView.date = visit!.departure
+            mapView.addAnnotations(annotations)
         }
     }
     
@@ -125,10 +208,12 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     var isFolded: Bool = false
     var isShowingStartDatePicker = false
     var isShowingEndDatePicker = false
+    var hasMadeChanges = false
     var searchActive: Bool = false
     var marker = UIImageView()
     var isFetchingFromServer = false
     var searchResult:PlaceSearchResult? = nil
+    var selectedPlace: PlaceSearchResultDetail? = nil
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -169,15 +254,19 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         deleteButton.addTarget(self, action: #selector(deletePlace), for: .touchUpInside)
         
         // set up the map view
-        mapView = MGLMapView(frame: view.bounds, styleURL: MGLStyle.lightStyleURL())
+        mapView = MGLMapView(frame: view.bounds, styleURL: MGLStyle.streetsStyleURL())
         mapView.tintColor = color
         mapView.delegate = self
         mapView.zoomLevel = 15
         mapView.translatesAutoresizingMaskIntoConstraints = false
         
         // Center the map on the visit coordinates
-        let coordinates = CLLocationCoordinate2D(latitude: (visit?.place?.latitude)!, longitude: (visit?.place?.longitude)!)
+        let coordinates = CLLocationCoordinate2D(latitude: latitude!, longitude: longitude!)
         mapView.centerCoordinate = coordinates
+        print("coordinates: \(coordinates)")
+        
+        // getting the raw trace from the server
+        getRawTrace()
         
         // Enable keyboard notifications when showing and hiding the keyboard
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
@@ -218,10 +307,12 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         
         // set up the overlaying map marker
         marker = UIImageView(image: UIImage(named: "map-marker")!.withRenderingMode(.alwaysTemplate))
-        marker.tintColor = Constants.colors.primaryDark
+        marker.tintColor = color
         marker.contentMode = .scaleAspectFit
         mapView.addSubview(marker)
         marker.translatesAutoresizingMaskIntoConstraints = false
+        
+        // set up constraints
         let verticalConstraint = NSLayoutConstraint(item: marker, attribute: .centerY, relatedBy: .equal, toItem: mapView, attribute: .centerY, multiplier: 1, constant: 0)
         let horizontalConstraint = NSLayoutConstraint(item: marker, attribute: .centerX, relatedBy: .equal, toItem: mapView, attribute: .centerX, multiplier: 1, constant: 0)
         let widthConstraint = NSLayoutConstraint(item: marker, attribute: NSLayoutAttribute.width, relatedBy: NSLayoutRelation.equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 40)
@@ -239,7 +330,10 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         
         deleteButtonHeightConstraint = NSLayoutConstraint(item: deleteButton, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 0)
         view.addConstraint(deleteButtonHeightConstraint)
-        deleteButtonHeightConstraint.isActive = false
+        deleteButtonHeightConstraint.isActive = !showDeleteButton
+        if !showDeleteButton {
+            deleteButton.isHidden = true
+        }
     }
 
     override func didReceiveMemoryWarning() {
@@ -272,10 +366,10 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     }
     
     func toggleEndDatePicker() {
-        print("Touched toggleEndDatePicker")
         if isShowingStartDatePicker {
             toggleStartDatePicker()
         }
+        
         UIView.animate(withDuration: 0.5, animations: { [weak self] in
             guard let strongSelf = self else { return }
             if strongSelf.isShowingEndDatePicker {
@@ -293,13 +387,28 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         })
     }
     
-    func didPress(visitTimesEditType: VisitTimesEditType) {
-        print("didPress with \(visitTimesEditType)")
-        switch visitTimesEditType {
+    func didPress(visitTimesEditType: VisitTimesEditType?) {
+        guard let type = visitTimesEditType else { return }
+        switch type {
         case .start:
             toggleStartDatePicker()
         case .end:
             toggleEndDatePicker()
+        }
+    }
+    
+    func hasChangedDate(visitTimesEditType: VisitTimesEditType?, oldDate: Date?, newDate: Date?) {
+        guard let type = visitTimesEditType else { return }
+        
+        switch type {
+        case .start:
+            startDate = newDate
+        case .end:
+            endDate = newDate
+        }
+        
+        if oldDate != newDate {
+            hasMadeChanges = true
         }
     }
     
@@ -335,10 +444,13 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
             cell.street = searchResult.street
         } else {
             // this is a search result place
-            let place = searchResult.places[indexPath.row-offset]
-            cell.placeNameLabel.text = place.name
-            cell.placeAddressLabel.text = place.city
-            cell.place = place
+            let idx = indexPath.row - offset
+            if idx < searchResult.places.count {
+                let place = searchResult.places[idx]
+                cell.placeNameLabel.text = place.name
+                cell.placeAddressLabel.text = place.city
+                cell.place = place
+            }
         }
         
         return cell
@@ -347,16 +459,25 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if let cell = tableView.cellForRow(at: indexPath) as? PlaceFinderTableViewCell {
             if let place = cell.place {
-                print("clicked on cell \(place.name)")
                 // select the place
-                headerView.placeName = place.name
-                headerView.placeAddress = formatAddress(street: place.address, city: place.city)
-                mapView.centerCoordinate = CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude)
+                name = place.name
+                address = place.address
+                city = place.city
+                formatedAddress = formatAddress(street: place.address, city: place.city)
+                latitude = place.latitude
+                longitude = place.longitude
+                selectedPlace = place
+                let coordinates = CLLocationCoordinate2D(latitude: latitude!, longitude: longitude!)
+                mapView.centerCoordinate = coordinates
+                hasMadeChanges = true
             } else {
                 if indexPath.row == 0 {
                     // select the new place
-                    headerView.placeName = cell.name ?? ""
-                    headerView.placeAddress = formatAddress(street: cell.street, city: cell.city)
+                    name = cell.name ?? ""
+                    address = cell.street
+                    city = cell.city
+                    formatedAddress = formatAddress(street: cell.street, city: cell.city)
+                    hasMadeChanges = true
                 }
             }
             tableView.deselectRow(at: indexPath, animated: true)
@@ -380,7 +501,6 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
         searchActive = false
-        searchBar.text = ""
         if isFolded {
             unfoldMapView()
         }
@@ -409,7 +529,6 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         return true
     }
     
-    
     // MARK: - fetch search result from server
     private func getPlaces(matching searchText: String) {
         if isFetchingFromServer ||
@@ -421,8 +540,8 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         
         let parameters: Parameters = [
             "userid": Settings.getUserId(),
-            "lon": self.mapView.centerCoordinate.longitude,
-            "lat": self.mapView.centerCoordinate.latitude,
+            "lon": longitude!,
+            "lat": latitude!,
             "query": searchText
         ]
         
@@ -443,6 +562,101 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         }
     }
     
+    // MARK: - Fetch the raw trace from the server
+    private func getRawTrace() {
+        guard let start = startDate, let end = endDate else { return }
+        
+        let parameters: Parameters = [
+            "userid": Settings.getUserId(),
+            "start": start.timeIntervalSince1970,
+            "end": end.timeIntervalSince1970
+        ]
+        
+        Alamofire.request(Constants.urls.rawTraceURL, method: .get, parameters: parameters)
+            .responseJSON { [weak self] response in
+                guard let strongSelf = self else { return }
+                if response.result.isSuccess {
+                    guard let data = response.data else { return }
+                    do {
+                        let decoder = JSONDecoder()
+                        strongSelf.rawTrace = try decoder.decode([VisitRawTrace].self, from: data)
+                    } catch {
+                        print("Error serializing the json", error)
+                    }
+                }
+        }
+    }
+    
+    private func updateVisit(_ callback: (()->Void)?) {
+        print("update visit - 0")
+        if !hasMadeChanges { return }
+        
+        print("update visit - 1")
+        
+        guard let start = startDate, let end = endDate else { return }
+        
+        print("update visit - 2")
+        let parameters: Parameters = [
+            "userid": Settings.getUserId(),
+            "start": start.timeIntervalSince1970,
+            "end": end.timeIntervalSince1970,
+            "day": DateHandler.dateToDayString(from: start),
+            "lon": longitude ?? 0.0,
+            "lat": latitude ?? 0.0,
+            "type": type.rawValue,
+            "name": name ?? "",
+            "address": address ?? "",
+            "city": city ?? "",
+            "visitid": visit?.id ?? "",
+            "oldplaceid": visit?.placeid ?? "",
+            "newplaceid": selectedPlace?.placeid ?? "",
+            "venueid": selectedPlace?.venueid ?? "",
+        ]
+        
+        print("update visit - 3")
+        print(parameters)
+        
+        Alamofire.request(Constants.urls.addvisitURL, method: .post, parameters: parameters, encoding: JSONEncoding.default)
+            .responseJSON { [weak self] response in
+                guard let strongSelf = self else { return }
+                if response.result.isSuccess {
+                    guard let data = response.data else { return }
+                    do {
+                        let decoder = JSONDecoder()
+                        decoder.dateDecodingStrategy = .secondsSince1970
+                        let userUpdate = try decoder.decode(UserUpdate.self, from: data)
+                        print("update visit - 4")
+                        print(userUpdate)
+                        DataStoreService.shared.updateDatabase(with: userUpdate)
+                        callback?()
+                    } catch {
+                        print("Error serializing the json", error)
+                    }
+                }
+        }
+        
+    }
+    
+    func dot(size: Int, color: UIColor) -> UIImage {
+        let floatSize = CGFloat(size)
+        let rect = CGRect(x: 0, y: 0, width: floatSize, height: floatSize)
+        let strokeWidth: CGFloat = 1
+        
+        UIGraphicsBeginImageContextWithOptions(rect.size, false, UIScreen.main.scale)
+        
+        let ovalPath = UIBezierPath(ovalIn: rect.insetBy(dx: strokeWidth, dy: strokeWidth))
+        color.withAlphaComponent(0.3).setFill()
+        ovalPath.fill()
+        
+        UIColor.white.setStroke()
+        ovalPath.lineWidth = strokeWidth
+        ovalPath.stroke()
+        
+        let image: UIImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        return image
+    }
     
     // MARK: - Map view interactions
     private func foldMapView() {
@@ -451,7 +665,6 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
             guard let strongSelf = self else { return }
             strongSelf.mapHeightContraint.isActive = true
             strongSelf.deleteButtonHeightConstraint.isActive = true
-//            strongSelf.headerHeightConstraint.isActive = true
             strongSelf.startVisitTimesEditView.hide()
             strongSelf.endVisitTimesEditView.hide()
             strongSelf.view.layoutIfNeeded()
@@ -467,11 +680,11 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     private func unfoldMapView() {
         view.endEditing(true)
         isAnimating = true
+        searchbarView.text = nil
         UIView.animate(withDuration: 0.5, animations: { [weak self] in
             guard let strongSelf = self else { return }
             strongSelf.mapHeightContraint.isActive = false
-            strongSelf.deleteButtonHeightConstraint.isActive = false
-//            strongSelf.headerHeightConstraint.isActive = false
+            strongSelf.deleteButtonHeightConstraint.isActive = !strongSelf.showDeleteButton
             strongSelf.startVisitTimesEditView.show()
             strongSelf.endVisitTimesEditView.show()
             strongSelf.view.layoutIfNeeded()
@@ -505,7 +718,31 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     // MARK: - MGLMapViewDelegate protocol
     
     func mapView(_ mapView: MGLMapView, regionDidChangeAnimated animated: Bool) {
-        getPlaces(matching: searchbarView.text ?? "")
+        if (self.mapView.centerCoordinate.longitude != 0 && self.mapView.centerCoordinate.latitude != 0) {
+            longitude = self.mapView.centerCoordinate.longitude
+            latitude = self.mapView.centerCoordinate.latitude
+            hasMadeChanges = true
+            getPlaces(matching: searchbarView.text ?? "")
+        }
+    }
+    
+    func mapView(_ mapView: MGLMapView, imageFor annotation: MGLAnnotation) -> MGLAnnotationImage? {
+        if let point = annotation as? CustomPointAnnotation,
+            
+            let image = point.image,
+            let reuseIdentifier = point.reuseIdentifier {
+            
+            if let annotationImage = mapView.dequeueReusableAnnotationImage(withIdentifier: reuseIdentifier) {
+                // The annotatation image has already been cached, just reuse it.
+                return annotationImage
+            } else {
+                // Create a new annotation image.
+                return MGLAnnotationImage(image: image, reuseIdentifier: reuseIdentifier)
+            }
+        }
+        
+        // Fallback to the default marker image.
+        return nil
     }
 }
 
@@ -557,7 +794,8 @@ class VisitTimesEditRow : UIView {
     var heightConstraint: NSLayoutConstraint!
     
     @objc func datePickerValueChanged(_ sender: UIDatePicker) {
-        dateLabel.text = DateHandler.dateToLetterAndPeriod(from: sender.date)
+        delegate?.hasChangedDate(visitTimesEditType: type, oldDate: date, newDate: sender.date)
+        date = sender.date
         self.layoutIfNeeded()
     }
 
@@ -620,7 +858,7 @@ class VisitTimesEditRow : UIView {
         translatesAutoresizingMaskIntoConstraints = false
         
         addTapGestureRecognizer {
-            self.delegate?.didPress(visitTimesEditType: self.type!)
+            self.delegate?.didPress(visitTimesEditType: self.type)
         }
     }
 }
@@ -681,3 +919,22 @@ class PlaceFinderTableViewCell: UITableViewCell {
     }
 }
 
+
+// MGLAnnotation protocol reimplementation
+class CustomPointAnnotation: NSObject, MGLAnnotation {
+    
+    // As a reimplementation of the MGLAnnotation protocol, we have to add mutable coordinate and (sub)title properties ourselves.
+    var coordinate: CLLocationCoordinate2D
+    var title: String?
+    var subtitle: String?
+    
+    // Custom properties that we will use to customize the annotation's image.
+    var image: UIImage?
+    var reuseIdentifier: String?
+    
+    init(coordinate: CLLocationCoordinate2D, title: String?, subtitle: String?) {
+        self.coordinate = coordinate
+        self.title = title
+        self.subtitle = subtitle
+    }
+}

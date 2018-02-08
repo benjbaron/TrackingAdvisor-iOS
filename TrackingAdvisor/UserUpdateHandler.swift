@@ -75,40 +75,53 @@ struct UserReviewChallenge: Codable {
 }
 
 struct UserUpdate: Codable {
-    let uid: String           // userid
-    let from: Date
-    let to: Date
-    let rv: [UserReviewVisit]      // reviews for visits
-    let rpi: [UserReviewPersonalInformation] // reviews for personal information
-    let p: [UserPlace]        // places
-    let v: [UserVisit]        // visits
-    let m: [UserMove]         // moves
-    let pi: [UserPersonalInformation] // personalinformation
-    let q: [String]           // questions
+    let uid: String?           // userid
+    let from: Date?
+    let to: Date?
+    let day: String?
+    let rv: [UserReviewVisit]?      // reviews for visits
+    let rpi: [UserReviewPersonalInformation]? // reviews for personal information
+    let p: [UserPlace]?        // places
+    let v: [UserVisit]?        // visits
+    let m: [UserMove]?        // moves
+    let pi: [UserPersonalInformation]? // personalinformation
+    let q: [String]?           // questions
 }
 
 class UserUpdateHandler {
     class func retrieveLatestUserUpdates(for day: String) {
-        let userid = "1EE560B1-6054-4E2D-A64B-B9ACC3FA0761" // Settings.getUUID()
-        let day = "2017-11-21" // TODO: - Change the date to get the latest date available
+        
+        let defaults = UserDefaults.standard
+        // See if the data needs to be uploaded to the server
+        if let lastUserUpdate = defaults.object(forKey: Constants.defaultsKeys.lastUserUpdate) as? Date {
+            print("time since upload: \(lastUserUpdate.timeIntervalSinceNow)")
+            if abs(lastUserUpdate.timeIntervalSinceNow) < Constants.variables.minimumDurationBetweenUserUpdates {
+                return
+            }
+        }
+        
+        DispatchQueue.global(qos: .background).async {
+            let userid = Settings.getUUID()
 
-        // 1 - Retreieve the data from the server
-        print("Retreiving udpate from the server \(Constants.urls.userUpdateURL)")
-        let parameters: Parameters = ["userid": userid, "day": day]
-        Alamofire.request(Constants.urls.userUpdateURL, method: .get, parameters: parameters).responseJSON { response in
-            if response.result.isSuccess {
-                FileService.shared.log("Retrieved latest user update from server", classname: "UserUpdateHandler")
-                guard let data = response.data else { return }
-                do {
-                    let decoder = JSONDecoder()
-                    decoder.dateDecodingStrategy = .secondsSince1970
-                    let userUpdate = try decoder.decode(UserUpdate.self, from: data)
-                    DataStoreService.shared.updateDatabase(with: userUpdate)
-                } catch {
-                    print("Error serializing the json", error)
+            // 1 - Retreieve the data from the server
+            print("Retreiving udpate from the server \(Constants.urls.userUpdateURL)")
+            let parameters: Parameters = ["userid": userid, "day": day]
+            Alamofire.request(Constants.urls.userUpdateURL, method: .get, parameters: parameters).responseJSON { response in
+                if response.result.isSuccess {
+                    FileService.shared.log("Retrieved latest user update from server", classname: "UserUpdateHandler")
+                    guard let data = response.data else { return }
+                    do {
+                        let decoder = JSONDecoder()
+                        decoder.dateDecodingStrategy = .secondsSince1970
+                        let userUpdate = try decoder.decode(UserUpdate.self, from: data)
+                        DataStoreService.shared.updateDatabase(with: userUpdate)
+                        defaults.set(Date(), forKey: Constants.defaultsKeys.lastUserUpdate)
+                    } catch {
+                        print("Error serializing the json", error)
+                    }
+                } else {
+                    print("Error in response \(response.result)")
                 }
-            } else {
-                print("Error in response \(response.result)")
             }
         }
     }

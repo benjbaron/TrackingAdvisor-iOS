@@ -10,9 +10,10 @@ import Foundation
 import CoreData
 
 
-protocol DataStoreUpdateProtocol {
-    func dataStoreDidUpdate(update: UserUpdate)
-    func dataStoreDidAddReviewChallenge(reviewChallenge: UserReviewChallenge)
+@objc protocol DataStoreUpdateProtocol {
+    @objc optional func dataStoreDidUpdate(for day: String?)
+    @objc optional func dataStoreDidAddReviewChallenge(for reviewChallengeId: String?)
+    @objc optional func dataStoreDidUpdateReviewAnswer(for reviewId: String?)
 }
 
 
@@ -26,52 +27,58 @@ class DataStoreService: NSObject {
     }
     
     func updateDatabase(with userUpdate: UserUpdate) {
-        
         container?.performBackgroundTask { [weak self] context in
-            for userPlace in userUpdate.p {
-                print("save place")
-                _ = try? Place.findOrCreatePlace(matching: userPlace, in: context)
+            if let places = userUpdate.p {
+                for userPlace in places {
+                    print("save place")
+                    _ = try? Place.findOrCreatePlace(matching: userPlace, in: context)
+                }
             }
-
-            for userVisit in userUpdate.v {
-                print("save visit")
-                _ = try? Visit.findOrCreateVisit(matching: userVisit, in: context)
+            if let visits = userUpdate.v {
+                for userVisit in visits {
+                    print("save visit")
+                    _ = try? Visit.findOrCreateVisit(matching: userVisit, in: context)
+                }
             }
-
-            for userMove in userUpdate.m {
-                print("save move")
-                _ = try? Move.findOrCreateMove(matching: userMove, in: context)
+            if let moves = userUpdate.m {
+                for userMove in moves {
+                    print("save move")
+                    _ = try? Move.findOrCreateMove(matching: userMove, in: context)
+                }
             }
-
-            for userPI in userUpdate.pi {
-                print("save personal information")
-                _ = try? PersonalInformation.findOrCreatePersonalInformation(matching: userPI, in: context)
+            if let pis = userUpdate.pi {
+                for userPI in pis {
+                    print("save personal information")
+                    _ = try? PersonalInformation.findOrCreatePersonalInformation(matching: userPI, in: context)
+                }
             }
-
-            for userReview in userUpdate.rv {
-                print("save reviews for visits")
-                _ = try? ReviewVisit.findOrCreateReviewVisit(matching: userReview, question: userUpdate.q[userReview.q], in: context)
+            if let reviews = userUpdate.rv, let questions = userUpdate.q {
+                for userReview in reviews {
+                    print("save reviews for visits")
+                    _ = try? ReviewVisit.findOrCreateReviewVisit(matching: userReview, question: questions[userReview.q], in: context)
+                }
             }
-
-            for userReview in userUpdate.rpi {
-                print("save reviews for personal information")
-                _ = try? ReviewPersonalInformation.findOrCreateReviewPersonalInformation(matching: userReview, question: userUpdate.q[userReview.q], in: context)
+            if let reviews = userUpdate.rpi, let questions = userUpdate.q {
+                for userReview in reviews {
+                    print("save reviews for personal information")
+                    _ = try? ReviewPersonalInformation.findOrCreateReviewPersonalInformation(matching: userReview, question: questions[userReview.q], in: context)
+                }
             }
 
             do {
+                print("context save")
                 try context.save()
             } catch {
                 print("error saving the database")
             }
-            self?.stats()
             
             DispatchQueue.main.async { () -> Void in
-                self?.delegate?.dataStoreDidUpdate(update: userUpdate)
+                self?.delegate?.dataStoreDidUpdate!(for: userUpdate.day)
             }
         }
     }
     
-    func updateDataBase(with reviewChallenge: UserReviewChallenge) {
+    func updateDatabase(with reviewChallenge: UserReviewChallenge) {
         container?.performBackgroundTask { [weak self] context in
             _ = try? ReviewChallenge.findOrCreateReviewChallenge(matching: reviewChallenge, in: context)
             
@@ -80,10 +87,25 @@ class DataStoreService: NSObject {
             } catch {
                 print("error saving the database")
             }
-            self?.stats()
             
             DispatchQueue.main.async { () -> Void in
-                self?.delegate?.dataStoreDidAddReviewChallenge(reviewChallenge: reviewChallenge)
+                self?.delegate?.dataStoreDidAddReviewChallenge?(for: reviewChallenge.reviewchallengeid)
+            }
+        }
+    }
+    
+    func saveReviewAnswer(with reviewId: String, answer: ReviewAnswer) {
+        container?.performBackgroundTask { [weak self] context in
+            _ = try? Review.saveReviewAnswer(reviewId: reviewId, answer: answer, in: context)
+            
+            do {
+                try context.save()
+            } catch {
+                print("error saving the database")
+            }
+            
+            DispatchQueue.main.async { () -> Void in
+                self?.delegate?.dataStoreDidUpdateReviewAnswer?(for: reviewId)
             }
         }
     }
@@ -115,6 +137,7 @@ class DataStoreService: NSObject {
     
     func getUniqueVisitDays() -> [String] {
         guard let context = container?.viewContext else { return [] }
+        context.reset()
         
         // create the fetch request
         let request: NSFetchRequest<Visit> = Visit.fetchRequest()
@@ -136,6 +159,7 @@ class DataStoreService: NSObject {
     
     func getVisits(for day: String) -> [Visit] {
         guard let context = container?.viewContext else { return [] }
+        context.reset()
         
         // create the fetch request
         let request: NSFetchRequest<Visit> = Visit.fetchRequest()
@@ -160,9 +184,49 @@ class DataStoreService: NSObject {
     func deleteAll() {
         guard let context = container?.viewContext else { return }
         
-        // deleting visits
-        var fetch = NSFetchRequest<NSFetchRequestResult>(entityName: "Visit")
+        // deleting review personal information
+        var fetch = NSFetchRequest<NSFetchRequestResult>(entityName: "ReviewPersonalInformation")
         var request = NSBatchDeleteRequest(fetchRequest: fetch)
+        
+        do {
+            _ = try context.execute(request)
+        } catch {
+            print("error when deleting review personal information", error)
+        }
+        
+        // deleting review visits
+        fetch = NSFetchRequest<NSFetchRequestResult>(entityName: "ReviewVisit")
+        request = NSBatchDeleteRequest(fetchRequest: fetch)
+        
+        do {
+            _ = try context.execute(request)
+        } catch {
+            print("error when deleting review visits", error)
+        }
+        
+        // deleting personal information
+        fetch = NSFetchRequest<NSFetchRequestResult>(entityName: "PersonalInformation")
+        request = NSBatchDeleteRequest(fetchRequest: fetch)
+        
+        do {
+            _ = try context.execute(request)
+        } catch {
+            print("error when deleting personal information", error)
+        }
+        
+        // deleting review challenge
+        fetch = NSFetchRequest<NSFetchRequestResult>(entityName: "ReviewChallenge")
+        request = NSBatchDeleteRequest(fetchRequest: fetch)
+        
+        do {
+            _ = try context.execute(request)
+        } catch {
+            print("error when deleting places", error)
+        }
+        
+        // deleting visits
+        fetch = NSFetchRequest<NSFetchRequestResult>(entityName: "Visit")
+        request = NSBatchDeleteRequest(fetchRequest: fetch)
         
         do {
             _ = try context.execute(request)

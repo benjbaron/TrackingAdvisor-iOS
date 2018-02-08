@@ -554,10 +554,14 @@ class PlaceReviewLayout: UICollectionViewFlowLayout {
 
 
 class QuestionRow : UIView {
-    var question: String?
+    var question: String? {
+        didSet {
+            questionLabel?.text = question
+        }
+    }
     var yesAction: (() -> ())?
     var noAction: (() -> ())?
-    var selectedColor: UIColor = Constants.colors.primaryDark {
+    var selectedColor: UIColor? = Constants.colors.primaryDark {
         didSet {
             let tmp = selected
             selected = tmp
@@ -571,6 +575,7 @@ class QuestionRow : UIView {
     }
     private var yesView: UIView?
     private var noView: UIView?
+    private var questionLabel: UILabel?
 
     var selected: ReviewAnswer = .none {
         didSet {
@@ -595,7 +600,7 @@ class QuestionRow : UIView {
         super.init(frame: frame)
     }
     
-    convenience init(with question: String, yesAction: @escaping () -> (), noAction: @escaping () -> ()) {
+    convenience init(with question: String?, yesAction: @escaping () -> (), noAction: @escaping () -> ()) {
         self.init(frame: CGRect.zero)
         self.question = question
         self.yesAction = yesAction
@@ -608,13 +613,6 @@ class QuestionRow : UIView {
     }
     
     func setupViews() {
-        let questionLabel = UILabel()
-        questionLabel.text = question
-        questionLabel.font = UIFont.systemFont(ofSize: 14)
-        questionLabel.numberOfLines = 0
-        questionLabel.textAlignment = .left
-        questionLabel.translatesAutoresizingMaskIntoConstraints = false
-        
         yesView = createIcon(icon: "check")
         noView = createIcon(icon: "times")
         
@@ -629,15 +627,23 @@ class QuestionRow : UIView {
             self.noAction!()
         }
         
-        addSubview(questionLabel)
         addSubview(yesView)
         addSubview(noView)
         
         // add constraints
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": questionLabel]))
         addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|-(5@999)-[v0]-(5@999)-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": yesView]))
         addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|-(5@999)-[v0]-(5@999)-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": noView]))
+
+        questionLabel = UILabel()
+        questionLabel?.text = question
+        questionLabel?.font = UIFont.systemFont(ofSize: 14)
+        questionLabel?.numberOfLines = 0
+        questionLabel?.textAlignment = .left
+        questionLabel?.translatesAutoresizingMaskIntoConstraints = false
         
+        addSubview(questionLabel!)
+        
+        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[v0]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": questionLabel]))
         addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-14-[v0]-10-[yes(30)]-14-[no(30)]-14-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": questionLabel, "yes": yesView, "no": noView]))
         
         translatesAutoresizingMaskIntoConstraints = false

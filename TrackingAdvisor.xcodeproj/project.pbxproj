@@ -29,6 +29,8 @@
 		B54C36B1200EBAFC0085BFEA /* PersonalInformationCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54C36B0200EBAFC0085BFEA /* PersonalInformationCollectionView.swift */; };
 		B55C10101FED736B001EE08D /* PlaceReviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55C100F1FED736B001EE08D /* PlaceReviewViewController.swift */; };
 		B55DE5D41FAB582B00CACB47 /* DataStoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55DE5D31FAB582B00CACB47 /* DataStoreService.swift */; };
+		B568B3B2202B037F00425A20 /* OnboardingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568B3B1202B037F00425A20 /* OnboardingViewController.swift */; };
+		B568B3BC202B05EC00425A20 /* Onboarding.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B568B3BB202B05EC00425A20 /* Onboarding.storyboard */; };
 		B568D8801FB45D0700E051B1 /* LocationAdaptiveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568D87F1FB45D0700E051B1 /* LocationAdaptiveService.swift */; };
 		B568D8821FB45FD800E051B1 /* ActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568D8811FB45FD800E051B1 /* ActivityService.swift */; };
 		B57768FA2016027900A0FD1B /* PlacePersonalInformationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57768F92016027900A0FD1B /* PlacePersonalInformationController.swift */; };
@@ -215,6 +217,8 @@
 		B54C36B0200EBAFC0085BFEA /* PersonalInformationCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalInformationCollectionView.swift; sourceTree = "<group>"; };
 		B55C100F1FED736B001EE08D /* PlaceReviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceReviewViewController.swift; sourceTree = "<group>"; };
 		B55DE5D31FAB582B00CACB47 /* DataStoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataStoreService.swift; sourceTree = "<group>"; };
+		B568B3B1202B037F00425A20 /* OnboardingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewController.swift; sourceTree = "<group>"; };
+		B568B3BB202B05EC00425A20 /* Onboarding.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Onboarding.storyboard; sourceTree = "<group>"; };
 		B568D87E1FB3827100E051B1 /* TrackingAdvisor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TrackingAdvisor.entitlements; sourceTree = "<group>"; };
 		B568D87F1FB45D0700E051B1 /* LocationAdaptiveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationAdaptiveService.swift; sourceTree = "<group>"; };
 		B568D8811FB45FD800E051B1 /* ActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityService.swift; sourceTree = "<group>"; };
@@ -434,6 +438,7 @@
 				B5FE77F11FA9D4D3002B5F0C /* Supporting Files */,
 				B599B3A71FA0B57F006D70B4 /* Main.storyboard */,
 				B599B3AF1FA0B57F006D70B4 /* LaunchScreen.storyboard */,
+				B568B3BB202B05EC00425A20 /* Onboarding.storyboard */,
 				B584C21E1FA0F16B002582D1 /* Assets.xcassets */,
 				B599B3A31FA0B57F006D70B4 /* AppDelegate.swift */,
 				B5C347471FB092D40078C12E /* TimelineSwipeViewController.swift */,
@@ -450,6 +455,7 @@
 				B55C100F1FED736B001EE08D /* PlaceReviewViewController.swift */,
 				B507BB5B1FFFCA1F00FEBC34 /* ProfileViewController.swift */,
 				B57768F92016027900A0FD1B /* PlacePersonalInformationController.swift */,
+				B568B3B1202B037F00425A20 /* OnboardingViewController.swift */,
 			);
 			path = TrackingAdvisor;
 			sourceTree = "<group>";
@@ -754,6 +760,7 @@
 				B599B3B11FA0B57F006D70B4 /* LaunchScreen.storyboard in Resources */,
 				B584C21F1FA0F16B002582D1 /* Assets.xcassets in Resources */,
 				B599B3A91FA0B57F006D70B4 /* Main.storyboard in Resources */,
+				B568B3BC202B05EC00425A20 /* Onboarding.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -949,6 +956,7 @@
 				B5FE77EB1FA9D442002B5F0C /* FSCalendarExtensions.m in Sources */,
 				B5D63B401FED358700DAB61C /* Extensions.swift in Sources */,
 				B5FE77E51FA9D442002B5F0C /* FSCalendarCollectionView.m in Sources */,
+				B568B3B2202B037F00425A20 /* OnboardingViewController.swift in Sources */,
 				B52AF1CE1FA8C87D00FDDF2A /* ISPoint.swift in Sources */,
 				B57768FA2016027900A0FD1B /* PlacePersonalInformationController.swift in Sources */,
 				B5FE77E31FA9D442002B5F0C /* FSCalendarDelegationFactory.m in Sources */,

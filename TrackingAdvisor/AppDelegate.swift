@@ -19,14 +19,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         Settings.registerDefaults()
         
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) {
-            (permissionGranted, error) in
-            print(error as Any)
-        }
-        
-        // start updating the location services again
-        LocationRegionService.shared.startUpdatingLocation()
-        
         // Override point for customization after application launch.
         if launchOptions?[.location] != nil {
             FileService.shared.log("App launched (location-triggered)", classname: "AppDelegate")
@@ -36,16 +28,41 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             FileService.shared.log("App launched (user-triggered)", classname: "AppDelegate")
         }
         
+        // if the app was launched for a notification
         if let notification = launchOptions?[.remoteNotification] as? [String:Any] {
             let aps = notification["aps"] as! [String:Any]
             print(aps)
         }
         
-        registerForPushNotifications()
+        // check if this is the first app launch
+        let defaults = UserDefaults.standard
+        if !defaults.bool(forKey: Constants.defaultsKeys.onboarding) {
+            launchStoryboard(storyboard: "Onboarding")
+            return true
+        } else {
+            launchStoryboard(storyboard: "Main")
+        }
         
-        // update the personal categories if needed
-        PersonalInformationCategory.updateIfNeeded()
+        // start updating the location services again
+        LocationRegionService.shared.startUpdatingLocation()
+        
+        // retrieve the latest data from the server
+        DispatchQueue.global(qos: .background).async {
+            // update the personal categories if needed
+            PersonalInformationCategory.updateIfNeeded()
+            
+            // get today's update
+            UserUpdateHandler.retrieveLatestUserUpdates(for: DateHandler.dateToDayString(from: Date()))
+        }
+        
         return true
+    }
+    
+    func launchStoryboard(storyboard: String) {
+        UIApplication.shared.isStatusBarHidden = true
+        let storyboard = UIStoryboard(name: storyboard, bundle: nil)
+        let controller = storyboard.instantiateInitialViewController()
+        self.window?.rootViewController = controller
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
@@ -153,7 +170,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let token = tokenParts.joined()
         let defaults = UserDefaults.standard
         defaults.set(token, forKey: Constants.defaultsKeys.pushNotificationToken)
-        print("Device Token: \(token)")
     }
     
     func application(_ application: UIApplication,

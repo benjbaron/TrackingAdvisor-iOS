@@ -49,7 +49,20 @@ class Place: NSManagedObject {
             let matches = try context.fetch(request)
             if matches.count > 0 {
                 assert(matches.count == 1, "Place.findOrCreatePlace -- database inconsistency")
-                return matches[0]
+                
+                // update the place with the new value
+                let managedObject = matches[0]
+                
+                print("update place \(userPlace.pid)")
+                
+                managedObject.setValue(userPlace.a, forKey: "address")
+                managedObject.setValue(userPlace.t, forKey: "type")
+                managedObject.setValue(userPlace.c, forKey: "city")
+                managedObject.setValue(userPlace.lat, forKey: "latitude")
+                managedObject.setValue(userPlace.lon, forKey: "longitude")
+                managedObject.setValue(userPlace.name, forKey: "name")
+                managedObject.setValue(userPlace.col, forKey: "color")
+                return managedObject
             }
         } catch {
             throw error
@@ -75,17 +88,15 @@ class Place: NSManagedObject {
         return addressString + sep + cityString
     }
     
-    func getPersonalInformation() -> [PersonalInformationCategory: [PersonalInformation]] {
-        var categories: [PersonalInformationCategory: [PersonalInformation]] = [:]
+    func getPersonalInformation() -> [String: [PersonalInformation]] {
+        var categories: [String: [PersonalInformation]] = [:]
         guard let personalInformation = personalInformation else { return categories }
         for case let pi as PersonalInformation in personalInformation {
             guard let picid = pi.category else { continue }
-            if let category = PersonalInformationCategory.getPersonalInformationCategory(with: picid) {
-                if categories[category] == nil {
-                    categories[category] = []
-                }
-                categories[category]!.append(pi)
+            if categories[picid] == nil {
+                categories[picid] = []
             }
+            categories[picid]!.append(pi)
         }
         
         return categories
@@ -96,7 +107,7 @@ class Place: NSManagedObject {
         var res = ""
         var count = 0
         for (cat, pi) in personalInformation {
-            res += "\(cat.name)"
+            res += "\(cat)"
             if pi.count > 0 {
                 res += ": \(pi.map { $0.name! }.joined(separator: ", "))"
             }

@@ -8,18 +8,14 @@
 
 import UIKit
 
-enum PersonalInformationCategoryType {
-    case regularPersonalInformation
-    case addPersonalInformation
+protocol PersonalInformationCategoryCellDelegate {
+    func addPersonalInformation(cat: String)
+    func reviewPersonalInformation(cat: String, personalInformation: PersonalInformation, answer: ReviewAnswer)
 }
 
-protocol PersonalInformationCategoryDelegate {
-    func didPressPersonalInformation(type: PersonalInformationCategoryType, name: String)
-}
-
-class PersonalInformationCategoryCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+class PersonalInformationCategoryCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, PersonalInformationCellDelegate {
     
-    var delegate: PersonalInformationCategoryDelegate?
+    var delegate: PersonalInformationCategoryCellDelegate?
     var personalInformationCategory: PersonalInformationCategory? {
         didSet {
             if let name = personalInformationCategory?.name {
@@ -29,6 +25,7 @@ class PersonalInformationCategoryCell: UICollectionViewCell, UICollectionViewDat
         }
     }
     var personalInformation: [PersonalInformation]? = []
+    var color: UIColor?
     
     fileprivate let cellId = "infoCellId"
     fileprivate let cellAddId = "infoCellAddId"
@@ -105,13 +102,15 @@ class PersonalInformationCategoryCell: UICollectionViewCell, UICollectionViewDat
             return cell
         } else {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! PersonalInformationCell
-            cell.personalInfo = personalInformation?[indexPath.item]
+            cell.personalInformation = personalInformation?[indexPath.item]
+            cell.color = color!
+            cell.delegate = self
             return cell
         }
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 100, height: frame.height - 32)
+        return CGSize(width: 150, height: frame.height - 32)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
@@ -121,47 +120,42 @@ class PersonalInformationCategoryCell: UICollectionViewCell, UICollectionViewDat
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard let cat = personalInformationCategory, let pi = personalInformation else { return }
         if indexPath.item == pi.count {
-            print("clicked on the add button")
             if let cell = self.infoCollectionView.cellForItem(at: indexPath) as? PersonalInformationAddCell {
                 cell.toggle(true)
-                delegate?.didPressPersonalInformation(type: .addPersonalInformation, name: cat.name)
-            }
-        } else {
-            personalInformation![indexPath.item].getReview(of: .personalInformation)?.answer = .yes
-            self.infoCollectionView.layoutIfNeeded()  // to make cellForItem work
-            if (self.infoCollectionView.cellForItem(at: indexPath) as? PersonalInformationCell) != nil {
-                delegate?.didPressPersonalInformation(type: .regularPersonalInformation, name: cat.name)
+                delegate?.addPersonalInformation(cat: cat.picid)
             }
         }
+    }
+    
+    func didPressPersonalInformationReview(personalInformation: PersonalInformation?, answer: ReviewAnswer) {
+        guard let pi = personalInformation, let cat = personalInformation?.category else { return }
+        delegate?.reviewPersonalInformation(cat: cat, personalInformation: pi, answer: answer)
     }
 }
 
 
+protocol PersonalInformationCellDelegate {
+    func didPressPersonalInformationReview(personalInformation: PersonalInformation?, answer: ReviewAnswer)
+}
+
 fileprivate class PersonalInformationCell: UICollectionViewCell {
-    // TODO: - Add check / times marks to get "better" feedback from the users
-    var personalInfo: PersonalInformation? {
+    var delegate: PersonalInformationCellDelegate?
+    var personalInformation: PersonalInformation? {
         didSet {
-            if let name = personalInfo?.name {
+            if let name = personalInformation?.name {
                 nameLabel.text = name
+                layoutIfNeeded()
             }
-            
-            if let review = personalInfo?.getReview(of: .personalInformation) {
-                var alpha: CGFloat = 0.2
-                switch review.answer {
-                    case .none:
-                        alpha = 0.2
-                    case .yes:
-                        alpha = 0.8
-                    case .no:
-                        alpha = 0.2
-                }
-                bgView.backgroundColor = UIColor.orange.withAlphaComponent(alpha)
-                if alpha > 0.25 {
-                    nameLabel.textColor = .white
-                } else {
-                    nameLabel.textColor = .black
-                }
+            if let review = personalInformation?.getReview(of: .personalInformation) {
+                questionPlaceView.selected = review.answer
             }
+        }
+    }
+    var color: UIColor? = UIColor.orange {
+        didSet {
+            bgView.backgroundColor = color!.withAlphaComponent(0.3)
+            nameLabel.textColor = color!
+            questionPlaceView.selectedColor = color
         }
     }
     
@@ -174,30 +168,47 @@ fileprivate class PersonalInformationCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    let bgView: UIView = {
+    lazy var bgView: UIView = {
         let v = UIView()
         v.layer.cornerRadius = 16
         v.translatesAutoresizingMaskIntoConstraints = false
-        v.backgroundColor = UIColor.orange.withAlphaComponent(0.4)
+        v.backgroundColor = color!.withAlphaComponent(0.3)
         return v
     }()
     
-    let nameLabel: UILabel = {
+    lazy var nameLabel: UILabel = {
         let label = UILabel()
         label.text = "Personal information"
         label.font = UIFont.boldSystemFont(ofSize: 14)
+        label.textColor = color
         label.numberOfLines = 2
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
+    lazy var questionPlaceView: QuestionRow = {
+        let row = QuestionRow(with: nil, yesAction: {
+            self.delegate?.didPressPersonalInformationReview(personalInformation: self.personalInformation, answer: .yes)
+        }, noAction: {
+            self.delegate?.didPressPersonalInformationReview(personalInformation: self.personalInformation, answer: .no)
+        })
+        row.unselectedColor = .white
+        row.selectedColor = color
+        return row
+    }()
+    
     func setupViews() {
         addSubview(bgView)
-        addSubview(nameLabel)
+        bgView.addSubview(nameLabel)
+        bgView.addSubview(questionPlaceView)
         
         addVisualConstraint("H:|-[v0]-|", views: ["v0": nameLabel])
-        addVisualConstraint("V:|-[v0]-|", views: ["v0": nameLabel])
+        addVisualConstraint("V:|-10-[v0]", views: ["v0": nameLabel])
+        addVisualConstraint("V:[v1(40)]-|", views: ["v1": questionPlaceView])
+        
+        questionPlaceView.centerXAnchor.constraint(equalTo: bgView.centerXAnchor).isActive = true
+        
         addVisualConstraint("H:|[v0]|", views: ["v0": bgView])
         addVisualConstraint("V:|-[v0]-14-|", views: ["v0": bgView])
     }

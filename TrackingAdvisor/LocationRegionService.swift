@@ -52,7 +52,7 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
             locationManager.requestAlwaysAuthorization()
         }
         
-        // configure the activity manager
+        // configure the location manager
         locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
         locationManager.distanceFilter = kCLDistanceFilterNone
         locationManager.pausesLocationUpdatesAutomatically = false
@@ -63,10 +63,14 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
         adaptiveLocationManager.delegate = self
     }
     
-    func startUpdatingLocation() {
+    func requestPermission() {
         if CLLocationManager.authorizationStatus() == .notDetermined {
             locationManager.requestAlwaysAuthorization()
         }
+    }
+    
+    func startUpdatingLocation() {
+        requestPermission()
 
         locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
         locationManager.distanceFilter = kCLDistanceFilterNone

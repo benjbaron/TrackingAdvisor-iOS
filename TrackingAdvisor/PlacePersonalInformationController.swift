@@ -10,7 +10,7 @@ import Foundation
 
 class PlacePersonalInformationController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, LargePersonalInformationCellDelegate {
     
-    @objc func save(_ sender: UIBarButtonItem) {
+    @objc func done(_ sender: UIBarButtonItem) {
         // TODO: - perform save action
         presentingViewController?.dismiss(animated: true)
     }
@@ -51,13 +51,14 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
             personalInformation = place.getPersonalInformation()
         }
     }
-    var personalInformation: [PersonalInformationCategory: [PersonalInformation]]?
+    var personalInformation: [String: [PersonalInformation]]?
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.tabBarController?.tabBar.isHidden = false
         
         setupNavBarButtons()
+        collectionView.reloadData()
     }
     
     override func viewDidLoad() {
@@ -82,9 +83,9 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
     }
     
     func setupNavBarButtons() {
-        let editButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(save))
-        editButton.tintColor = Constants.colors.superLightGray
-        self.navigationItem.rightBarButtonItem = editButton
+//        let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(done))
+//        doneButton.tintColor = Constants.colors.superLightGray
+//        self.navigationItem.rightBarButtonItem = doneButton
         
         let backButton = UIButton()
         backButton.setImage(UIImage(named: "angle-left")!.withRenderingMode(.alwaysTemplate), for: .normal)
@@ -103,7 +104,7 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
         collectionView.backgroundColor = UIColor.white
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         self.view.addSubview(collectionView)
-        
+
         self.view.addVisualConstraint("H:|[collection]|", views: ["collection" : collectionView])
         self.view.addVisualConstraint("V:[header][collection]|", views: ["header": headerView, "collection" : collectionView])
     }
@@ -118,6 +119,7 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        
         if let pi = personalInformation {
             let category = Array(pi.keys)[section]
             if let count = pi[category]?.count {
@@ -132,27 +134,40 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
         guard let pi = personalInformation else { return cell }
         let category = Array(pi.keys)[indexPath.section]
         cell.personalInformation = pi[category]?[indexPath.item]
+        cell.indexPath = indexPath
+        cell.color = color
+        cell.delegate = self
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        collectionView.layoutIfNeeded()
-        if let cell = collectionView.cellForItem(at: indexPath) as? LargePersonalInformationCell {
-            let height = cell.height()
-            print("height = \(height)")
-            return CGSize(width: view.frame.width, height: height)
-        }
         
-        return CGSize(width: view.frame.width, height: 270)
+        // 1 - instanciate a new cell
+        let cell = LargePersonalInformationCell()
+        guard let pi = personalInformation else {
+            return CGSize(width: view.frame.width, height: 200)
+        }
+        let category = Array(pi.keys)[indexPath.section]
+        cell.personalInformation = pi[category]?[indexPath.item]
+        
+        // 3 - get the height
+        let height = cell.height()
+        print("height for pi \(category): \(height)")
+        
+        // 4 - return the correct size
+        return CGSize(width: view.frame.width, height: height)
     }
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         if kind == UICollectionElementKindSectionHeader {
             let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerCellId, for: indexPath) as! HeaderLargePersonalInformationCell
+            
             guard let pi = personalInformation else { return headerView }
-            let category = Array(pi.keys)[indexPath.section]
-            headerView.title = category.name
-            headerView.subtitle = category.desc
+            let picid = Array(pi.keys)[indexPath.section]
+            let category = PersonalInformationCategory.getPersonalInformationCategory(with: picid)
+            
+            headerView.title = category?.name
+            headerView.subtitle = category?.detail
             return headerView
         } else {
             assert(false, "Unexpected element kind")
@@ -167,8 +182,9 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
         let headerView = HeaderLargePersonalInformationCell()
         guard let pi = personalInformation else { return CGSize(width: collectionView.frame.width, height: 100) }
         
-        let category = Array(pi.keys)[section]
-        headerView.title = category.name
+        let picid = Array(pi.keys)[section]
+        let category = PersonalInformationCategory.getPersonalInformationCategory(with: picid)
+        headerView.title = category?.name
         
         // 2 - set the width through a constraint and lay out the view
         headerView.addConstraint(NSLayoutConstraint(item: headerView, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: collectionView.frame.width))
@@ -183,19 +199,26 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
     }
     
     // MARK: - LargePersonalInformationCellDelegate method
-    func wasPersonalInfromationCellChanged() {
+    func wasPersonalInfromationCellChanged(at indexPath: IndexPath?) {
         print("Personal information cell was changed")
         // update the layout of the cells
-        collectionView.performBatchUpdates(nil, completion: nil)
+//        collectionView.reloadData()
+//        collectionView.performBatchUpdates(nil, completion: nil)
+        if indexPath != nil {
+            UIView.performWithoutAnimation {
+                collectionView.reloadItems(at: [indexPath!])
+            }
+        }
     }
 }
 
 protocol LargePersonalInformationCellDelegate {
-    func wasPersonalInfromationCellChanged()
+    func wasPersonalInfromationCellChanged(at indexPath: IndexPath?)
 }
 
 fileprivate class LargePersonalInformationCell: UICollectionViewCell {
     var delegate: LargePersonalInformationCellDelegate?
+    var indexPath: IndexPath?
     var personalInformation: PersonalInformation? {
         didSet {
             if let name = personalInformation?.name {
@@ -204,6 +227,32 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
             if let explanation = personalInformation?.explanation {
                 explanationLabel.text = explanation
             }
+            
+            if let review = personalInformation?.getReview(of: .personalInformation) {
+                questionPersonalInformationView.question = review.question
+                questionPersonalInformationView.selected = review.answer
+                constraintsUpdatePersonalInformation(review.answer)
+            }
+            
+            if let review = personalInformation?.getReview(of: .explanation) {
+                questionExplanationView.question = review.question
+                questionExplanationView.selected = review.answer
+                constraintsUpdateExplanation(review.answer)
+            }
+            
+            if let review = personalInformation?.getReview(of: .privacy) {
+                questionPrivacyView.question = review.question
+                questionPrivacyView.selected = review.answer
+            }
+        }
+    }
+    var color: UIColor? = Constants.colors.lightOrange {
+        didSet {
+            bgView.backgroundColor = color?.withAlphaComponent(0.3)
+            headerView.backgroundColor = color
+            questionPersonalInformationView.selectedColor = color
+            questionExplanationView.selectedColor = color
+            questionPrivacyView.selectedColor = color
         }
     }
     
@@ -216,14 +265,18 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    let bgView: UIView = {
+    lazy var headerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = color
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    lazy var bgView: UIView = {
         let v = UIView()
         v.layer.cornerRadius = 5.0
-        v.layer.shadowRadius = 1.0
-        v.layer.shadowOpacity = 0.1
-        v.layer.shadowOffset = CGSize(width: 2, height: 2)
+        v.backgroundColor = color
         v.translatesAutoresizingMaskIntoConstraints = false
-        v.backgroundColor = Constants.colors.lightOrange  // TODO: - Associate with the color of the place / visit
         return v
     }()
     
@@ -234,6 +287,7 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
         label.numberOfLines = 2
         label.textColor = .white
         label.textAlignment = .center
+        label.sizeToFit()
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -243,31 +297,42 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
         label.text = "Explanations"
         label.font = UIFont.italicSystemFont(ofSize: 14)
         label.textColor = .white
-        label.numberOfLines = 2
+        label.numberOfLines = 3
         label.textAlignment = .center
+        label.sizeToFit()
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
     lazy var questionPersonalInformationView: QuestionRow = {
-        let row = QuestionRow(with: "Is the information correct?", yesAction: { [weak self] in
-            print("yes")
-            self?.personalInformationEditHeight?.constant = 0
-            self?.questionExplanationViewHeight?.constant = 40
-            self?.questionPrivacyViewHeight?.constant = 40
-            self?.delegate?.wasPersonalInfromationCellChanged()
+        let row = QuestionRow(with: "question", yesAction: { [weak self] in
+            if let review = self?.personalInformation?.getReview(of: .personalInformation) {
+                review.answer = .yes
+                DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: .yes)
+            }
+            self?.constraintsUpdatePersonalInformation(.yes)
+            self?.delegate?.wasPersonalInfromationCellChanged(at: self?.indexPath)
         }, noAction: { [weak self] in
-            print("no")
-            self?.personalInformationEditHeight?.constant = 40
-            self?.questionExplanationViewHeight?.constant = 0
-            self?.questionPrivacyViewHeight?.constant = 0
-            self?.questionExplanationEditViewHeight?.constant = 0
+            if let review = self?.personalInformation?.getReview(of: .personalInformation) {
+                review.answer = .no
+                DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: .no)
+            }
+            if let review = self?.personalInformation?.getReview(of: .explanation) {
+                review.answer = .none
+                DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: .none)
+            }
+            if let review = self?.personalInformation?.getReview(of: .privacy) {
+                review.answer = .none
+                DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: .none)
+            }
+            self?.constraintsUpdatePersonalInformation(.no)
             self?.questionExplanationView.selected = .none
             self?.questionPrivacyView.selected = .none
-            self?.delegate?.wasPersonalInfromationCellChanged()
+            self?.delegate?.wasPersonalInfromationCellChanged(at: self?.indexPath)
         })
-        row.selectedColor = Constants.colors.orange
+        row.selectedColor = color
         row.unselectedColor = Constants.colors.superLightGray
+        
         return row
     }()
     
@@ -282,16 +347,26 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
     var personalInformationEditHeight: NSLayoutConstraint?
     
     lazy var questionExplanationView: QuestionRow = {
-        let row = QuestionRow(with: "Is the explanation informative?", yesAction: { [weak self] in
-            print("yes")
-            self?.questionExplanationEditViewHeight?.constant = 0
-            self?.delegate?.wasPersonalInfromationCellChanged()
+        
+        let row = QuestionRow(with: "question", yesAction: { [weak self] in
+            if let review = self?.personalInformation?.getReview(of: .explanation) {
+                review.answer = .yes
+                DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: .yes)
+                print("answered yes to review \(review)")
+            }
+            
+            self?.constraintsUpdateExplanation(.yes)
+            self?.delegate?.wasPersonalInfromationCellChanged(at: self?.indexPath)
         }, noAction: { [weak self] in
-            print("no")
-            self?.questionExplanationEditViewHeight?.constant = 40
-            self?.delegate?.wasPersonalInfromationCellChanged()
+            if let review = self?.personalInformation?.getReview(of: .explanation) {
+                review.answer = .no
+                DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: .no)
+                print("answered no to review \(review)")
+            }
+            self?.constraintsUpdateExplanation(.no)
+            self?.delegate?.wasPersonalInfromationCellChanged(at: self?.indexPath)
         })
-        row.selectedColor = Constants.colors.orange
+        row.selectedColor = color
         row.unselectedColor = Constants.colors.superLightGray
         return row
     }()
@@ -307,14 +382,20 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
     var questionExplanationEditViewHeight: NSLayoutConstraint?
 
     lazy var questionPrivacyView: QuestionRow = {
-        let row = QuestionRow(with: "Is the inferred information sensitive to you?", yesAction: { [weak self] in
-            print("yes")
-            self?.delegate?.wasPersonalInfromationCellChanged()
+        let row = QuestionRow(with: "question", yesAction: { [weak self] in
+            if let review = self?.personalInformation?.getReview(of: .privacy) {
+                review.answer = .yes
+                DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: .yes)
+            }
+            self?.delegate?.wasPersonalInfromationCellChanged(at: self?.indexPath)
             }, noAction: { [weak self] in
-            print("yes")
-            self?.delegate?.wasPersonalInfromationCellChanged()
+                if let review = self?.personalInformation?.getReview(of: .privacy) {
+                    review.answer = .no
+                    DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: .no)
+                }
+            self?.delegate?.wasPersonalInfromationCellChanged(at: self?.indexPath)
         })
-        row.selectedColor = Constants.colors.orange
+        row.selectedColor = color
         row.unselectedColor = Constants.colors.superLightGray
         return row
     }()
@@ -323,17 +404,14 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
     func setupViews() {
         contentView.addSubview(bgView)
         
-        let view = UIView()
-        view.backgroundColor = Constants.colors.orange
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(titleLabel)
-        view.addSubview(explanationLabel)
-        view.addVisualConstraint("H:|-[v0]-|", views: ["v0": titleLabel])
-        view.addVisualConstraint("H:|-[v0]-|", views: ["v0": explanationLabel])
-        view.addVisualConstraint("V:|-14-[v0]-[v1]-|", views: ["v0": titleLabel, "v1": explanationLabel])
+        headerView.addSubview(titleLabel)
+        headerView.addSubview(explanationLabel)
+        headerView.addVisualConstraint("H:|-[v0]-|", views: ["v0": titleLabel])
+        headerView.addVisualConstraint("H:|-[v0]-|", views: ["v0": explanationLabel])
+        headerView.addVisualConstraint("V:|-14-[v0]-[v1]-|", views: ["v0": titleLabel, "v1": explanationLabel])
         
-        bgView.addSubview(view)
-        bgView.addVisualConstraint("H:|[v0]|", views: ["v0": view])
+        bgView.addSubview(headerView)
+        bgView.addVisualConstraint("H:|[v0]|", views: ["v0": headerView])
         
         bgView.addSubview(questionPersonalInformationView)
         bgView.addVisualConstraint("H:|[v0]|", views: ["v0": questionPersonalInformationView])
@@ -350,7 +428,8 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
         bgView.addSubview(questionPrivacyView)
         bgView.addVisualConstraint("H:|[v0]|", views: ["v0": questionPrivacyView])
         
-        bgView.addVisualConstraint("V:|[v0]-[v1(40)][v2][v3][v4][v5]-|", views: ["v0": view, "v1": questionPersonalInformationView, "v2": personalInformationEditView, "v3": questionExplanationView, "v4": questionExplanationEditView, "v5": questionPrivacyView])
+        bgView.addVisualConstraint("V:|[v0(120)]", views: ["v0": headerView])
+        bgView.addVisualConstraint("V:[v1(40)][v2][v3][v4][v5]-|", views: ["v1": questionPersonalInformationView, "v2": personalInformationEditView, "v3": questionExplanationView, "v4": questionExplanationEditView, "v5": questionPrivacyView])
         
         addVisualConstraint("H:|-14-[v0]-14-|", views: ["v0": bgView])
         addVisualConstraint("V:|-[v0]-|", views: ["v0": bgView])
@@ -372,8 +451,36 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
         questionPrivacyViewHeight?.isActive = true
     }
     
+    private func constraintsUpdatePersonalInformation(_ answer: ReviewAnswer) {
+        if answer == .yes {
+            personalInformationEditHeight?.constant = 0
+            questionExplanationViewHeight?.constant = 40
+            questionPrivacyViewHeight?.constant = 40
+        } else if answer == .no {
+            personalInformationEditHeight?.constant = 40
+            questionExplanationViewHeight?.constant = 0
+            questionPrivacyViewHeight?.constant = 0
+            questionExplanationEditViewHeight?.constant = 0
+        } else {
+            personalInformationEditHeight?.constant = 0
+            questionExplanationViewHeight?.constant = 0
+            questionPrivacyViewHeight?.constant = 0
+            questionExplanationEditViewHeight?.constant = 0
+        }
+    }
+    
+    private func constraintsUpdateExplanation(_ answer: ReviewAnswer) {
+        if answer == .yes {
+            questionExplanationEditViewHeight?.constant = 0
+        } else if answer == .no {
+            questionExplanationEditViewHeight?.constant = 40
+        } else {
+            questionExplanationEditViewHeight?.constant = 0
+        }
+    }
+    
     func height() -> CGFloat {
-        let headerHeight: CGFloat = 14.0 + titleLabel.bounds.height + 8 + explanationLabel.bounds.height + 8.0
+        let headerHeight: CGFloat = 14.0 + 40 + 8.0 + 50 + 16.0
         var questionsHeight: CGFloat = 40.0
         if questionPersonalInformationView.selected == .no {
             questionsHeight += 40.0
@@ -383,6 +490,7 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
                 questionsHeight += 40.0
             }
         }
+        print("headerHeight: \(headerHeight), questionsHeight: \(questionsHeight)")
         return 8.0 + headerHeight + 8.0 + questionsHeight + 8.0
     }
 }

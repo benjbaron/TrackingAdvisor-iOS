@@ -100,7 +100,6 @@ class SettingsTableTableViewController: UITableViewController {
                     (result : UIAlertAction) -> Void in
                     print("Delete all -- proceed")
                     DataStoreService.shared.deleteAll()
-                    
                 }
                 
                 let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel) {
@@ -112,6 +111,16 @@ class SettingsTableTableViewController: UITableViewController {
                 alertController.addAction(cancelAction)
                 self.present(alertController, animated: true, completion: nil)
                 tableView.deselectRow(at: indexPath, animated: true)
+            } else if id == "onboarding" {
+                print("Show onboarding screen")
+                
+                // Load the onboarding view and the navigation controller
+                let storyboard = UIStoryboard(name: "Onboarding", bundle: nil)
+                 let initialViewController = storyboard.instantiateViewController(withIdentifier: "InitialOnboarding")
+
+                initialViewController.modalTransitionStyle = .crossDissolve
+                initialViewController.modalPresentationStyle = .fullScreen
+                present(initialViewController, animated: true, completion: nil)
             }
         }
     }

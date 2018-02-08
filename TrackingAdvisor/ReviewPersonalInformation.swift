@@ -37,7 +37,33 @@ class ReviewPersonalInformation: Review {
             let matches = try context.fetch(request)
             if matches.count > 0 {
                 assert(matches.count == 1, "ReviewPersonalInformation.findOrCreateReviewPersonalInformation -- database inconsistency")
-                return matches[0]
+                
+                // update the review
+                let managedObject = matches[0]
+                
+                print("update review pi \(userReview.rid)")
+                
+                if let oldPlace = managedObject.place {
+                    oldPlace.removeFromReviews(managedObject)
+                }
+                if let oldPi = managedObject.personalinformation {
+                    oldPi.removeFromReviews(managedObject)
+                }
+                
+                managedObject.setValue(question, forKey: "question")
+                managedObject.setValue(userReview.a, forKey: "answer_")
+                managedObject.setValue(userReview.t, forKey: "type_")
+                
+                if let newPlace = try! Place.findPlace(matching: userReview.pid, in: context) {
+                    managedObject.setValue(newPlace, forKey: "place")
+                    newPlace.addToReviews(managedObject)
+                }
+                if let newPi = try! PersonalInformation.findPersonalInformation(matching: userReview.piid, in: context) {
+                    managedObject.setValue(newPi, forKey: "personalinformation")
+                    newPi.addToReviews(managedObject)
+                }
+                
+                return managedObject
             }
         } catch {
             throw error
@@ -48,15 +74,14 @@ class ReviewPersonalInformation: Review {
         review.question = question
         review.answer = ReviewAnswer(rawValue: userReview.a)!
         review.type = ReviewType(rawValue: userReview.t)!
-        if let place = try! Place.findPlace(matching: userReview.pid, in: context),
-           let pi = try! PersonalInformation.findPersonalInformation(matching: userReview.piid, in: context) {
-            review.personalinformation = pi
+        if let place = try! Place.findPlace(matching: userReview.pid, in: context) {
             review.place = place
-            
-            pi.addToReviews(review)
             place.addToReviews(review)
         }
-        
+        if let pi = try! PersonalInformation.findPersonalInformation(matching: userReview.piid, in: context) {
+            review.personalinformation = pi
+            pi.addToReviews(review)
+        }
         
         return review
     }

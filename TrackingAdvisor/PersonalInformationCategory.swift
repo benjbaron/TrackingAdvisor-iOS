@@ -14,7 +14,7 @@ class PersonalInformationCategory: NSObject, NSCoding, Decodable {
     // MARK: Properties
     var picid: String  // Equivalent to an acronym
     var name: String
-    var desc: String
+    var detail: String
     var explanation: String
     var icon: String
     
@@ -26,16 +26,16 @@ class PersonalInformationCategory: NSObject, NSCoding, Decodable {
     struct PropertyKey {
         static let picid = "picid"
         static let name = "name"
-        static let desc = "description"
+        static let detail = "detail"
         static let explanation = "explanation"
         static let icon = "icon"
     }
     
     // MARK: Initialization
-    init?(picid: String, name: String, desc: String, explanation: String, icon: String) {
+    init?(picid: String, name: String, detail: String, explanation: String, icon: String) {
         self.picid = picid
         self.name = name
-        self.desc = desc
+        self.detail = detail
         self.explanation = explanation
         self.icon = icon
     }
@@ -44,7 +44,7 @@ class PersonalInformationCategory: NSObject, NSCoding, Decodable {
     func encode(with aCoder: NSCoder) {
         aCoder.encode(picid, forKey: PropertyKey.picid)
         aCoder.encode(name, forKey: PropertyKey.name)
-        aCoder.encode(description, forKey: PropertyKey.desc)
+        aCoder.encode(detail, forKey: PropertyKey.detail)
         aCoder.encode(explanation, forKey: PropertyKey.explanation)
         aCoder.encode(icon, forKey: PropertyKey.icon)
     }
@@ -54,12 +54,13 @@ class PersonalInformationCategory: NSObject, NSCoding, Decodable {
         guard let picid = aDecoder.decodeObject(forKey: PropertyKey.picid) as? String else {
             return nil // initializer should fail
         }
+        
         let name = aDecoder.decodeObject(forKey: PropertyKey.name) as! String
-        let desc = aDecoder.decodeObject(forKey: PropertyKey.desc) as! String
+        let detail = aDecoder.decodeObject(forKey: PropertyKey.detail) as! String
         let explanation = aDecoder.decodeObject(forKey: PropertyKey.explanation) as! String
         let icon = aDecoder.decodeObject(forKey: PropertyKey.icon) as! String
         
-        self.init(picid: picid, name: name, desc: desc, explanation: explanation, icon: icon)
+        self.init(picid: picid, name: name, detail: detail, explanation: explanation, icon: icon)
     }
     
     // MARK: Class functions to save and load the personal information categories
@@ -90,7 +91,6 @@ class PersonalInformationCategory: NSObject, NSCoding, Decodable {
         let parameters: Parameters = ["userid": userid]
         Alamofire.request(Constants.urls.personalInformationCategoriesURL, method: .get, parameters: parameters).responseJSON { response in
             if response.result.isSuccess {
-                print(response)
                 guard let data = response.data else { return }
                 do {
                     let decoder = JSONDecoder()
@@ -113,6 +113,9 @@ class PersonalInformationCategory: NSObject, NSCoding, Decodable {
                 FileService.shared.log("update the personal information categories in the background", classname: "PersonalInformationCategory")
                 DispatchQueue.global(qos: .background).async {
                     PersonalInformationCategory.retrieveLatestPersonalInformationCategories()
+                    let defaults = UserDefaults.standard
+                    let date = Date()
+                    defaults.set(date, forKey: Constants.defaultsKeys.lastPersonalInformationCategoryUpdate)
                 }
             }
         }

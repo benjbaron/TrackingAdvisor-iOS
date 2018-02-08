@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CoreLocation
 
 extension NSMutableAttributedString {
     @discardableResult func bold(_ text: String, of size: CGFloat = 17) -> NSMutableAttributedString {
@@ -161,5 +162,44 @@ extension UIColor {
         }
         
         self.init(red: r, green: g, blue: b, alpha: a)
+    }
+}
+
+extension CLLocationCoordinate2D {
+    static func degreeToRadian(angle:CLLocationDegrees) -> CGFloat{
+        return (  (CGFloat(angle)) / 180.0 * CGFloat(Double.pi)  )
+    }
+    
+    static func radianToDegree(radian:CGFloat) -> CLLocationDegrees{
+        return CLLocationDegrees(  radian * CGFloat(180.0 / Double.pi)  )
+    }
+    
+    static func middlePoint(of listCoords: [CLLocationCoordinate2D]) -> CLLocationCoordinate2D{
+        var x: CGFloat = 0.0
+        var y: CGFloat = 0.0
+        var z: CGFloat = 0.0
+
+        for coordinate in listCoords{
+            let lat:CGFloat = degreeToRadian(angle: coordinate.latitude)
+            let lon:CGFloat = degreeToRadian(angle: coordinate.longitude)
+            
+            x = x + cos(lat) * cos(lon)
+            y = y + cos(lat) * sin(lon);
+            z = z + sin(lat);
+        }
+        
+        x = x/CGFloat(listCoords.count)
+        y = y/CGFloat(listCoords.count)
+        z = z/CGFloat(listCoords.count)
+        
+        let resultLon: CGFloat = atan2(y, x)
+        let resultHyp: CGFloat = sqrt(x*x+y*y)
+        let resultLat:CGFloat = atan2(z, resultHyp)
+        
+        let newLat = radianToDegree(radian: resultLat)
+        let newLon = radianToDegree(radian: resultLon)
+        let result:CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: newLat, longitude: newLon)
+        
+        return result
     }
 }

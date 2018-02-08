@@ -9,7 +9,7 @@
 import UIKit
 import Mapbox
 
-class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, PersonalInformationCategoryDelegate, FooterMoreInformationDelegate {
+class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, PersonalInformationCategoryCellDelegate, FooterMoreInformationDelegate {
     
     @objc func edit(_ sender: UIBarButtonItem) {
         let viewController = PlaceFinderMapTableViewController()
@@ -41,16 +41,18 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
             color = place.getPlaceColor()
             headerView.backgroundColor = color
             personalInformation = place.getPersonalInformation()
+            print("place: \(place)")
         }
     }
     
-    var personalInformation: [PersonalInformationCategory: [PersonalInformation]]?
+    var personalInformation: [String: [PersonalInformation]]?
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.tabBarController?.tabBar.isHidden = false
         
         setupNavBarButtons()
+        collectionView.reloadData()
     }
     
     override func viewDidLoad() {
@@ -142,16 +144,18 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell: PersonalInformationCategoryCell
         cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! PersonalInformationCategoryCell
+        
         guard let pi = personalInformation else { return cell }
-        let category = Array(pi.keys)[indexPath.section]
-        cell.personalInformationCategory = category
-        cell.personalInformation = pi[category]
+        let picid = Array(pi.keys)[indexPath.item]
+        cell.personalInformationCategory = PersonalInformationCategory.getPersonalInformationCategory(with: picid)
+        cell.personalInformation = pi[picid]
+        cell.color = color
         cell.delegate = self
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: view.frame.width, height: 120)
+        return CGSize(width: view.frame.width, height: 150)
     }
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
@@ -175,7 +179,7 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
         // 1 - instanciate a new header
         let headerView = HeaderPersonalInformationCell()
         
-        // 2 - set the width through a constraint and lay out the view
+        // 2 - set the width through a constraint and layout the view
         headerView.addConstraint(NSLayoutConstraint(item: headerView, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: collectionView.frame.width))
         headerView.setNeedsLayout()
         headerView.layoutIfNeeded()
@@ -220,9 +224,25 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
         return annotationView
     }
     
-    // MARK: - PersonalInformationCategoryDelegate method
-    func didPressPersonalInformation(type: PersonalInformationCategoryType, name: String) {
-        print("Did press button in category \(name)")
+    // MARK: - PersonalInformationCategoryCellDelegate method
+    func addPersonalInformation(cat: String) {
+        print("add a personal information for category \(cat)")
+    }
+    
+    func reviewPersonalInformation(cat: String, personalInformation: PersonalInformation, answer: ReviewAnswer) {
+        if let review = personalInformation.getReview(of: .personalInformation) {
+            print("save review in the database with answer: \(answer.rawValue)")
+            review.answer = answer
+            DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: answer)
+        }
+        if let review = personalInformation.getReview(of: .explanation) {
+            review.answer = .none
+            DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: .none)
+        }
+        if let review = personalInformation.getReview(of: .privacy) {
+            review.answer = .none
+            DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: .none)
+        }
     }
     
     // MARK: - FooterMoreInformationDelegate method
@@ -289,6 +309,10 @@ class FooterMoreInformationCell: UICollectionViewCell {
             self.delegate?.didPressMoreInformation()
         }
         
+        moreInformationLabel.setContentCompressionResistancePriority(UILayoutPriority(rawValue: 1000), for: .horizontal)
+        moreInformationIcon.setContentCompressionResistancePriority(UILayoutPriority(rawValue: 250), for: .horizontal)
+
+        // setup constraints
         addVisualConstraint("H:|-14-[label]-[icon]-14-|", views: ["label": moreInformationLabel, "icon": moreInformationIcon])
         addVisualConstraint("V:|[label]|", views: ["label": moreInformationLabel])
         addVisualConstraint("V:|-[icon]-|", views: ["icon": moreInformationIcon])

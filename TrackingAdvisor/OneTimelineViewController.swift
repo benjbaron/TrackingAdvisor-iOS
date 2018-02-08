@@ -31,6 +31,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
     @IBOutlet weak var timeline: ISTimeline!
     
     var timelineTitle: String!
+    var timelineDay: String!
     var isAnimating = false
     var isFolded = true
     var annotations: [PointAnnotation] = []
@@ -44,14 +45,20 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         timeline.contentInset = UIEdgeInsetsMake(20.0, 20.0, 20.0, 20.0)
         mapView?.zoomLevel = 13
         mapView?.centerCoordinate = CLLocationCoordinate2D(latitude: 51.524543, longitude: -0.132176)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         
+        UserUpdateHandler.retrieveLatestUserUpdates(for: DateHandler.dateToDayString(from: Date()))
         reload()
     }
     
     func reload() {
         guard let timeline = self.timeline else { return }
         
-        let visits = DataStoreService.shared.getVisits(for: timelineTitle)
+        print("reload timeline for \(timelineDay)")
+        let visits = DataStoreService.shared.getVisits(for: timelineDay)
                 
         let touchAction = { [weak self] (point:ISPoint) in
             guard let strongSelf = self else { return }
@@ -71,6 +78,30 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             guard let strongSelf = self else { return }
             let controller = PlaceFinderMapTableViewController()
             controller.visit = point.visit
+            
+            let controllerNavigation = UINavigationController(rootViewController: controller)
+            controllerNavigation.modalTransitionStyle = .crossDissolve
+            controllerNavigation.modalPresentationStyle = .fullScreen
+            strongSelf.present(controllerNavigation, animated: true, completion: nil)
+        }
+        
+        let addPlaceTouchAction = { [weak self] (pt1: ISPoint, pt2: ISPoint) in
+            guard let strongSelf = self else { return }
+            let controller = PlaceFinderMapTableViewController()
+            controller.color = Constants.colors.primaryDark
+            controller.name = "Add a place"
+            controller.address = "Pick a place with the map and search bar below"
+            controller.startDate = pt1.visit?.departure
+            controller.endDate = pt2.visit?.arrival
+            controller.showDeleteButton = false
+            controller.type = .add
+            if let place1 = pt1.visit?.place, let place2 = pt2.visit?.place {
+                let coords = CLLocationCoordinate2D.middlePoint(of: [
+                    CLLocationCoordinate2D(latitude: place1.latitude, longitude: place1.longitude),
+                    CLLocationCoordinate2D(latitude: place2.latitude, longitude: place2.longitude) ])
+                controller.latitude = coords.latitude
+                controller.longitude = coords.longitude
+            }
             
             let controllerNavigation = UINavigationController(rootViewController: controller)
             controllerNavigation.modalTransitionStyle = .crossDissolve
@@ -102,7 +133,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             
             let lineColor = Constants.colors.primaryDark
             
-            let point = ISPoint(title: placeName, description: description, pointColor: Constants.colors.primaryLight, lineColor: lineColor, touchUpInside: touchAction, feedbackTouchUpInside: feebackTouchAction, icon: icon, iconBg: Constants.colors.primaryLight, fill: true)
+            let point = ISPoint(title: placeName, description: description, pointColor: Constants.colors.primaryLight, lineColor: lineColor, touchUpInside: touchAction, feedbackTouchUpInside: feebackTouchAction, addPlaceTouchUpInside: addPlaceTouchAction, icon: icon, iconBg: Constants.colors.primaryLight, fill: true)
             point.visit = visit
             timelinePoints.append(point)
             
@@ -213,17 +244,9 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
     func mapViewDidFinishLoadingMap(_ mapView: MGLMapView) {
         showAnnotations()
     }
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
+    
+    
+    
 }
 
 // MGLAnnotationView subclass

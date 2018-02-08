@@ -87,7 +87,6 @@ class MovableLineLayer: MoveableLayer {
             }
         }
         
-        print("MovableLineLayer -- moveDown \(position)")
         move(to: position, with: delay)
     }
 }
@@ -175,9 +174,10 @@ open class ISTimeline: UIScrollView {
     
     var layers:[Int:[Moveable]] = [:]
     var addButtons:[Moveable] = []
+    var addButtonViews:[UIView] = []
     
     open var points:[ISPoint] = [] {
-        didSet {
+        didSet {            
             self.layer.sublayers?.forEach({ (layer:CALayer) in
                 if layer.isKind(of: CAShapeLayer.self) {
                     layer.removeFromSuperlayer()
@@ -190,6 +190,12 @@ open class ISTimeline: UIScrollView {
             self.contentSize = CGSize.zero
             
             sections.removeAll()
+            addButtonViews.removeAll()
+            addButtons.removeAll()
+            layers.removeAll()
+            isEditing = false
+            isAnimating = false
+            
             buildSections()
             
             layer.setNeedsDisplay()
@@ -212,9 +218,10 @@ open class ISTimeline: UIScrollView {
                 timelineEditButton.setTitle("Done", for: .normal)
                 timelineEditButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
             } else {
-                timelineEditButton.setTitle("Edit", for: .normal)
-                timelineEditButton.titleLabel?.font = UIFont.systemFont(ofSize: 14)
-
+                if timelineEditButton != nil {
+                  timelineEditButton.setTitle("Edit", for: .normal)
+                  timelineEditButton.titleLabel?.font = UIFont.systemFont(ofSize: 16)
+                }
             }
         }
     }
@@ -256,7 +263,6 @@ open class ISTimeline: UIScrollView {
             CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut))
             
             CATransaction.setCompletionBlock { [weak self] in
-                print("end animation")
                 
                 self?.isAnimating = false
                 self?.isEditing = false
@@ -280,7 +286,6 @@ open class ISTimeline: UIScrollView {
             CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut))
             
             CATransaction.setCompletionBlock { [weak self] in
-                print("end animation")
                 guard let strongSelf = self else { return  }
                 for i in 0..<strongSelf.addButtons.count {
                     let layer = strongSelf.addButtons[i]
@@ -293,7 +298,6 @@ open class ISTimeline: UIScrollView {
             
             for i in 1..<self.layers.count {
                 for j in 0..<self.layers[i]!.count {
-                    print("call moveDown \(i), \(j)")
                     let layer = self.layers[i]![j]
                     layer.moveDown(by: CGFloat(i) * 50, with: duration)
                 }
@@ -316,7 +320,7 @@ open class ISTimeline: UIScrollView {
         
         // Place the timeline edit button
         timelineEditButton = UIButton(type: UIButtonType.system)
-        timelineEditButton.frame.size = CGSize(width: 50, height: 25)
+        timelineEditButton.frame.size = CGSize(width: 75, height: 50)
         timelineEditButton.contentHorizontalAlignment = .right
         timelineEditButton.frame.origin = CGPoint(x: screenSize.width - (timelineEditButton.frame.width + 40), y: -10)
         timelineEditButton.setTitle("Edit", for: .normal)
@@ -358,11 +362,12 @@ open class ISTimeline: UIScrollView {
                     y: addIconPosition.y + 2,
                     width: 100,
                     height: 25)
-                let addTextLabel = buildAddLabel(text: "Add an event")
+                let addTextLabel = buildAddLabel(text: "Add a place")
                 
                 let addTextLayer = drawDescription(addTextRect, textColor: Constants.colors.black, descriptionLabel: addTextLabel!)
                 addTextLayer.alpha = 0
                 addButtons.append(MoveableView(view: addTextLayer, position: i, maxPosition: sections.count - 2))
+                addButtonViews.append(addTextLayer)
                 self.addSubview(addTextLayer)
             }
             
@@ -455,13 +460,7 @@ open class ISTimeline: UIScrollView {
     fileprivate func buildTimelineTitleLabel() {
         timelineTitleLabel = UILabel()
         timelineTitleLabel.text = timelineTitle
-        if #available(iOS 11.0, *) {
-            timelineTitleLabel.font =  UIFont.systemFont(ofSize: UIFont.preferredFont(forTextStyle: .largeTitle).pointSize, weight: .bold)
-            
-        } else {
-            timelineTitleLabel.font = UIFont.preferredFont(forTextStyle: .title1)
-            
-        }
+        timelineTitleLabel.font = UIFont.systemFont(ofSize: 36, weight: .heavy)
         timelineTitleLabel.preferredMaxLayoutWidth = calcWidth()
     }
     
@@ -638,13 +637,27 @@ open class ISTimeline: UIScrollView {
     
     override open func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         let point = touches.first!.location(in: self)
-        for (index, section) in sections.enumerated() {
-            if (section.bubbleRect.contains(point) ||
-                (section.descriptionRect != nil && section.descriptionRect!.contains(point))) {
-                points[index].touchUpInside?(points[index])
+        
+        if isEditing {
+            for (index, addButton) in addButtonViews.enumerated() {
+                if addButton.frame.contains(point) {
+                    print("Tapped on add a place no. \(index)")
+                    isEditing = false
+                    points[index].addPlaceTouchUpInside?(points[index], points[index+1])
+                    return
+                }
             }
-            if (section.feedbackRect.contains(point)) {
-                points[index].feedbackTouchUpInside?(points[index])
+        } else {
+            for (index, section) in sections.enumerated() {
+                if (section.bubbleRect.contains(point) ||
+                    (section.descriptionRect != nil && section.descriptionRect!.contains(point))) {
+                    points[index].touchUpInside?(points[index])
+                    return
+                }
+                if (section.feedbackRect.contains(point)) {
+                    points[index].feedbackTouchUpInside?(points[index])
+                    return
+                }
             }
         }
     }

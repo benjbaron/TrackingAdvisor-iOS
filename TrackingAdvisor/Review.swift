@@ -33,4 +33,42 @@ class Review: NSManagedObject {
         get { return ReviewAnswer(rawValue: answer_)! }
         set { answer_ = newValue.rawValue }
     }
+    
+    class func findReview(matching userReviewId: String, in context: NSManagedObjectContext) throws -> Review? {
+        let request: NSFetchRequest<Review> = Review.fetchRequest()
+        request.predicate = NSPredicate(format: "id = %@", userReviewId)
+        
+        do {
+            let matches = try context.fetch(request)
+            if matches.count > 0 {
+                assert(matches.count == 1, "Review.findReview -- database inconsistency")
+                return matches[0]
+            }
+        } catch {
+            throw error
+        }
+        
+        return nil
+    }
+
+    class func saveReviewAnswer(reviewId: String, answer: ReviewAnswer, in context: NSManagedObjectContext) throws -> Review? {
+        
+        let request: NSFetchRequest<Review> = Review.fetchRequest()
+        request.predicate = NSPredicate(format: "id = %@", reviewId)
+        
+        do {
+            let matches = try context.fetch(request)
+            if matches.count > 0 {
+                assert(matches.count == 1, "Review.saveReviewAnswer -- database inconsistency")
+                let managedObject = matches[0]
+                managedObject.setValue(answer.rawValue, forKey: "answer_")
+                
+                return managedObject
+            }
+        } catch {
+            throw error
+        }
+        
+        return nil
+    }
 }

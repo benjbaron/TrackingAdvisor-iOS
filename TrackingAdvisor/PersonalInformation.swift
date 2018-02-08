@@ -38,7 +38,36 @@ class PersonalInformation : NSManagedObject {
             let matches = try context.fetch(request)
             if matches.count > 0 {
                 assert(matches.count == 1, "PersonalInformation.findOrCreatePersonalInformation -- database inconsistency")
-                return matches[0]
+                
+                // update the personal information
+                let managedObject = matches[0]
+                
+                print("update personal information \(userPersonalInformation.piid)")
+                
+                if let oldPlace = managedObject.place {
+                    oldPlace.removeFromPersonalInformation(managedObject)
+                }
+                
+                managedObject.setValue(userPersonalInformation.name, forKey: "name")
+                managedObject.setValue(userPersonalInformation.d, forKey: "desc")
+                managedObject.setValue(userPersonalInformation.icon, forKey: "icon")
+                managedObject.setValue(userPersonalInformation.s, forKey: "source")
+                managedObject.setValue(userPersonalInformation.p, forKey: "privacy")
+                managedObject.setValue(userPersonalInformation.picid, forKey: "category")
+                
+                if userPersonalInformation.e != nil {
+                    managedObject.setValue(userPersonalInformation.e, forKey: "explanation")
+                } else {
+                    let pic = PersonalInformationCategory.getPersonalInformationCategory(with: userPersonalInformation.picid)
+                    managedObject.setValue(pic?.explanation, forKey: "explanation")
+                }
+                
+                if let newPlace = try! Place.findPlace(matching: userPersonalInformation.pid, in: context) {
+                    managedObject.setValue(newPlace, forKey: "place")
+                    newPlace.addToPersonalInformation(managedObject)
+                }
+                
+                return managedObject
             }
         } catch {
             throw error
@@ -50,13 +79,19 @@ class PersonalInformation : NSManagedObject {
         personalInformation.desc = userPersonalInformation.d
         personalInformation.icon = userPersonalInformation.icon
         personalInformation.source = userPersonalInformation.s
-        personalInformation.explanation = userPersonalInformation.e
         personalInformation.privacy = userPersonalInformation.p
         personalInformation.category = userPersonalInformation.picid
         
         if let place = try! Place.findPlace(matching: userPersonalInformation.pid, in: context) {
             personalInformation.place = place
             place.addToPersonalInformation(personalInformation)
+        }
+        
+        if userPersonalInformation.e != nil {
+            personalInformation.explanation = userPersonalInformation.e
+        } else {
+            let pic = PersonalInformationCategory.getPersonalInformationCategory(with: userPersonalInformation.picid)
+            personalInformation.explanation = pic?.explanation
         }
         
         return personalInformation

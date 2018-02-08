@@ -11,6 +11,7 @@ import CoreData
 
 @objc(ReviewVisit)
 class ReviewVisit: Review {
+    
     class func findReviewVisit(matching userReviewId: String, in context: NSManagedObjectContext) throws -> ReviewVisit? {
         let request: NSFetchRequest<ReviewVisit> = ReviewVisit.fetchRequest()
         request.predicate = NSPredicate(format: "id = %@", userReviewId)
@@ -37,7 +38,21 @@ class ReviewVisit: Review {
             let matches = try context.fetch(request)
             if matches.count > 0 {
                 assert(matches.count == 1, "ReviewVisit.findOrCreateReviewVisit -- database inconsistency")
-                return matches[0]
+                // udpate the visit review
+                
+                let managedObject = matches[0]
+                print("update review visit \(userReview.rid)")
+                
+                managedObject.setValue(question, forKey: "question")
+                managedObject.setValue(userReview.a, forKey: "answer_")
+                managedObject.setValue(userReview.t, forKey: "type_")
+                
+                if let visit = try! Visit.findVisit(matching: userReview.vid, in: context) {
+                    managedObject.setValue(visit, forKey: "visit")
+                    visit.setValue(managedObject, forKey: "review")
+                }
+                
+                return managedObject
             }
         } catch {
             throw error

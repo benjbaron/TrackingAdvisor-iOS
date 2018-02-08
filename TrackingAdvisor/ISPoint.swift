@@ -16,33 +16,35 @@ open class ISPoint {
     open var lineColor:UIColor
     open var touchUpInside:Optional<(_ point:ISPoint) -> Void>
     open var feedbackTouchUpInside:Optional<(_ point:ISPoint) -> Void>
+    open var addPlaceTouchUpInside:Optional<(_ pt1:ISPoint, _ pt2:ISPoint) -> Void>
     open var fill:Bool = true
     open var icon:UIImage
     open var iconBg: UIColor
     var visit: Visit?
     
-    public init(title:String, description:String, pointColor:UIColor, lineColor:UIColor, touchUpInside:Optional<(_ point:ISPoint) -> Void>, feedbackTouchUpInside:Optional<(_ point:ISPoint) -> Void>, icon:UIImage, iconBg:UIColor, fill:Bool = true) {
+    public init(title:String, description:String, pointColor:UIColor, lineColor:UIColor, touchUpInside:Optional<(_ point:ISPoint) -> Void>, feedbackTouchUpInside:Optional<(_ point:ISPoint) -> Void>, addPlaceTouchUpInside:Optional<(_ pt1:ISPoint, _ pt2:ISPoint) -> Void>,  icon:UIImage, iconBg:UIColor, fill:Bool = true) {
         self.title = title
         self.description = description
         self.pointColor = pointColor
         self.lineColor = lineColor
         self.touchUpInside = touchUpInside
         self.feedbackTouchUpInside = feedbackTouchUpInside
+        self.addPlaceTouchUpInside = addPlaceTouchUpInside
         self.fill = fill
         self.icon = icon
         self.iconBg = iconBg
     }
     
-    public convenience init(title:String, description:String, touchUpInside:Optional<(_ point:ISPoint) -> Void>, feedbackTouchUpInside:Optional<(_ point:ISPoint) -> Void>) {
+    public convenience init(title:String, description:String, touchUpInside:Optional<(_ point:ISPoint) -> Void>, feedbackTouchUpInside:Optional<(_ point:ISPoint) -> Void>, addPlaceTouchUpInside:Optional<(_ pt1:ISPoint, _ pt2:ISPoint) -> Void>) {
         
-        self.init(title: title, description: description, pointColor: Constants.colors.primaryLight, lineColor: Constants.colors.primaryDark, touchUpInside: touchUpInside, feedbackTouchUpInside:feedbackTouchUpInside, icon: UIImage(named: "location")!, iconBg: Constants.colors.primaryLight, fill: true)
+        self.init(title: title, description: description, pointColor: Constants.colors.primaryLight, lineColor: Constants.colors.primaryDark, touchUpInside: touchUpInside, feedbackTouchUpInside:feedbackTouchUpInside, addPlaceTouchUpInside:addPlaceTouchUpInside, icon: UIImage(named: "location")!, iconBg: Constants.colors.primaryLight, fill: true)
     }
     
-    public convenience init(title:String, touchUpInside:Optional<(_ point:ISPoint) -> Void>, feedbackTouchUpInside:Optional<(_ point:ISPoint) -> Void>) {
-        self.init(title: title, description: "", touchUpInside: touchUpInside, feedbackTouchUpInside: feedbackTouchUpInside)
+    public convenience init(title:String, touchUpInside:Optional<(_ point:ISPoint) -> Void>, feedbackTouchUpInside:Optional<(_ point:ISPoint) -> Void>, addPlaceTouchUpInside:Optional<(_ pt1:ISPoint, _ pt2:ISPoint) -> Void>) {
+        self.init(title: title, description: "", touchUpInside: touchUpInside, feedbackTouchUpInside: feedbackTouchUpInside, addPlaceTouchUpInside:addPlaceTouchUpInside)
     }
     
     public convenience init(title:String) {
-        self.init(title: title, touchUpInside: nil, feedbackTouchUpInside: nil)
+        self.init(title: title, touchUpInside: nil, feedbackTouchUpInside: nil, addPlaceTouchUpInside: nil)
     }
 }
