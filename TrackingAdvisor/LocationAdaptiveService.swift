@@ -8,6 +8,7 @@
 
 import Foundation
 import CoreLocation
+import UIKit
 
 protocol LocationAdaptiveUpdateProtocol {
     func locationDidUpdate(location: UserLocation)
@@ -23,19 +24,19 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
     var currentLocation:UserLocation? = nil
     var locations:[CLLocation] = []
     
-    var accuracy = kCLLocationAccuracyBestForNavigation
+    var accuracy = kCLLocationAccuracyNearestTenMeters
     var distanceFilter = kCLDistanceFilterNone
     
     var timer = Timer()
     var delayTimer = Timer()
     var activityTimeout = (Double)(60)
-    var timeout = (Double)(2*60)
+    var timeout = (Double)(3*60)
     var minTimeout = (Double)(2*60)
     var maxTimeout = (Double)(30*60)
     
     var updating = false
     var isStationary = false
-    var id: String = Settings.getUUID()
+    var id: String = Settings.getUserId() ?? ""
     var bgTask = UIBackgroundTaskInvalid
     
     override init() {
@@ -143,9 +144,7 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
                     FileService.shared.log("added location to \(filename)", classname: "LocationAdaptiveService")
                     
                     // upload to server
-                    UserLocation.upload() { response in
-                        print("file sent to server")
-                    }
+                    UserLocation.upload(callback: nil)
                     
                     DispatchQueue.main.async { () -> Void in
                         NSLog("call delegate method for location handler")
@@ -200,7 +199,7 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
         
         // Will only stop the locationManager after 1 seconds, so that we can get some accurate locations
         // The location manager will only operate for 1 seconds to save battery
-        delayTimer = Timer.scheduledTimer(timeInterval: 1.0,
+        delayTimer = Timer.scheduledTimer(timeInterval: 0.5,
                                           target: self,
                                           selector: #selector(LocationAdaptiveService.stopUpdatingLocationAfterXSeconds),
                                           userInfo: nil,

@@ -43,7 +43,7 @@ class LocationService: NSObject, CLLocationManagerDelegate {
     var updating = false
 
     var locations:[UserLocation] = []
-    let id: String = Settings.getUUID()
+    let id: String = Settings.getUserId() ?? ""
     
     let uclCoords = CLLocationCoordinate2D(latitude: 51.524657746824921, longitude: -0.13423115015042408)
     let homeCoords = CLLocationCoordinate2D(latitude: 51.513596047066898, longitude: -0.093435771182253588)
@@ -252,7 +252,7 @@ class LocationService: NSObject, CLLocationManagerDelegate {
         
         if timer.isValid { return }
         
-        var isStationary = false
+        let isStationary = false
 //        if let activityService = activityService {
 //            NSLog("isStationary: \(activityService.isStationary), activities: \(activityService.activities)")
 //            isStationary = activityService.isStationary

@@ -30,13 +30,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // if the app was launched for a notification
         if let notification = launchOptions?[.remoteNotification] as? [String:Any] {
-            let aps = notification["aps"] as! [String:Any]
-            print(aps)
+            handleRemoteNotifications(with: notification)
         }
         
         // check if this is the first app launch
-        let defaults = UserDefaults.standard
-        if !defaults.bool(forKey: Constants.defaultsKeys.onboarding) {
+        if !Settings.getOnboarding() {
             launchStoryboard(storyboard: "Onboarding")
             return true
         } else {
@@ -48,13 +46,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // retrieve the latest data from the server
         DispatchQueue.global(qos: .background).async {
+            
+            // force upload last locations to server
+            UserLocation.upload(force: true, callback: nil)
+            
             // update the personal categories if needed
             PersonalInformationCategory.updateIfNeeded()
             
             // get today's update
             UserUpdateHandler.retrieveLatestUserUpdates(for: DateHandler.dateToDayString(from: Date()))
+            
+            let reviewChallenges = DataStoreService.shared.getLatestReviewChallenge()
+            DispatchQueue.main.async { () -> Void in
+                if reviewChallenges.count > 0 {
+                    application.applicationIconBadgeNumber = 1
+                } else {
+                    application.applicationIconBadgeNumber = 0
+                }
+            }
         }
-        
+                
         return true
     }
     
@@ -147,6 +158,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             print("Permission granted: \(granted)")
             
             guard granted else { return }
+            
+            let viewAction = UNNotificationAction(identifier: "VIEW",
+                                                  title: "View",
+                                                  options: [.foreground])
+            
+            let category = UNNotificationCategory(identifier: "REVIEW_CHALLENGE",
+                                                      actions: [viewAction],
+                                                      intentIdentifiers: [],
+                                                      options: [])
+            
+            UNUserNotificationCenter.current().setNotificationCategories([category])
             self.getNotificationSettings()
         }
     }
@@ -168,8 +190,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         
         let token = tokenParts.joined()
-        let defaults = UserDefaults.standard
-        defaults.set(token, forKey: Constants.defaultsKeys.pushNotificationToken)
+        Settings.savePushNotificationId(with: token)
     }
     
     func application(_ application: UIApplication,
@@ -178,8 +199,37 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        
+        handleRemoteNotifications(with: userInfo)
+        
         FileService.shared.log("call -- didReceiveRemoteNotification", classname: "AppDelegate")
         LocationRegionService.shared.restartUpdatingLocation()
+    }
+    
+    private func handleRemoteNotifications(with userInfo: [AnyHashable : Any]) {
+        // retrieve the latest data from the server
+        DispatchQueue.global(qos: .background).async { [weak self] in
+            if let aps = userInfo["aps"] as? [String: AnyObject] {
+                if aps["content-available"] as? Int == 1 {
+                    // update the personal categories if needed
+                    PersonalInformationCategory.updateIfNeeded()
+                    
+                    // get today's update
+                    UserUpdateHandler.retrieveLatestUserUpdates(for: DateHandler.dateToDayString(from: Date()))
+                } else  {
+                    // get the user challenge days
+                    if let reviewChallengesDays = userInfo["challenges"] as? [String] {
+                        for day in reviewChallengesDays {
+                            UserUpdateHandler.retrievingLatestReviewChallenge(for: day)
+                        }
+                        // show the challenge review tab
+                        DispatchQueue.main.async { () -> Void in
+                            (self?.window?.rootViewController as? UITabBarController)?.selectedIndex = 1
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

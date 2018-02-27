@@ -9,6 +9,7 @@
 import Foundation
 import CoreLocation
 import Alamofire
+import UIKit
 
 enum BatteryState {
     case unknown
@@ -62,9 +63,8 @@ class UserLocation {
     }
     
     func dumps(to file: String, callback: @escaping (Bool) -> Void) {
-        let defaults = UserDefaults.standard
         // get the last location update
-        if let lastLocationUpdate = defaults.object(forKey: Constants.defaultsKeys.lastLocationUpdate) as? Date {
+        if let lastLocationUpdate = Settings.getLastLocationUpdate() {
             // get the most likely activity since the last location update
             ActivityService.shared.getActivity(from: lastLocationUpdate, to: self.timestamp) { [weak self] activities in
                 guard let strongSelf = self else { return }
@@ -87,8 +87,7 @@ class UserLocation {
                         FileService.shared.write(header, in: Constants.filenames.locationFile)
                     }
                     FileService.shared.append(line, in: Constants.filenames.locationFile)
-
-                    defaults.set(strongSelf.timestamp, forKey: Constants.defaultsKeys.lastLocationUpdate)
+                    Settings.saveLastLocationUpdate(with: strongSelf.timestamp)
                     
                     callback(true)
                 }
@@ -96,13 +95,10 @@ class UserLocation {
         }
     }
     
-    class func upload(callback: @escaping (DataResponse<Any>) -> Void) {
-        print("UserLocation -- upload to server")
-        let defaults = UserDefaults.standard
+    class func upload(force: Bool = false, callback: ((DataResponse<Any>) -> Void)?) {
         // See if the data needs to be uploaded to the server
-        if let lastFileUpdate = defaults.object(forKey: Constants.defaultsKeys.lastFileUpdate) as? Date {
-            print("time since upload: \(lastFileUpdate.timeIntervalSinceNow)")
-            if abs(lastFileUpdate.timeIntervalSinceNow) > Constants.variables.minimumDurationBetweenLocationFileUploads {
+        if let lastFileUpdate = Settings.getLastFileUpdate() {
+            if force || (!force && abs(lastFileUpdate.timeIntervalSinceNow) > Constants.variables.minimumDurationBetweenLocationFileUploads) {
                 FileService.shared.log("upload file \(Constants.filenames.locationFile) in the background", classname: "UserLocation")
                 
                 guard let path = FileService.shared.getFilePath(for: Constants.filenames.locationFile) else { return }
@@ -111,7 +107,7 @@ class UserLocation {
                 
                 Networking.shared.backgroundSessionManager.upload(
                     multipartFormData: { multipartFormData in
-                        let id: String = UIDevice.current.identifierForVendor!.uuidString
+                        let id: String = Settings.getUserId() ?? ""
                         let day = DateHandler.dateToDayString(from: date)
                         let time = DateHandler.dateToHourString(from: date)
                         let filename = "\(id)_\(day)_\(time).csv"
@@ -127,7 +123,8 @@ class UserLocation {
                             upload.responseJSON { response in
                                 FileService.shared.log("response received from server: \(response.result.isSuccess)", classname: "UserLocation")
                                 // update the last file update
-                                defaults.set(date, forKey: Constants.defaultsKeys.lastFileUpdate)
+                                
+                                Settings.saveLastFileUpdate(with: date)
                                 
                                 // delete the file if success
                                 if response.result.isSuccess {

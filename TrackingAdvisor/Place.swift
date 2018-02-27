@@ -8,6 +8,7 @@
 
 import Foundation
 import CoreData
+import UIKit
 
 @objc(Place)
 class Place: NSManagedObject {
@@ -62,6 +63,7 @@ class Place: NSManagedObject {
                 managedObject.setValue(userPlace.lon, forKey: "longitude")
                 managedObject.setValue(userPlace.name, forKey: "name")
                 managedObject.setValue(userPlace.col, forKey: "color")
+                
                 return managedObject
             }
         } catch {
@@ -117,6 +119,33 @@ class Place: NSManagedObject {
             }
         }
         return res
+    }
+    
+    func getPersonalInformationIcons() -> UIView? {
+        let personalInformation = getPersonalInformation()
+        let sortedPIC = personalInformation.keys.sorted { $0 < $1 }
+        if sortedPIC.count == 0 {
+            return nil
+        }
+        
+        let view = UIView()
+        var count = 0
+        var x: CGFloat = 0.0
+        for picid in sortedPIC {
+            let pic = PersonalInformationCategory.getPersonalInformationCategory(with: picid)
+            if let iconName = pic?.icon {
+                let iconView = IconView(icon: iconName, iconColor: Constants.colors.primaryLight)
+                iconView.translatesAutoresizingMaskIntoConstraints = true
+                iconView.frame = CGRect(x: x, y: 0.0, width: 30.0, height: 30.0)
+                x += 40.0
+                count += 1
+                if count == 6 { break }
+                
+                view.addSubview(iconView)
+            }
+        }
+        view.frame.size = CGSize(width: x, height: 30.0)
+        return view
     }
     
     func getPlaceColor() -> UIColor {

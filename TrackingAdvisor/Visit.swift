@@ -40,9 +40,7 @@ class Visit: NSManagedObject {
                 
                 // update the visit
                 let managedObject = matches[0]
-                
-                print("update visit with vid \(userVisit.vid)")
-                
+                                
                 if let oldPlace = managedObject.place {
                     oldPlace.removeFromVisits(managedObject)
                 }

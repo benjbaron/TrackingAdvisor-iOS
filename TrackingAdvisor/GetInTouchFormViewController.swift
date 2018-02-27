@@ -89,8 +89,8 @@ class GetInTouchFormViewController: FormViewController {
                     let parameters: Parameters = [
                         "device": UIDevice.current.modelName,
                         "version": UIDevice.current.systemVersion,
-                        "uuid": Settings.getUUID(),
-                        "userid": Settings.getUserId(),
+                        "uuid": Settings.getUUID() ?? "",
+                        "userid": Settings.getUserId() ?? "",
                         "name": strongSelf.name,
                         "email": strongSelf.email,
                         "reason": strongSelf.reason,

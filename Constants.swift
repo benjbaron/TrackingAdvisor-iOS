@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 struct Constants {
     
@@ -22,7 +23,7 @@ struct Constants {
     
     struct variables {
         static let minimumDurationBetweenLocationFileUploads: TimeInterval = 3600 // one hour
-        static let minimumDurationBetweenUserUpdates: TimeInterval = 600 // 10 minutes
+        static let minimumDurationBetweenUserUpdates: TimeInterval = 60 // 10 minutes
         static let minimumDurationBetweenPersonalInformationCategoryUpdates: TimeInterval = 62400 // one day
     }
     
@@ -55,11 +56,17 @@ struct Constants {
         static let sendMailURL = "https://iss-lab.geog.ucl.ac.uk/semantica/mail"
         static let userUpdateURL = "https://iss-lab.geog.ucl.ac.uk/semantica/userupdate"
         static let placeAutcompleteURL = "https://iss-lab.geog.ucl.ac.uk/semantica/autocomplete"
+        static let piAutcompleteURL = "https://iss-lab.geog.ucl.ac.uk/semantica/autocompletepi"
         static let rawTraceURL = "https://iss-lab.geog.ucl.ac.uk/semantica/rawtrace"
         static let personalInformationCategoriesURL = "https://iss-lab.geog.ucl.ac.uk/semantica/personalinformationcategories"
-        static let userChallengeURL = "https://iss-lab.geog.ucl.ac.uk/semantica/userchallenge"
         static let consentFormURL = "https://iss-lab.geog.ucl.ac.uk/semantica/consentform"
         static let addvisitURL = "https://iss-lab.geog.ucl.ac.uk/semantica/addvisit"
+        static let reviewUpdateURL = "https://iss-lab.geog.ucl.ac.uk/semantica/reviews"
+        static let reviewChallengeURL = "https://iss-lab.geog.ucl.ac.uk/semantica/userchallenge"
+        static let reviewChallengeUpdateURL = "https://iss-lab.geog.ucl.ac.uk/semantica/userchallengeupdate"
+        static let registerURL = "https://iss-lab.geog.ucl.ac.uk/semantica/register"
+        static let updateUserInfoURL = "https://iss-lab.geog.ucl.ac.uk/semantica/updateuserinfo"
+        static let personalInformationUpdateURL = "https://iss-lab.geog.ucl.ac.uk/semantica/personalinformationupdate"
     }
     
 }

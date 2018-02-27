@@ -396,37 +396,12 @@
                     <view key="view" contentMode="scaleToFill" id="QTm-Ay-PkC">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="Ve2-ON-vWx">
-                                <rect key="frame" x="0.0" y="120" width="375" height="498"/>
-                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                                <collectionViewLayout key="collectionViewLayout" id="OlA-87-uwl" customClass="PlaceReviewLayout" customModule="TrackingAdvisor" customModuleProvider="target"/>
-                                <cells>
-                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="PlaceReviewCell" id="IFG-Pn-yLV" customClass="PlaceReviewCell" customModule="TrackingAdvisor" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO">
-                                            <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
-                                            <autoresizingMask key="autoresizingMask"/>
-                                        </view>
-                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                    </collectionViewCell>
-                                </cells>
-                            </collectionView>
-                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                        <constraints>
-                            <constraint firstItem="Ve2-ON-vWx" firstAttribute="leading" secondItem="MOS-JZ-012" secondAttribute="leading" id="3Ra-hg-szC"/>
-                            <constraint firstItem="Ve2-ON-vWx" firstAttribute="top" secondItem="MOS-JZ-012" secondAttribute="top" constant="100" id="5nv-s7-KAs"/>
-                            <constraint firstItem="Ve2-ON-vWx" firstAttribute="trailing" secondItem="MOS-JZ-012" secondAttribute="trailing" id="O2u-y5-ZcQ"/>
-                            <constraint firstItem="Ve2-ON-vWx" firstAttribute="bottom" secondItem="MOS-JZ-012" secondAttribute="bottom" id="Y3h-dQ-qmG"/>
-                        </constraints>
                         <viewLayoutGuide key="safeArea" id="MOS-JZ-012"/>
                     </view>
                     <tabBarItem key="tabBarItem" title="Review" image="check-tabbar" selectedImage="check-tabbar" id="7V7-Vp-ngT"/>
-                    <connections>
-                        <outlet property="collectionView" destination="Ve2-ON-vWx" id="dC9-Py-cAt"/>
-                    </connections>
+                    <nil key="simulatedTopBarMetrics"/>
+                    <simulatedTabBarMetrics key="simulatedBottomBarMetrics"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3u9-jd-v0K" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -454,7 +429,6 @@
         <!--One Timeline View Controller-->
         <scene sceneID="IE7-HX-dPy">
             <objects>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="KC8-nO-aX7" userLabel="First Responder" sceneMemberID="firstResponder"/>
                 <viewController storyboardIdentifier="OneTimelineViewController" id="vbx-NG-M0B" customClass="OneTimelineViewController" customModule="TrackingAdvisor" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="4KY-sk-fbh">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
@@ -489,6 +463,7 @@
                         <outlet property="timeline" destination="kif-Sk-AR0" id="Yg3-7U-HzP"/>
                     </connections>
                 </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="KC8-nO-aX7" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="2908" y="1235.5322338830586"/>
         </scene>

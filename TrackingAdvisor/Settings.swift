@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 open class Settings {
     open class func registerDefaults() {
@@ -24,14 +25,78 @@ open class Settings {
         }
     }
     
-    open class func getUserId() -> String {
+    open class func getUserId() -> String? {
         let defaults = UserDefaults.standard
-        return "1EE560B1-6054-4E2D-A64B-B9ACC3FA0761" // TODO: CHANGE
-//        return defaults.string(forKey: Constants.defaultsKeys.userid) ?? ""
+        return defaults.string(forKey: Constants.defaultsKeys.userid) ?? nil
     }
     
-    open class func getUUID() -> String {
-        return "1EE560B1-6054-4E2D-A64B-B9ACC3FA0761" // TODO: CHANGE
-//        return UIDevice.current.identifierForVendor?.uuidString ?? ""
+    open class func getUUID() -> String? {
+        return UIDevice.current.identifierForVendor?.uuidString ?? nil
+    }
+    
+    open class func getPushNotificationId() -> String? {
+        let defaults = UserDefaults.standard
+        return defaults.string(forKey: Constants.defaultsKeys.pushNotificationToken) ?? nil
+    }
+    
+    open class func getLastPersonalInformationCategoryUpdate() -> Date? {
+        let defaults = UserDefaults.standard
+        return defaults.object(forKey: Constants.defaultsKeys.lastPersonalInformationCategoryUpdate) as? Date
+    }
+    
+    open class func getLastUserUpdate() -> Date? {
+        let defaults = UserDefaults.standard
+        return defaults.object(forKey: Constants.defaultsKeys.lastUserUpdate) as? Date
+    }
+    
+    open class func getLastLocationUpdate() -> Date? {
+        let defaults = UserDefaults.standard
+        return defaults.object(forKey: Constants.defaultsKeys.lastLocationUpdate) as? Date
+    }
+    
+    open class func getLastFileUpdate() -> Date? {
+        let defaults = UserDefaults.standard
+        return defaults.object(forKey: Constants.defaultsKeys.lastFileUpdate) as? Date
+    }
+    
+    open class func getOnboarding() -> Bool {
+        let defaults = UserDefaults.standard
+        return defaults.bool(forKey: Constants.defaultsKeys.onboarding)
+    }
+    
+    
+    open class func savePushNotificationId(with pnid: String) {
+        let defaults = UserDefaults.standard
+        defaults.set(pnid, forKey: Constants.defaultsKeys.pushNotificationToken)
+    }
+    
+    open class func saveUserId(with userId: String) {
+        let defaults = UserDefaults.standard
+        defaults.set(userId, forKey: Constants.defaultsKeys.userid)
+    }
+    
+    open class func saveOnboarding(with value: Bool) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: Constants.defaultsKeys.onboarding)
+    }
+    
+    open class func saveLastPersonalInformationCategoryUpdate(with value: Date) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: Constants.defaultsKeys.lastPersonalInformationCategoryUpdate)
+    }
+    
+    open class func saveLastUserUpdate(with value: Date) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: Constants.defaultsKeys.lastUserUpdate)
+    }
+    
+    open class func saveLastLocationUpdate(with value: Date) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: Constants.defaultsKeys.lastLocationUpdate)
+    }
+    
+    open class func saveLastFileUpdate(with value: Date) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: Constants.defaultsKeys.lastFileUpdate)
     }
 }

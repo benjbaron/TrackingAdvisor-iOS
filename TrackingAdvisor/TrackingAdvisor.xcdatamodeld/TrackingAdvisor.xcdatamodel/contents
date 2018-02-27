@@ -41,11 +41,13 @@
         <attribute name="type_" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
     </entity>
     <entity name="ReviewChallenge" representedClassName="ReviewChallenge" syncable="YES" codeGenerationType="category">
-        <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="dateCompleted" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="dateCreated" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="day" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="id" optional="YES" attributeType="String" syncable="YES"/>
-        <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
-        <relationship name="personalInformation" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PersonalInformation" syncable="YES"/>
+        <relationship name="personalInformation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PersonalInformation" syncable="YES"/>
+        <relationship name="place" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Place" syncable="YES"/>
+        <relationship name="visit" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Visit" syncable="YES"/>
     </entity>
     <entity name="ReviewPersonalInformation" representedClassName="ReviewPersonalInformation" parentEntity="Review" syncable="YES" codeGenerationType="category">
         <relationship name="personalinformation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PersonalInformation" inverseName="reviews" inverseEntity="PersonalInformation" syncable="YES"/>
@@ -69,7 +71,7 @@
         <element name="PersonalInformation" positionX="-297" positionY="-211" width="128" height="193"/>
         <element name="Place" positionX="-324" positionY="20" width="128" height="210"/>
         <element name="Review" positionX="7" positionY="-136" width="128" height="105"/>
-        <element name="ReviewChallenge" positionX="-126" positionY="-333" width="128" height="118"/>
+        <element name="ReviewChallenge" positionX="-126" positionY="-333" width="128" height="150"/>
         <element name="ReviewPersonalInformation" positionX="-288" positionY="-171" width="128" height="75"/>
         <element name="ReviewVisit" positionX="-297" positionY="-180" width="128" height="60"/>
         <element name="Visit" positionX="-137" positionY="-9" width="128" height="163"/>

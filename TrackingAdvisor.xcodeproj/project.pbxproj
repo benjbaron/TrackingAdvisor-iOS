@@ -7,10 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7DCDD58EF206643E7D842739 /* Pods_TrackingAdvisor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9D48B79E01ECEFA6565DD968 /* Pods_TrackingAdvisor.framework */; };
+		853C01657F4ED808C7BDAE59 /* Pods_TrackingAdvisorUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37ABB7F43432CF7884BB75CC /* Pods_TrackingAdvisorUITests.framework */; };
+		B1A4BA59013AF66EF8A2333A /* Pods_TrackingAdvisorTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 91862FEE6D71D340ED381975 /* Pods_TrackingAdvisorTests.framework */; };
 		B507BB5C1FFFCA1F00FEBC34 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B507BB5B1FFFCA1F00FEBC34 /* ProfileViewController.swift */; };
 		B50EF6B21FA8AFAC0008ADFB /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50EF6B11FA8AFAC0008ADFB /* LocationService.swift */; };
-		B511C4FA1FD5BFBC006A312C /* Eureka.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B511C4F71FD5BF8C006A312C /* Eureka.framework */; };
-		B511C4FB1FD5BFBC006A312C /* Eureka.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B511C4F71FD5BF8C006A312C /* Eureka.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B511C4FF1FD5C039006A312C /* GetInTouchFormViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B511C4FE1FD5C039006A312C /* GetInTouchFormViewController.swift */; };
 		B512ED441FBC8EB60062B9E1 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B512ED431FBC8EB60062B9E1 /* Constants.swift */; };
 		B51BAFB01FD961E200BE9CAA /* UserLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51BAFAF1FD961E200BE9CAA /* UserLocation.swift */; };
@@ -22,8 +23,7 @@
 		B53043231FDED92A00DBC7C0 /* UserUpdateHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53043221FDED92A00DBC7C0 /* UserUpdateHandler.swift */; };
 		B530432D1FDEDBD400DBC7C0 /* Networking.swift in Sources */ = {isa = PBXBuildFile; fileRef = B530432C1FDEDBD400DBC7C0 /* Networking.swift */; };
 		B530432F1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B530432E1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift */; };
-		B53F20751FC3341100006B67 /* Mapbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B53F20741FC3341000006B67 /* Mapbox.framework */; };
-		B53F20761FC3341100006B67 /* Mapbox.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B53F20741FC3341000006B67 /* Mapbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		B5317A9E203DCE420057B857 /* PersonalInformationChooserViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5317A9D203DCE420057B857 /* PersonalInformationChooserViewController.swift */; };
 		B53FB6FB1FAB74630000112E /* ActivityServiceOld.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53FB6FA1FAB74630000112E /* ActivityServiceOld.swift */; };
 		B53FB6FD1FAB9A870000112E /* FileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53FB6FC1FAB9A870000112E /* FileService.swift */; };
 		B54C36B1200EBAFC0085BFEA /* PersonalInformationCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54C36B0200EBAFC0085BFEA /* PersonalInformationCollectionView.swift */; };
@@ -37,11 +37,9 @@
 		B577690420164C2B00A0FD1B /* HeaderPlace.swift in Sources */ = {isa = PBXBuildFile; fileRef = B577690320164C2B00A0FD1B /* HeaderPlace.swift */; };
 		B57F514E1FD55A5B0018B416 /* NetworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57F514D1FD55A5B0018B416 /* NetworkService.swift */; };
 		B584C21F1FA0F16B002582D1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B584C21E1FA0F16B002582D1 /* Assets.xcassets */; };
-		B586126E1FB0D0E200480DD4 /* Alamofire.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B58612611FB0D08A00480DD4 /* Alamofire.framework */; };
-		B586126F1FB0D0E200480DD4 /* Alamofire.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B58612611FB0D08A00480DD4 /* Alamofire.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B58612751FB0D9C700480DD4 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58612741FB0D9C700480DD4 /* NotificationService.swift */; };
 		B5883BD51FA3274200EA8A02 /* TrackingAdvisor.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = B5883BD31FA3274100EA8A02 /* TrackingAdvisor.xcdatamodeld */; };
-		B58A6E141FCC4CF9003DA168 /* SettingsTableTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A6E131FCC4CF9003DA168 /* SettingsTableTableViewController.swift */; };
+		B58A6E141FCC4CF9003DA168 /* SettingsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A6E131FCC4CF9003DA168 /* SettingsTableViewController.swift */; };
 		B58B79181FC734A1007BA1BC /* Visit.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58B79171FC734A1007BA1BC /* Visit.swift */; };
 		B58B79211FC734AF007BA1BC /* Place.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58B79201FC734AF007BA1BC /* Place.swift */; };
 		B58B79241FC742F9007BA1BC /* Move.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58B79231FC742F9007BA1BC /* Move.swift */; };
@@ -57,6 +55,8 @@
 		B59E24592028B3B1008C8AC5 /* ReviewVisit.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E24582028B3B1008C8AC5 /* ReviewVisit.swift */; };
 		B59F64001FE819220025BE06 /* PlaceFinderMapTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59F63FF1FE819220025BE06 /* PlaceFinderMapTableViewController.swift */; };
 		B5A22B882019F33D00B68BD8 /* Review.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A22B872019F33D00B68BD8 /* Review.swift */; };
+		B5C28A89202E092A00B48017 /* HelperFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C28A88202E092A00B48017 /* HelperFunctions.swift */; };
+		B5C28A8B20321D2700B48017 /* CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C28A8A20321D2700B48017 /* CardView.swift */; };
 		B5C347431FB064D50078C12E /* RawCollectedDataViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C347421FB064D50078C12E /* RawCollectedDataViewController.swift */; };
 		B5C347461FB0929F0078C12E /* EMPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C347451FB0929F0078C12E /* EMPageViewController.swift */; };
 		B5C347481FB092D40078C12E /* TimelineSwipeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C347471FB092D40078C12E /* TimelineSwipeViewController.swift */; };
@@ -66,104 +66,10 @@
 		B5D63B401FED358700DAB61C /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D63B3F1FED358700DAB61C /* Extensions.swift */; };
 		B5DD9C581FA0D51E000B970F /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B5DD9C571FA0D51E000B970F /* CoreLocation.framework */; };
 		B5F20A80201BF0A700D24A70 /* ReviewChallenge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F20A7F201BF0A700D24A70 /* ReviewChallenge.swift */; };
-		B5FE77B61FA9D1BD002B5F0C /* CalendarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77B51FA9D1BD002B5F0C /* CalendarViewController.swift */; };
-		B5FE77DF1FA9D442002B5F0C /* FSCalendarStickyHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77BE1FA9D43E002B5F0C /* FSCalendarStickyHeader.m */; };
-		B5FE77E01FA9D442002B5F0C /* FSCalendar.m in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77BF1FA9D43E002B5F0C /* FSCalendar.m */; };
-		B5FE77E11FA9D442002B5F0C /* FSCalendarCollectionViewLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77C01FA9D43E002B5F0C /* FSCalendarCollectionViewLayout.m */; };
-		B5FE77E21FA9D442002B5F0C /* FSCalendarDelegationProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77C41FA9D43E002B5F0C /* FSCalendarDelegationProxy.m */; };
-		B5FE77E31FA9D442002B5F0C /* FSCalendarDelegationFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77C51FA9D43F002B5F0C /* FSCalendarDelegationFactory.m */; };
-		B5FE77E41FA9D442002B5F0C /* FSCalendarTransitionCoordinator.m in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77C61FA9D43F002B5F0C /* FSCalendarTransitionCoordinator.m */; };
-		B5FE77E51FA9D442002B5F0C /* FSCalendarCollectionView.m in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77C71FA9D43F002B5F0C /* FSCalendarCollectionView.m */; };
-		B5FE77E61FA9D442002B5F0C /* FSCalendarAppearance.m in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77C81FA9D43F002B5F0C /* FSCalendarAppearance.m */; };
-		B5FE77E71FA9D442002B5F0C /* FSCalendarScopeHandle.m in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77CB1FA9D440002B5F0C /* FSCalendarScopeHandle.m */; };
-		B5FE77E81FA9D442002B5F0C /* FSCalendarCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77CC1FA9D440002B5F0C /* FSCalendarCell.m */; };
-		B5FE77E91FA9D442002B5F0C /* FSCalendarConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77CE1FA9D440002B5F0C /* FSCalendarConstants.m */; };
-		B5FE77EB1FA9D442002B5F0C /* FSCalendarExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77D41FA9D440002B5F0C /* FSCalendarExtensions.m */; };
-		B5FE77EC1FA9D442002B5F0C /* FSCalendarCalculator.m in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77D51FA9D441002B5F0C /* FSCalendarCalculator.m */; };
-		B5FE77ED1FA9D442002B5F0C /* FSCalendar+Deprecated.m in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77D61FA9D441002B5F0C /* FSCalendar+Deprecated.m */; };
-		B5FE77EE1FA9D442002B5F0C /* FSCalendarWeekdayView.m in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77DC1FA9D441002B5F0C /* FSCalendarWeekdayView.m */; };
-		B5FE77EF1FA9D442002B5F0C /* FSCalendarHeaderView.m in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77DD1FA9D442002B5F0C /* FSCalendarHeaderView.m */; };
 		B5FE77F31FA9F2F6002B5F0C /* MapCalendarContainerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5FE77F21FA9F2F6002B5F0C /* MapCalendarContainerViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		B511C4F61FD5BF8C006A312C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B511C4EA1FD5BF8C006A312C /* Eureka.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 51729DEB1B9A4F5E004A00EB;
-			remoteInfo = Eureka;
-		};
-		B511C4F81FD5BF8C006A312C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B511C4EA1FD5BF8C006A312C /* Eureka.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 51729DF51B9A4F5E004A00EB;
-			remoteInfo = EurekaTests;
-		};
-		B511C4FC1FD5BFBC006A312C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B511C4EA1FD5BF8C006A312C /* Eureka.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 51729DEA1B9A4F5E004A00EB;
-			remoteInfo = Eureka;
-		};
-		B58612601FB0D08A00480DD4 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B58612551FB0D08A00480DD4 /* Alamofire.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = F8111E3319A95C8B0040E7D1;
-			remoteInfo = "Alamofire iOS";
-		};
-		B58612621FB0D08A00480DD4 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B58612551FB0D08A00480DD4 /* Alamofire.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = F8111E3E19A95C8B0040E7D1;
-			remoteInfo = "Alamofire iOS Tests";
-		};
-		B58612641FB0D08A00480DD4 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B58612551FB0D08A00480DD4 /* Alamofire.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 4DD67C0B1A5C55C900ED2280;
-			remoteInfo = "Alamofire macOS";
-		};
-		B58612661FB0D08A00480DD4 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B58612551FB0D08A00480DD4 /* Alamofire.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = F829C6B21A7A94F100A2CD59;
-			remoteInfo = "Alamofire macOS Tests";
-		};
-		B58612681FB0D08A00480DD4 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B58612551FB0D08A00480DD4 /* Alamofire.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 4CF626EF1BA7CB3E0011A099;
-			remoteInfo = "Alamofire tvOS";
-		};
-		B586126A1FB0D08A00480DD4 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B58612551FB0D08A00480DD4 /* Alamofire.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 4CF626F81BA7CB3E0011A099;
-			remoteInfo = "Alamofire tvOS Tests";
-		};
-		B586126C1FB0D08A00480DD4 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B58612551FB0D08A00480DD4 /* Alamofire.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = E4202FE01B667AA100C997FB;
-			remoteInfo = "Alamofire watchOS";
-		};
-		B58612701FB0D0E200480DD4 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B58612551FB0D08A00480DD4 /* Alamofire.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = F8111E3219A95C8B0040E7D1;
-			remoteInfo = "Alamofire iOS";
-		};
 		B599B3B81FA0B57F006D70B4 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B599B3981FA0B57F006D70B4 /* Project object */;
@@ -187,9 +93,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				B511C4FB1FD5BFBC006A312C /* Eureka.framework in Embed Frameworks */,
-				B586126F1FB0D0E200480DD4 /* Alamofire.framework in Embed Frameworks */,
-				B53F20761FC3341100006B67 /* Mapbox.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -197,9 +100,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		37ABB7F43432CF7884BB75CC /* Pods_TrackingAdvisorUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrackingAdvisorUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		540E148FC3AD46C7331C2D8E /* Pods-TrackingAdvisor.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrackingAdvisor.debug.xcconfig"; path = "Pods/Target Support Files/Pods-TrackingAdvisor/Pods-TrackingAdvisor.debug.xcconfig"; sourceTree = "<group>"; };
+		80CC1541D9866D42E9CA4ABE /* Pods-TrackingAdvisor.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrackingAdvisor.release.xcconfig"; path = "Pods/Target Support Files/Pods-TrackingAdvisor/Pods-TrackingAdvisor.release.xcconfig"; sourceTree = "<group>"; };
+		91862FEE6D71D340ED381975 /* Pods_TrackingAdvisorTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrackingAdvisorTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		991C7F852DBD270BE0CA474C /* Pods-TrackingAdvisorTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrackingAdvisorTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-TrackingAdvisorTests/Pods-TrackingAdvisorTests.debug.xcconfig"; sourceTree = "<group>"; };
+		9D48B79E01ECEFA6565DD968 /* Pods_TrackingAdvisor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrackingAdvisor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B507BB5B1FFFCA1F00FEBC34 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
 		B50EF6B11FA8AFAC0008ADFB /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
-		B511C4EA1FD5BF8C006A312C /* Eureka.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Eureka.xcodeproj; path = Eureka/Eureka.xcodeproj; sourceTree = "<group>"; };
 		B511C4FE1FD5C039006A312C /* GetInTouchFormViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetInTouchFormViewController.swift; sourceTree = "<group>"; };
 		B512ED431FBC8EB60062B9E1 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = SOURCE_ROOT; };
 		B51BAFAF1FD961E200BE9CAA /* UserLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLocation.swift; sourceTree = "<group>"; };
@@ -211,7 +119,7 @@
 		B53043221FDED92A00DBC7C0 /* UserUpdateHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserUpdateHandler.swift; sourceTree = "<group>"; };
 		B530432C1FDEDBD400DBC7C0 /* Networking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Networking.swift; sourceTree = "<group>"; };
 		B530432E1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OneTimelinePlaceDetailViewController.swift; sourceTree = "<group>"; };
-		B53F20741FC3341000006B67 /* Mapbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Mapbox.framework; sourceTree = "<group>"; };
+		B5317A9D203DCE420057B857 /* PersonalInformationChooserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalInformationChooserViewController.swift; sourceTree = "<group>"; };
 		B53FB6FA1FAB74630000112E /* ActivityServiceOld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityServiceOld.swift; sourceTree = "<group>"; };
 		B53FB6FC1FAB9A870000112E /* FileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileService.swift; sourceTree = "<group>"; };
 		B54C36B0200EBAFC0085BFEA /* PersonalInformationCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalInformationCollectionView.swift; sourceTree = "<group>"; };
@@ -226,10 +134,9 @@
 		B577690320164C2B00A0FD1B /* HeaderPlace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderPlace.swift; sourceTree = "<group>"; };
 		B57F514D1FD55A5B0018B416 /* NetworkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkService.swift; sourceTree = "<group>"; };
 		B584C21E1FA0F16B002582D1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		B58612551FB0D08A00480DD4 /* Alamofire.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Alamofire.xcodeproj; path = Alamofire/Alamofire.xcodeproj; sourceTree = "<group>"; };
 		B58612741FB0D9C700480DD4 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		B5883BD41FA3274100EA8A02 /* TrackingAdvisor.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = TrackingAdvisor.xcdatamodel; sourceTree = "<group>"; };
-		B58A6E131FCC4CF9003DA168 /* SettingsTableTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsTableTableViewController.swift; sourceTree = "<group>"; };
+		B58A6E131FCC4CF9003DA168 /* SettingsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsTableViewController.swift; sourceTree = "<group>"; };
 		B58B79171FC734A1007BA1BC /* Visit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Visit.swift; sourceTree = "<group>"; };
 		B58B79201FC734AF007BA1BC /* Place.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Place.swift; sourceTree = "<group>"; };
 		B58B79231FC742F9007BA1BC /* Move.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Move.swift; sourceTree = "<group>"; };
@@ -251,6 +158,8 @@
 		B59E24582028B3B1008C8AC5 /* ReviewVisit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewVisit.swift; sourceTree = "<group>"; };
 		B59F63FF1FE819220025BE06 /* PlaceFinderMapTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceFinderMapTableViewController.swift; sourceTree = "<group>"; };
 		B5A22B872019F33D00B68BD8 /* Review.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Review.swift; sourceTree = "<group>"; };
+		B5C28A88202E092A00B48017 /* HelperFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperFunctions.swift; sourceTree = "<group>"; };
+		B5C28A8A20321D2700B48017 /* CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardView.swift; sourceTree = "<group>"; };
 		B5C347421FB064D50078C12E /* RawCollectedDataViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RawCollectedDataViewController.swift; sourceTree = "<group>"; };
 		B5C347451FB0929F0078C12E /* EMPageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EMPageViewController.swift; sourceTree = "<group>"; };
 		B5C347471FB092D40078C12E /* TimelineSwipeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineSwipeViewController.swift; sourceTree = "<group>"; };
@@ -260,41 +169,10 @@
 		B5D63B3F1FED358700DAB61C /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		B5DD9C571FA0D51E000B970F /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		B5F20A7F201BF0A700D24A70 /* ReviewChallenge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewChallenge.swift; sourceTree = "<group>"; };
-		B5FE77B51FA9D1BD002B5F0C /* CalendarViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarViewController.swift; sourceTree = "<group>"; };
-		B5FE77BD1FA9D43D002B5F0C /* TrackingAdvisor-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TrackingAdvisor-Bridging-Header.h"; sourceTree = "<group>"; };
-		B5FE77BE1FA9D43E002B5F0C /* FSCalendarStickyHeader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSCalendarStickyHeader.m; path = FSCalendar_/FSCalendarStickyHeader.m; sourceTree = SOURCE_ROOT; };
-		B5FE77BF1FA9D43E002B5F0C /* FSCalendar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSCalendar.m; path = FSCalendar_/FSCalendar.m; sourceTree = SOURCE_ROOT; };
-		B5FE77C01FA9D43E002B5F0C /* FSCalendarCollectionViewLayout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSCalendarCollectionViewLayout.m; path = FSCalendar_/FSCalendarCollectionViewLayout.m; sourceTree = SOURCE_ROOT; };
-		B5FE77C11FA9D43E002B5F0C /* FSCalendarExtensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSCalendarExtensions.h; path = FSCalendar_/FSCalendarExtensions.h; sourceTree = SOURCE_ROOT; };
-		B5FE77C21FA9D43E002B5F0C /* FSCalendarWeekdayView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSCalendarWeekdayView.h; path = FSCalendar_/FSCalendarWeekdayView.h; sourceTree = SOURCE_ROOT; };
-		B5FE77C31FA9D43E002B5F0C /* FSCalendarAppearance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSCalendarAppearance.h; path = FSCalendar_/FSCalendarAppearance.h; sourceTree = SOURCE_ROOT; };
-		B5FE77C41FA9D43E002B5F0C /* FSCalendarDelegationProxy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSCalendarDelegationProxy.m; path = FSCalendar_/FSCalendarDelegationProxy.m; sourceTree = SOURCE_ROOT; };
-		B5FE77C51FA9D43F002B5F0C /* FSCalendarDelegationFactory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSCalendarDelegationFactory.m; path = FSCalendar_/FSCalendarDelegationFactory.m; sourceTree = SOURCE_ROOT; };
-		B5FE77C61FA9D43F002B5F0C /* FSCalendarTransitionCoordinator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSCalendarTransitionCoordinator.m; path = FSCalendar_/FSCalendarTransitionCoordinator.m; sourceTree = SOURCE_ROOT; };
-		B5FE77C71FA9D43F002B5F0C /* FSCalendarCollectionView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSCalendarCollectionView.m; path = FSCalendar_/FSCalendarCollectionView.m; sourceTree = SOURCE_ROOT; };
-		B5FE77C81FA9D43F002B5F0C /* FSCalendarAppearance.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSCalendarAppearance.m; path = FSCalendar_/FSCalendarAppearance.m; sourceTree = SOURCE_ROOT; };
-		B5FE77C91FA9D43F002B5F0C /* FSCalendarCollectionViewLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSCalendarCollectionViewLayout.h; path = FSCalendar_/FSCalendarCollectionViewLayout.h; sourceTree = SOURCE_ROOT; };
-		B5FE77CA1FA9D440002B5F0C /* FSCalendarCalculator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSCalendarCalculator.h; path = FSCalendar_/FSCalendarCalculator.h; sourceTree = SOURCE_ROOT; };
-		B5FE77CB1FA9D440002B5F0C /* FSCalendarScopeHandle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSCalendarScopeHandle.m; path = FSCalendar_/FSCalendarScopeHandle.m; sourceTree = SOURCE_ROOT; };
-		B5FE77CC1FA9D440002B5F0C /* FSCalendarCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSCalendarCell.m; path = FSCalendar_/FSCalendarCell.m; sourceTree = SOURCE_ROOT; };
-		B5FE77CD1FA9D440002B5F0C /* FSCalendarDelegationProxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSCalendarDelegationProxy.h; path = FSCalendar_/FSCalendarDelegationProxy.h; sourceTree = SOURCE_ROOT; };
-		B5FE77CE1FA9D440002B5F0C /* FSCalendarConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSCalendarConstants.m; path = FSCalendar_/FSCalendarConstants.m; sourceTree = SOURCE_ROOT; };
-		B5FE77CF1FA9D440002B5F0C /* FSCalendarDelegationFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSCalendarDelegationFactory.h; path = FSCalendar_/FSCalendarDelegationFactory.h; sourceTree = SOURCE_ROOT; };
-		B5FE77D01FA9D440002B5F0C /* FSCalendarDynamicHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSCalendarDynamicHeader.h; path = FSCalendar_/FSCalendarDynamicHeader.h; sourceTree = SOURCE_ROOT; };
-		B5FE77D11FA9D440002B5F0C /* FSCalendarCollectionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSCalendarCollectionView.h; path = FSCalendar_/FSCalendarCollectionView.h; sourceTree = SOURCE_ROOT; };
-		B5FE77D31FA9D440002B5F0C /* FSCalendarHeaderView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSCalendarHeaderView.h; path = FSCalendar_/FSCalendarHeaderView.h; sourceTree = SOURCE_ROOT; };
-		B5FE77D41FA9D440002B5F0C /* FSCalendarExtensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSCalendarExtensions.m; path = FSCalendar_/FSCalendarExtensions.m; sourceTree = SOURCE_ROOT; };
-		B5FE77D51FA9D441002B5F0C /* FSCalendarCalculator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSCalendarCalculator.m; path = FSCalendar_/FSCalendarCalculator.m; sourceTree = SOURCE_ROOT; };
-		B5FE77D61FA9D441002B5F0C /* FSCalendar+Deprecated.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "FSCalendar+Deprecated.m"; path = "FSCalendar_/FSCalendar+Deprecated.m"; sourceTree = SOURCE_ROOT; };
-		B5FE77D71FA9D441002B5F0C /* FSCalendarStickyHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSCalendarStickyHeader.h; path = FSCalendar_/FSCalendarStickyHeader.h; sourceTree = SOURCE_ROOT; };
-		B5FE77D81FA9D441002B5F0C /* FSCalendarConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSCalendarConstants.h; path = FSCalendar_/FSCalendarConstants.h; sourceTree = SOURCE_ROOT; };
-		B5FE77D91FA9D441002B5F0C /* FSCalendarCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSCalendarCell.h; path = FSCalendar_/FSCalendarCell.h; sourceTree = SOURCE_ROOT; };
-		B5FE77DA1FA9D441002B5F0C /* FSCalendar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSCalendar.h; path = FSCalendar_/FSCalendar.h; sourceTree = SOURCE_ROOT; };
-		B5FE77DB1FA9D441002B5F0C /* FSCalendarTransitionCoordinator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSCalendarTransitionCoordinator.h; path = FSCalendar_/FSCalendarTransitionCoordinator.h; sourceTree = SOURCE_ROOT; };
-		B5FE77DC1FA9D441002B5F0C /* FSCalendarWeekdayView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSCalendarWeekdayView.m; path = FSCalendar_/FSCalendarWeekdayView.m; sourceTree = SOURCE_ROOT; };
-		B5FE77DD1FA9D442002B5F0C /* FSCalendarHeaderView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FSCalendarHeaderView.m; path = FSCalendar_/FSCalendarHeaderView.m; sourceTree = SOURCE_ROOT; };
-		B5FE77DE1FA9D442002B5F0C /* FSCalendarScopeHandle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FSCalendarScopeHandle.h; path = FSCalendar_/FSCalendarScopeHandle.h; sourceTree = SOURCE_ROOT; };
 		B5FE77F21FA9F2F6002B5F0C /* MapCalendarContainerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapCalendarContainerViewController.swift; sourceTree = "<group>"; };
+		EB15ED05F8CE9C40F1336501 /* Pods-TrackingAdvisorUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrackingAdvisorUITests.release.xcconfig"; path = "Pods/Target Support Files/Pods-TrackingAdvisorUITests/Pods-TrackingAdvisorUITests.release.xcconfig"; sourceTree = "<group>"; };
+		FCD4D9AF39ACD952AA1672C7 /* Pods-TrackingAdvisorTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrackingAdvisorTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-TrackingAdvisorTests/Pods-TrackingAdvisorTests.release.xcconfig"; sourceTree = "<group>"; };
+		FE631034DB767391DB7E2474 /* Pods-TrackingAdvisorUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrackingAdvisorUITests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-TrackingAdvisorUITests/Pods-TrackingAdvisorUITests.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -303,9 +181,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B5DD9C581FA0D51E000B970F /* CoreLocation.framework in Frameworks */,
-				B511C4FA1FD5BFBC006A312C /* Eureka.framework in Frameworks */,
-				B586126E1FB0D0E200480DD4 /* Alamofire.framework in Frameworks */,
-				B53F20751FC3341100006B67 /* Mapbox.framework in Frameworks */,
+				7DCDD58EF206643E7D842739 /* Pods_TrackingAdvisor.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -313,6 +189,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1A4BA59013AF66EF8A2333A /* Pods_TrackingAdvisorTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -320,6 +197,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				853C01657F4ED808C7BDAE59 /* Pods_TrackingAdvisorUITests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -335,13 +213,11 @@
 			name = Timeline;
 			sourceTree = "<group>";
 		};
-		B511C4EB1FD5BF8C006A312C /* Products */ = {
+		B5105ED220363A6C008D7C06 /* walking */ = {
 			isa = PBXGroup;
 			children = (
-				B511C4F71FD5BF8C006A312C /* Eureka.framework */,
-				B511C4F91FD5BF8C006A312C /* EurekaTests.xctest */,
 			);
-			name = Products;
+			path = walking;
 			sourceTree = "<group>";
 		};
 		B54C36A7200EB8550085BFEA /* UIViews */ = {
@@ -349,22 +225,9 @@
 			children = (
 				B54C36B0200EBAFC0085BFEA /* PersonalInformationCollectionView.swift */,
 				B577690320164C2B00A0FD1B /* HeaderPlace.swift */,
+				B5C28A8A20321D2700B48017 /* CardView.swift */,
 			);
 			name = UIViews;
-			sourceTree = "<group>";
-		};
-		B58612561FB0D08A00480DD4 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				B58612611FB0D08A00480DD4 /* Alamofire.framework */,
-				B58612631FB0D08A00480DD4 /* Alamofire iOS Tests.xctest */,
-				B58612651FB0D08A00480DD4 /* Alamofire.framework */,
-				B58612671FB0D08A00480DD4 /* Alamofire macOS Tests.xctest */,
-				B58612691FB0D08A00480DD4 /* Alamofire.framework */,
-				B586126B1FB0D08A00480DD4 /* Alamofire tvOS Tests.xctest */,
-				B586126D1FB0D08A00480DD4 /* Alamofire.framework */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		B58612731FB0D9AD00480DD4 /* Services */ = {
@@ -375,6 +238,7 @@
 				B568D87F1FB45D0700E051B1 /* LocationAdaptiveService.swift */,
 				B53FB6FA1FAB74630000112E /* ActivityServiceOld.swift */,
 				B55DE5D31FAB582B00CACB47 /* DataStoreService.swift */,
+				B53043221FDED92A00DBC7C0 /* UserUpdateHandler.swift */,
 				B53FB6FC1FAB9A870000112E /* FileService.swift */,
 				B58612741FB0D9C700480DD4 /* NotificationService.swift */,
 				B568D8811FB45FD800E051B1 /* ActivityService.swift */,
@@ -403,15 +267,12 @@
 		B599B3971FA0B57F006D70B4 = {
 			isa = PBXGroup;
 			children = (
-				B53F20741FC3341000006B67 /* Mapbox.framework */,
-				B511C4EA1FD5BF8C006A312C /* Eureka.xcodeproj */,
-				B58612551FB0D08A00480DD4 /* Alamofire.xcodeproj */,
-				B5FE77BC1FA9D410002B5F0C /* FSCalendar */,
 				B599B3A21FA0B57F006D70B4 /* TrackingAdvisor */,
 				B599B3BA1FA0B57F006D70B4 /* TrackingAdvisorTests */,
 				B599B3C51FA0B580006D70B4 /* TrackingAdvisorUITests */,
 				B599B3A11FA0B57F006D70B4 /* Products */,
 				B5DD9C561FA0D51E000B970F /* Frameworks */,
+				F97DAF6D1BF521F0E921DEB9 /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -431,7 +292,6 @@
 				B54C36A7200EB8550085BFEA /* UIViews */,
 				B507BB521FFDA8E200FEBC34 /* Timeline */,
 				B58B79221FC74167007BA1BC /* CoreData Models */,
-				B5F4B3571FC6D78100ED92EC /* Structures */,
 				B568D87E1FB3827100E051B1 /* TrackingAdvisor.entitlements */,
 				B5883BD31FA3274100EA8A02 /* TrackingAdvisor.xcdatamodeld */,
 				B58612731FB0D9AD00480DD4 /* Services */,
@@ -440,22 +300,23 @@
 				B599B3AF1FA0B57F006D70B4 /* LaunchScreen.storyboard */,
 				B568B3BB202B05EC00425A20 /* Onboarding.storyboard */,
 				B584C21E1FA0F16B002582D1 /* Assets.xcassets */,
+				B5105ED220363A6C008D7C06 /* walking */,
 				B599B3A31FA0B57F006D70B4 /* AppDelegate.swift */,
 				B5C347471FB092D40078C12E /* TimelineSwipeViewController.swift */,
-				B5FE77B51FA9D1BD002B5F0C /* CalendarViewController.swift */,
 				B5FE77F21FA9F2F6002B5F0C /* MapCalendarContainerViewController.swift */,
 				B5C3474B1FB0B4760078C12E /* RawCollectedDataTextViewController.swift */,
 				B5C347421FB064D50078C12E /* RawCollectedDataViewController.swift */,
 				B5C347491FB093F50078C12E /* OneTimelineViewController.swift */,
-				B58A6E131FCC4CF9003DA168 /* SettingsTableTableViewController.swift */,
+				B58A6E131FCC4CF9003DA168 /* SettingsTableViewController.swift */,
 				B511C4FE1FD5C039006A312C /* GetInTouchFormViewController.swift */,
 				B59ABF671FDAADA300A60066 /* PositionMapModalViewController.swift */,
 				B530432E1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift */,
+				B57768F92016027900A0FD1B /* PlacePersonalInformationController.swift */,
 				B59F63FF1FE819220025BE06 /* PlaceFinderMapTableViewController.swift */,
 				B55C100F1FED736B001EE08D /* PlaceReviewViewController.swift */,
 				B507BB5B1FFFCA1F00FEBC34 /* ProfileViewController.swift */,
-				B57768F92016027900A0FD1B /* PlacePersonalInformationController.swift */,
 				B568B3B1202B037F00425A20 /* OnboardingViewController.swift */,
+				B5317A9D203DCE420057B857 /* PersonalInformationChooserViewController.swift */,
 			);
 			path = TrackingAdvisor;
 			sourceTree = "<group>";
@@ -482,71 +343,40 @@
 			isa = PBXGroup;
 			children = (
 				B5DD9C571FA0D51E000B970F /* CoreLocation.framework */,
+				9D48B79E01ECEFA6565DD968 /* Pods_TrackingAdvisor.framework */,
+				91862FEE6D71D340ED381975 /* Pods_TrackingAdvisorTests.framework */,
+				37ABB7F43432CF7884BB75CC /* Pods_TrackingAdvisorUITests.framework */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		B5F4B3571FC6D78100ED92EC /* Structures */ = {
-			isa = PBXGroup;
-			children = (
-				B51BAFAF1FD961E200BE9CAA /* UserLocation.swift */,
-				B53043221FDED92A00DBC7C0 /* UserUpdateHandler.swift */,
-				B5C347451FB0929F0078C12E /* EMPageViewController.swift */,
-				B51BAFB91FD9621A00BE9CAA /* DateHandler.swift */,
-				B59E24542028A4AF008C8AC5 /* PersonalInformationCategory.swift */,
-			);
-			name = Structures;
-			sourceTree = "<group>";
-		};
-		B5FE77BC1FA9D410002B5F0C /* FSCalendar */ = {
-			isa = PBXGroup;
-			children = (
-				B5FE77DA1FA9D441002B5F0C /* FSCalendar.h */,
-				B5FE77BF1FA9D43E002B5F0C /* FSCalendar.m */,
-				B5FE77D61FA9D441002B5F0C /* FSCalendar+Deprecated.m */,
-				B5FE77C31FA9D43E002B5F0C /* FSCalendarAppearance.h */,
-				B5FE77C81FA9D43F002B5F0C /* FSCalendarAppearance.m */,
-				B5FE77CA1FA9D440002B5F0C /* FSCalendarCalculator.h */,
-				B5FE77D51FA9D441002B5F0C /* FSCalendarCalculator.m */,
-				B5FE77D91FA9D441002B5F0C /* FSCalendarCell.h */,
-				B5FE77CC1FA9D440002B5F0C /* FSCalendarCell.m */,
-				B5FE77D11FA9D440002B5F0C /* FSCalendarCollectionView.h */,
-				B5FE77C71FA9D43F002B5F0C /* FSCalendarCollectionView.m */,
-				B5FE77C91FA9D43F002B5F0C /* FSCalendarCollectionViewLayout.h */,
-				B5FE77C01FA9D43E002B5F0C /* FSCalendarCollectionViewLayout.m */,
-				B5FE77D81FA9D441002B5F0C /* FSCalendarConstants.h */,
-				B5FE77CE1FA9D440002B5F0C /* FSCalendarConstants.m */,
-				B5FE77CF1FA9D440002B5F0C /* FSCalendarDelegationFactory.h */,
-				B5FE77C51FA9D43F002B5F0C /* FSCalendarDelegationFactory.m */,
-				B5FE77CD1FA9D440002B5F0C /* FSCalendarDelegationProxy.h */,
-				B5FE77C41FA9D43E002B5F0C /* FSCalendarDelegationProxy.m */,
-				B5FE77D01FA9D440002B5F0C /* FSCalendarDynamicHeader.h */,
-				B5FE77C11FA9D43E002B5F0C /* FSCalendarExtensions.h */,
-				B5FE77D41FA9D440002B5F0C /* FSCalendarExtensions.m */,
-				B5FE77D31FA9D440002B5F0C /* FSCalendarHeaderView.h */,
-				B5FE77DD1FA9D442002B5F0C /* FSCalendarHeaderView.m */,
-				B5FE77DE1FA9D442002B5F0C /* FSCalendarScopeHandle.h */,
-				B5FE77CB1FA9D440002B5F0C /* FSCalendarScopeHandle.m */,
-				B5FE77D71FA9D441002B5F0C /* FSCalendarStickyHeader.h */,
-				B5FE77BE1FA9D43E002B5F0C /* FSCalendarStickyHeader.m */,
-				B5FE77DB1FA9D441002B5F0C /* FSCalendarTransitionCoordinator.h */,
-				B5FE77C61FA9D43F002B5F0C /* FSCalendarTransitionCoordinator.m */,
-				B5FE77C21FA9D43E002B5F0C /* FSCalendarWeekdayView.h */,
-				B5FE77DC1FA9D441002B5F0C /* FSCalendarWeekdayView.m */,
-			);
-			path = FSCalendar;
 			sourceTree = "<group>";
 		};
 		B5FE77F11FA9D4D3002B5F0C /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
 				B599B3B21FA0B57F006D70B4 /* Info.plist */,
-				B5FE77BD1FA9D43D002B5F0C /* TrackingAdvisor-Bridging-Header.h */,
+				B51BAFAF1FD961E200BE9CAA /* UserLocation.swift */,
+				B5C347451FB0929F0078C12E /* EMPageViewController.swift */,
+				B51BAFB91FD9621A00BE9CAA /* DateHandler.swift */,
+				B59E24542028A4AF008C8AC5 /* PersonalInformationCategory.swift */,
 				B512ED431FBC8EB60062B9E1 /* Constants.swift */,
 				B51BAFBB1FD98D2900BE9CAA /* Settings.swift */,
 				B5D63B3F1FED358700DAB61C /* Extensions.swift */,
+				B5C28A88202E092A00B48017 /* HelperFunctions.swift */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		F97DAF6D1BF521F0E921DEB9 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				540E148FC3AD46C7331C2D8E /* Pods-TrackingAdvisor.debug.xcconfig */,
+				80CC1541D9866D42E9CA4ABE /* Pods-TrackingAdvisor.release.xcconfig */,
+				991C7F852DBD270BE0CA474C /* Pods-TrackingAdvisorTests.debug.xcconfig */,
+				FCD4D9AF39ACD952AA1672C7 /* Pods-TrackingAdvisorTests.release.xcconfig */,
+				FE631034DB767391DB7E2474 /* Pods-TrackingAdvisorUITests.debug.xcconfig */,
+				EB15ED05F8CE9C40F1336501 /* Pods-TrackingAdvisorUITests.release.xcconfig */,
+			);
+			name = Pods;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -556,17 +386,18 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = B599B3CB1FA0B580006D70B4 /* Build configuration list for PBXNativeTarget "TrackingAdvisor" */;
 			buildPhases = (
+				AD4A89665D5D81958971A6AC /* [CP] Check Pods Manifest.lock */,
 				B599B39C1FA0B57F006D70B4 /* Sources */,
 				B599B39D1FA0B57F006D70B4 /* Frameworks */,
 				B599B39E1FA0B57F006D70B4 /* Resources */,
 				B5FBCD681FA8FD5B007EBEDC /* Embed Frameworks */,
 				B53F20771FC3342100006B67 /* ShellScript */,
+				DD8EBFF992FA1FF3D58A538C /* [CP] Embed Pods Frameworks */,
+				0B10D7954AF51D5AF66EC3F5 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				B58612711FB0D0E200480DD4 /* PBXTargetDependency */,
-				B511C4FD1FD5BFBC006A312C /* PBXTargetDependency */,
 			);
 			name = TrackingAdvisor;
 			productName = TrackingAdvisor;
@@ -667,16 +498,6 @@
 			mainGroup = B599B3971FA0B57F006D70B4;
 			productRefGroup = B599B3A11FA0B57F006D70B4 /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = B58612561FB0D08A00480DD4 /* Products */;
-					ProjectRef = B58612551FB0D08A00480DD4 /* Alamofire.xcodeproj */;
-				},
-				{
-					ProductGroup = B511C4EB1FD5BF8C006A312C /* Products */;
-					ProjectRef = B511C4EA1FD5BF8C006A312C /* Eureka.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				B599B39F1FA0B57F006D70B4 /* TrackingAdvisor */,
@@ -685,72 +506,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXReferenceProxy section */
-		B511C4F71FD5BF8C006A312C /* Eureka.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = Eureka.framework;
-			remoteRef = B511C4F61FD5BF8C006A312C /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		B511C4F91FD5BF8C006A312C /* EurekaTests.xctest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = EurekaTests.xctest;
-			remoteRef = B511C4F81FD5BF8C006A312C /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		B58612611FB0D08A00480DD4 /* Alamofire.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = Alamofire.framework;
-			remoteRef = B58612601FB0D08A00480DD4 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		B58612631FB0D08A00480DD4 /* Alamofire iOS Tests.xctest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = "Alamofire iOS Tests.xctest";
-			remoteRef = B58612621FB0D08A00480DD4 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		B58612651FB0D08A00480DD4 /* Alamofire.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = Alamofire.framework;
-			remoteRef = B58612641FB0D08A00480DD4 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		B58612671FB0D08A00480DD4 /* Alamofire macOS Tests.xctest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = "Alamofire macOS Tests.xctest";
-			remoteRef = B58612661FB0D08A00480DD4 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		B58612691FB0D08A00480DD4 /* Alamofire.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = Alamofire.framework;
-			remoteRef = B58612681FB0D08A00480DD4 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		B586126B1FB0D08A00480DD4 /* Alamofire tvOS Tests.xctest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = "Alamofire tvOS Tests.xctest";
-			remoteRef = B586126A1FB0D08A00480DD4 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		B586126D1FB0D08A00480DD4 /* Alamofire.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = Alamofire.framework;
-			remoteRef = B586126C1FB0D08A00480DD4 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		B599B39E1FA0B57F006D70B4 /* Resources */ = {
@@ -794,6 +549,21 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-TrackingAdvisorTests/Pods-TrackingAdvisorTests-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		0B10D7954AF51D5AF66EC3F5 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-TrackingAdvisor/Pods-TrackingAdvisor-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		24281CD7DBE9C2927267346D /* [CP] Copy Pods Resources */ = {
@@ -862,6 +632,24 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		AD4A89665D5D81958971A6AC /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-TrackingAdvisor-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
 		B53F20771FC3342100006B67 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -873,7 +661,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "bash \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/Mapbox.framework/strip-frameworks.sh\"";
+			shellScript = "";
 		};
 		C4DE704250666480E63FFDC1 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -890,6 +678,32 @@
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-TrackingAdvisorTests/Pods-TrackingAdvisorTests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		DD8EBFF992FA1FF3D58A538C /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${SRCROOT}/Pods/Target Support Files/Pods-TrackingAdvisor/Pods-TrackingAdvisor-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/Alamofire/Alamofire.framework",
+				"${BUILT_PRODUCTS_DIR}/Eureka/Eureka.framework",
+				"${BUILT_PRODUCTS_DIR}/Fuse/Fuse.framework",
+				"${PODS_ROOT}/Mapbox-iOS-SDK/dynamic/Mapbox.framework",
+				"${PODS_ROOT}/Mapbox-iOS-SDK/dynamic/Mapbox.framework.dSYM",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Alamofire.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Eureka.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Fuse.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Mapbox.framework",
+				"${DWARF_DSYM_FOLDER_PATH}/Mapbox.framework.dSYM",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-TrackingAdvisor/Pods-TrackingAdvisor-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -903,63 +717,49 @@
 				B5C347431FB064D50078C12E /* RawCollectedDataViewController.swift in Sources */,
 				B5C347461FB0929F0078C12E /* EMPageViewController.swift in Sources */,
 				B57F514E1FD55A5B0018B416 /* NetworkService.swift in Sources */,
-				B5FE77EF1FA9D442002B5F0C /* FSCalendarHeaderView.m in Sources */,
 				B507BB5C1FFFCA1F00FEBC34 /* ProfileViewController.swift in Sources */,
 				B59F64001FE819220025BE06 /* PlaceFinderMapTableViewController.swift in Sources */,
 				B51BAFBA1FD9621A00BE9CAA /* DateHandler.swift in Sources */,
 				B5C3C9521FB20F750037DD22 /* LocationRegionService.swift in Sources */,
 				B58612751FB0D9C700480DD4 /* NotificationService.swift in Sources */,
 				B51BAFBC1FD98D2900BE9CAA /* Settings.swift in Sources */,
-				B5FE77B61FA9D1BD002B5F0C /* CalendarViewController.swift in Sources */,
 				B54C36B1200EBAFC0085BFEA /* PersonalInformationCollectionView.swift in Sources */,
 				B5F20A80201BF0A700D24A70 /* ReviewChallenge.swift in Sources */,
-				B5FE77ED1FA9D442002B5F0C /* FSCalendar+Deprecated.m in Sources */,
 				B577690420164C2B00A0FD1B /* HeaderPlace.swift in Sources */,
-				B5FE77E21FA9D442002B5F0C /* FSCalendarDelegationProxy.m in Sources */,
 				B59ABF681FDAADA300A60066 /* PositionMapModalViewController.swift in Sources */,
+				B5C28A89202E092A00B48017 /* HelperFunctions.swift in Sources */,
 				B52AF1D01FA8C89F00FDDF2A /* ISTimeline.swift in Sources */,
-				B5FE77E01FA9D442002B5F0C /* FSCalendar.m in Sources */,
 				B5A22B882019F33D00B68BD8 /* Review.swift in Sources */,
 				B511C4FF1FD5C039006A312C /* GetInTouchFormViewController.swift in Sources */,
 				B5C347481FB092D40078C12E /* TimelineSwipeViewController.swift in Sources */,
-				B5FE77E11FA9D442002B5F0C /* FSCalendarCollectionViewLayout.m in Sources */,
-				B58A6E141FCC4CF9003DA168 /* SettingsTableTableViewController.swift in Sources */,
+				B58A6E141FCC4CF9003DA168 /* SettingsTableViewController.swift in Sources */,
 				B58CAAFC2019F6FD0050A344 /* PersonalInformation.swift in Sources */,
 				B530432D1FDEDBD400DBC7C0 /* Networking.swift in Sources */,
 				B53FB6FB1FAB74630000112E /* ActivityServiceOld.swift in Sources */,
 				B568D8821FB45FD800E051B1 /* ActivityService.swift in Sources */,
-				B5FE77E91FA9D442002B5F0C /* FSCalendarConstants.m in Sources */,
 				B58B79181FC734A1007BA1BC /* Visit.swift in Sources */,
 				B512ED441FBC8EB60062B9E1 /* Constants.swift in Sources */,
-				B5FE77DF1FA9D442002B5F0C /* FSCalendarStickyHeader.m in Sources */,
+				B5C28A8B20321D2700B48017 /* CardView.swift in Sources */,
 				B50EF6B21FA8AFAC0008ADFB /* LocationService.swift in Sources */,
 				B599B3A41FA0B57F006D70B4 /* AppDelegate.swift in Sources */,
 				B5C3474A1FB093F50078C12E /* OneTimelineViewController.swift in Sources */,
 				B59E24552028A4AF008C8AC5 /* PersonalInformationCategory.swift in Sources */,
-				B5FE77EE1FA9D442002B5F0C /* FSCalendarWeekdayView.m in Sources */,
 				B55C10101FED736B001EE08D /* PlaceReviewViewController.swift in Sources */,
-				B5FE77E41FA9D442002B5F0C /* FSCalendarTransitionCoordinator.m in Sources */,
 				B59E24592028B3B1008C8AC5 /* ReviewVisit.swift in Sources */,
-				B5FE77E61FA9D442002B5F0C /* FSCalendarAppearance.m in Sources */,
 				B58B79211FC734AF007BA1BC /* Place.swift in Sources */,
-				B5FE77E71FA9D442002B5F0C /* FSCalendarScopeHandle.m in Sources */,
 				B530432F1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift in Sources */,
 				B53043231FDED92A00DBC7C0 /* UserUpdateHandler.swift in Sources */,
-				B5FE77EC1FA9D442002B5F0C /* FSCalendarCalculator.m in Sources */,
 				B5C3474C1FB0B4760078C12E /* RawCollectedDataTextViewController.swift in Sources */,
 				B568D8801FB45D0700E051B1 /* LocationAdaptiveService.swift in Sources */,
-				B5FE77E81FA9D442002B5F0C /* FSCalendarCell.m in Sources */,
 				B5FE77F31FA9F2F6002B5F0C /* MapCalendarContainerViewController.swift in Sources */,
 				B58B79241FC742F9007BA1BC /* Move.swift in Sources */,
 				B53FB6FD1FAB9A870000112E /* FileService.swift in Sources */,
 				B51BAFB01FD961E200BE9CAA /* UserLocation.swift in Sources */,
-				B5FE77EB1FA9D442002B5F0C /* FSCalendarExtensions.m in Sources */,
 				B5D63B401FED358700DAB61C /* Extensions.swift in Sources */,
-				B5FE77E51FA9D442002B5F0C /* FSCalendarCollectionView.m in Sources */,
+				B5317A9E203DCE420057B857 /* PersonalInformationChooserViewController.swift in Sources */,
 				B568B3B2202B037F00425A20 /* OnboardingViewController.swift in Sources */,
 				B52AF1CE1FA8C87D00FDDF2A /* ISPoint.swift in Sources */,
 				B57768FA2016027900A0FD1B /* PlacePersonalInformationController.swift in Sources */,
-				B5FE77E31FA9D442002B5F0C /* FSCalendarDelegationFactory.m in Sources */,
 				B5883BD51FA3274200EA8A02 /* TrackingAdvisor.xcdatamodeld in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -983,16 +783,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		B511C4FD1FD5BFBC006A312C /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = Eureka;
-			targetProxy = B511C4FC1FD5BFBC006A312C /* PBXContainerItemProxy */;
-		};
-		B58612711FB0D0E200480DD4 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = "Alamofire iOS";
-			targetProxy = B58612701FB0D0E200480DD4 /* PBXContainerItemProxy */;
-		};
 		B599B3B91FA0B57F006D70B4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = B599B39F1FA0B57F006D70B4 /* TrackingAdvisor */;
@@ -1134,13 +924,16 @@
 		};
 		B599B3CC1FA0B580006D70B4 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 540E148FC3AD46C7331C2D8E /* Pods-TrackingAdvisor.debug.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = TrackingAdvisor/TrackingAdvisor.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = NJF475DQF5;
+				DEVELOPMENT_TEAM = 8UMT23UD55;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -1148,24 +941,28 @@
 				INFOPLIST_FILE = TrackingAdvisor/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = uk.ac.ucl.iss.TrackingAdvisor;
+				PRODUCT_BUNDLE_IDENTIFIER = TrackingAdvisor;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "TrackingAdvisor/TrackingAdvisor-Bridging-Header.h";
+				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
 		B599B3CD1FA0B580006D70B4 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 80CC1541D9866D42E9CA4ABE /* Pods-TrackingAdvisor.release.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = TrackingAdvisor/TrackingAdvisor.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = NJF475DQF5;
+				DEVELOPMENT_TEAM = 8UMT23UD55;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -1173,16 +970,18 @@
 				INFOPLIST_FILE = TrackingAdvisor/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = uk.ac.ucl.iss.TrackingAdvisor;
+				PRODUCT_BUNDLE_IDENTIFIER = TrackingAdvisor;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "TrackingAdvisor/TrackingAdvisor-Bridging-Header.h";
+				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 4.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
 		B599B3CF1FA0B580006D70B4 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 991C7F852DBD270BE0CA474C /* Pods-TrackingAdvisorTests.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -1200,6 +999,7 @@
 		};
 		B599B3D01FA0B580006D70B4 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = FCD4D9AF39ACD952AA1672C7 /* Pods-TrackingAdvisorTests.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -1217,6 +1017,7 @@
 		};
 		B599B3D21FA0B580006D70B4 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = FE631034DB767391DB7E2474 /* Pods-TrackingAdvisorUITests.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
@@ -1233,6 +1034,7 @@
 		};
 		B599B3D31FA0B580006D70B4 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = EB15ED05F8CE9C40F1336501 /* Pods-TrackingAdvisorUITests.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;

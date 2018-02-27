@@ -49,7 +49,7 @@ extension Formatter {
     }()
     static let customFullDateLetter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM d, yyyy"
+        formatter.dateFormat = "cccc d MMMM yyyy"
         return formatter
     }()
     static let time:DateFormatter = {
@@ -120,6 +120,187 @@ extension Date {
         let date = Calendar.current.date(byAdding: components, to: self.startOfDay)
         return (date?.addingTimeInterval(-1))!
     }
+    
+    public func earlier(_ date:Date) -> Date{
+        return (self.timeIntervalSince1970 <= date.timeIntervalSince1970) ? self : date
+    }
+    
+    public func timeAgo(since date:Date, numericDates: Bool = false, numericTimes: Bool = false) -> String {
+        let calendar = Calendar.current
+        let unitFlags = Set<Calendar.Component>([.second,.minute,.hour,.day,.weekOfYear,.month,.year])
+        let earliest = self.earlier(date)
+        let latest = (earliest == self) ? date : self
+        let components = calendar.dateComponents(unitFlags, from: earliest, to: latest)
+        
+        if (components.year! >= 2) {
+            return "\(components.year!) years ago"
+        }
+        else if (components.year! >= 1) {
+            
+            if (numericDates) {
+                return "1 year ago"
+            }
+            
+            return "Last year"
+        }
+        else if (components.month! >= 2) {
+            return "\(components.month!) months ago"
+        }
+        else if (components.month! >= 1) {
+            
+            if (numericDates) {
+                return "1 month ago"
+            }
+            
+            return "Last month"
+        }
+        else if (components.weekOfYear! >= 2) {
+            return "\(components.weekOfYear!) weeks ago"
+        }
+        else if (components.weekOfYear! >= 1) {
+            
+            if (numericDates) {
+                return "1 week ago"
+            }
+            
+            
+            return "Last week"
+        }
+        else if (components.day! >= 2) {
+            return "\(components.day!) days ago"
+        }
+        else if (components.day! >= 1) {
+            if (numericDates) {
+                return "1 day ago"
+            }
+            
+            return "Yesterday"
+        }
+        else if (components.hour! >= 2) {
+            return "\(components.hour!) hours ago"
+        }
+        else if (components.hour! >= 1) {
+            
+            if (numericTimes) {
+                return "1 hour ago"
+            }
+            
+            return "An hour ago"
+        }
+        else if (components.minute! >= 2) {
+            return "\(components.minute!) minutes ago"
+        }
+        else if (components.minute! >= 1) {
+            
+            if (numericTimes) {
+                return "1 minute ago"
+            }
+            
+            return "A minute ago"
+        }
+        else if (components.second! >= 2) {
+            return "\(components.second!) seconds ago"
+        }
+        else {
+            
+            if (numericTimes) {
+                return "1 second ago"
+            }
+            
+            return "Just now"
+        }
+    }
+    
+    public func dayAgo(since date:Date, numericDates: Bool = false, numericTimes: Bool = false, spellOut: Bool = false) -> String {
+        let calendar = Calendar.current
+        let unitFlags = Set<Calendar.Component>([.second,.minute,.hour,.day,.weekOfYear,.month,.year])
+        let earliest = self.earlier(date)
+        let latest = (earliest == self) ? date : self
+        let components = calendar.dateComponents(unitFlags, from: earliest, to: latest)
+        
+        if (components.year! >= 2) {
+            if (spellOut) {
+                return "\(components.year!.spellOut()) years ago"
+            }
+            return "\(components.year!) years ago"
+        }
+        else if (components.year! >= 1) {
+            
+            if (numericDates) {
+                if (spellOut) {
+                    return "\(Int(1).spellOut()) year ago"
+                }
+                return "1 year ago"
+            }
+            
+            return "Last year"
+        }
+        else if (components.month! >= 2) {
+            if (spellOut) {
+                return "\(components.month!.spellOut()) years ago"
+            }
+            return "\(components.month!) months ago"
+        }
+        else if (components.month! >= 1) {
+            
+            if (numericDates) {
+                if (spellOut) {
+                    return "\(Int(1).spellOut()) month ago"
+                }
+                return "1 month ago"
+            }
+            
+            return "Last month"
+        }
+        else if (components.weekOfYear! >= 2) {
+            if (spellOut) {
+                return "\(components.weekOfYear!.spellOut()) weeks ago"
+            }
+            return "\(components.weekOfYear!) weeks ago"
+        }
+        else if (components.weekOfYear! >= 1) {
+            
+            if (numericDates) {
+                if (spellOut) {
+                    return "\(Int(1).spellOut()) week ago"
+                }
+                return "1 week ago"
+            }
+            
+            return "Last week"
+        }
+        else if (components.day! >= 2) {
+            if (spellOut) {
+                return "\(components.day!.spellOut()) days ago"
+            }
+            return "\(components.day!) days ago"
+        }
+        else if (components.day! >= 1) {
+            if (numericDates) {
+                if (spellOut) {
+                    return "\(Int(1).spellOut()) day ago"
+                }
+                return "1 day ago"
+            }
+            
+            return "Yesterday"
+        }
+        else {
+            return "Today"
+        }
+    }
+    
+    public func numberOfDays(to date: Date?) -> Int? {
+        guard let date = date else { return nil }
+        
+        let calendar = Calendar.current
+        let earliest = self.earlier(date)
+        let latest = (earliest == self) ? date : self
+        let components = calendar.dateComponents([.day], from: earliest, to: latest)
+        
+        return components.day
+    }
+    
 }
 
 extension String {
@@ -163,3 +344,5 @@ extension TimeInterval {
         return ""
     }
 }
+
+

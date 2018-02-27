@@ -9,19 +9,32 @@
 import UIKit
 import Mapbox
 
-class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, PersonalInformationCategoryCellDelegate, FooterMoreInformationDelegate {
+class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, PersonalInformationCategoryCellDelegate, FooterMoreInformationDelegate, HeaderReviewVisitDelegate, DataStoreUpdateProtocol {
     
-    @objc func edit(_ sender: UIBarButtonItem) {
+    private func presentEditVC() {
         let viewController = PlaceFinderMapTableViewController()
         viewController.visit = visit
         navigationController?.pushViewController(viewController, animated: true)
     }
     
+    private func presentAddPIVC(for cat: String?) {
+        let viewController = PersonalInformationChooserViewController()
+        viewController.color = color
+        viewController.place = visit?.place
+        viewController.visit = visit
+        viewController.cat = cat
+        navigationController?.pushViewController(viewController, animated: true)
+    }
+    
+    @objc func edit(_ sender: UIBarButtonItem) {
+        presentEditVC()
+    }
+    
     @objc func back(_ sender: UIBarButtonItem) {
+        UserUpdateHandler.sendReviewUpdate(reviews: updatedReviews)
         presentingViewController?.dismiss(animated: true)
     }
     
-    var mapView: MGLMapView!
     var collectionView: UICollectionView!
     lazy var headerView: HeaderPlaceDetail = {
         return HeaderPlaceDetail()
@@ -33,6 +46,7 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
     
     var visit: Visit? {
         didSet {
+            print("didSet visit")
             guard let visit = visit, let place = visit.place else { return }
             headerView.placeAddress = place.address
             headerView.placeName = place.name
@@ -41,17 +55,25 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
             color = place.getPlaceColor()
             headerView.backgroundColor = color
             personalInformation = place.getPersonalInformation()
-            print("place: \(place)")
+            pics = personalInformation!.keys.sorted(by: { $0 < $1 })
+            if collectionView != nil {
+                collectionView.reloadData()
+            }
         }
     }
     
     var personalInformation: [String: [PersonalInformation]]?
+    var pics: [String]?
+    var updatedReviews: [String:Int32] = [:]  // [reviewId : Answer]
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.tabBarController?.tabBar.isHidden = false
         
+        DataStoreService.shared.delegate = self
+        
         setupNavBarButtons()
+        updatedReviews.removeAll()
         collectionView.reloadData()
     }
     
@@ -64,11 +86,6 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
         self.navigationController?.view.backgroundColor = UIColor.clear
         self.navigationController?.navigationBar.barStyle = .blackOpaque
         
-        mapView = MGLMapView(frame: view.bounds, styleURL: MGLStyle.lightStyleURL())
-        mapView.delegate = self
-        mapView.tintColor = color
-        mapView.zoomLevel = 15
-
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
         collectionView = UICollectionView(frame: view.frame, collectionViewLayout: layout)
@@ -80,14 +97,6 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
         collectionView.register(PersonalInformationCategoryCell.self, forCellWithReuseIdentifier: cellId)
         collectionView.register(HeaderPersonalInformationCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, withReuseIdentifier: headerCellId)
         collectionView.register(FooterMoreInformationCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionFooter, withReuseIdentifier: footerCellId)
-        
-        // configure map
-        let annotation = MGLPointAnnotation()
-        let coordinates = CLLocationCoordinate2D(latitude: (visit?.place?.latitude)!, longitude: (visit?.place?.longitude)!)
-        annotation.coordinate = coordinates
-        annotation.title = visit?.place?.name
-        mapView.addAnnotation(annotation)
-        mapView.centerCoordinate = coordinates
         
         setupViews()
     }
@@ -109,27 +118,19 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
         backButton.addTarget(self, action: #selector(back), for: .touchUpInside)
         let leftBarButton = UIBarButtonItem(customView: backButton)
         self.navigationItem.leftBarButtonItem = leftBarButton
-
     }
     
     func setupViews() {
         self.view.addSubview(headerView)
         self.view.addVisualConstraint("H:|[header]|", views: ["header" : headerView])
-        self.view.addVisualConstraint("V:|[header]", views: ["header" : headerView])
-        
-        mapView?.backgroundColor = .white
-        mapView?.translatesAutoresizingMaskIntoConstraints = false
-        self.view.addSubview(mapView!)
-        
-        self.view.addVisualConstraint("H:|[map]|", views: ["map" : mapView!])
-        self.view.addVisualConstraint("V:[header][map(150)]", views: ["header": headerView, "map" : mapView!])
         
         collectionView.backgroundColor = UIColor.white
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         self.view.addSubview(collectionView)
         
         self.view.addVisualConstraint("H:|[collection]|", views: ["collection" : collectionView])
-        self.view.addVisualConstraint("V:[map][collection]|", views: ["collection" : collectionView, "map": mapView])
+        self.view.addVisualConstraint("V:|[header][collection]|", views: ["header" : headerView, "collection" : collectionView])
+        
     }
     
     // MARK: - UICollectionViewDataSource delegate methods
@@ -145,8 +146,8 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
         let cell: PersonalInformationCategoryCell
         cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! PersonalInformationCategoryCell
         
-        guard let pi = personalInformation else { return cell }
-        let picid = Array(pi.keys)[indexPath.item]
+        guard let pi = personalInformation, let pics = pics else { return cell }
+        let picid = pics[indexPath.item]
         cell.personalInformationCategory = PersonalInformationCategory.getPersonalInformationCategory(with: picid)
         cell.personalInformation = pi[picid]
         cell.color = color
@@ -161,15 +162,31 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         if kind == UICollectionElementKindSectionHeader {
             let headerCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerCellId, for: indexPath) as! HeaderPersonalInformationCell
+            headerCell.delegate = self
+            headerCell.color = color
+            if let count = personalInformation?.count {
+                headerCell.hasPersonalInformation = count > 0
+            }
+            if let place = visit?.place {
+                headerCell.coordinates = CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude)
+            }
+            if let answer = visit?.review?.answer {
+                headerCell.setReviewAnswer(with: answer)
+            }
             return headerCell
         } else if kind == UICollectionElementKindSectionFooter {
             let footerCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: footerCellId, for: indexPath) as! FooterMoreInformationCell
             footerCell.delegate = self
             footerCell.color = color
+            if let count = personalInformation?.count {
+                footerCell.hasPersonalInformation = count > 0
+            }
             return footerCell
         } else {
             assert(false, "Unexpected element kind")
         }
+        
+        return UICollectionReusableView()
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
@@ -178,6 +195,9 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
         
         // 1 - instanciate a new header
         let headerView = HeaderPersonalInformationCell()
+        if let answer = visit?.review?.answer {
+            headerView.setReviewAnswer(with: answer)
+        }
         
         // 2 - set the width through a constraint and layout the view
         headerView.addConstraint(NSLayoutConstraint(item: headerView, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: collectionView.frame.width))
@@ -194,44 +214,14 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForFooterInSection section: Int) -> CGSize {
         return CGSize(width: collectionView.frame.width, height: 45)
     }
-
-    
-    // MARK: - MGLMapViewDelegate delegate methods
-    
-    func mapView(_ mapView: MGLMapView, viewFor annotation: MGLAnnotation) -> MGLAnnotationView? {
-        let reuseIdentifier = "map-marker"
-        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier)
-
-        if annotationView == nil {
-            let marker = UIImageView(image: UIImage(named: "map-marker")!.withRenderingMode(.alwaysTemplate))
-            marker.tintColor = color
-            marker.contentMode = .scaleAspectFit
-            marker.clipsToBounds = true
-            marker.translatesAutoresizingMaskIntoConstraints = false
-            
-            annotationView = MGLAnnotationView(reuseIdentifier: reuseIdentifier)
-            annotationView?.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
-            annotationView?.addSubview(marker)
-            
-            // add constraints
-            let verticalConstraint = NSLayoutConstraint(item: marker, attribute: .centerY, relatedBy: .equal, toItem: annotationView, attribute: .centerY, multiplier: 1, constant: 0)
-            let horizontalConstraint = NSLayoutConstraint(item: marker, attribute: .centerX, relatedBy: .equal, toItem: annotationView, attribute: .centerX, multiplier: 1, constant: 0)
-            let widthConstraint = NSLayoutConstraint(item: marker, attribute: NSLayoutAttribute.width, relatedBy: NSLayoutRelation.equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 40)
-            let heightConstraint = NSLayoutConstraint(item: marker, attribute: NSLayoutAttribute.height, relatedBy: NSLayoutRelation.equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 40)
-            annotationView?.addConstraints([horizontalConstraint, verticalConstraint, widthConstraint, heightConstraint])
-        }
-        
-        return annotationView
-    }
     
     // MARK: - PersonalInformationCategoryCellDelegate method
     func addPersonalInformation(cat: String) {
-        print("add a personal information for category \(cat)")
+        presentAddPIVC(for: cat)
     }
     
     func reviewPersonalInformation(cat: String, personalInformation: PersonalInformation, answer: ReviewAnswer) {
         if let review = personalInformation.getReview(of: .personalInformation) {
-            print("save review in the database with answer: \(answer.rawValue)")
             review.answer = answer
             DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: answer)
         }
@@ -252,6 +242,39 @@ class OneTimelinePlaceDetailViewController: UIViewController, MGLMapViewDelegate
         navigationController?.pushViewController(viewController, animated: true)
     }
     
+    // MARK: - HeaderReviewVisitDelegate methods
+    func didPressReviewVisit(with answer: ReviewAnswer) {
+        if let review = visit?.review {
+            review.answer = answer
+            DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: answer)
+        }
+        
+        self.collectionView.collectionViewLayout.invalidateLayout()
+        self.collectionView.reloadData()
+    }
+    
+    func didPressVisitEdit() {
+        presentEditVC()
+    }
+    
+    func didPressAddPersonalInformation() {
+        presentAddPIVC(for: nil)
+    }
+    
+    // MARK: DataStoreUpdateProtocol method
+    func dataStoreDidUpdateReviewAnswer(for reviewId: String?, with answer: Int32) {
+        if let reviewId = reviewId {
+            updatedReviews[reviewId] = answer
+        }
+    }
+    
+    func dataStoreDidUpdate(for day: String?) {
+        print("dataStoreDidUpdate -> reload data")
+        
+        if let vid = visit?.id {
+            visit = DataStoreService.shared.getVisit(for: vid)
+        }
+    }
 }
 
 protocol FooterMoreInformationDelegate {
@@ -260,6 +283,13 @@ protocol FooterMoreInformationDelegate {
 
 class FooterMoreInformationCell: UICollectionViewCell {
     var delegate: FooterMoreInformationDelegate?
+    var hasPersonalInformation: Bool = true { didSet {
+        if hasPersonalInformation {
+            alpha = 1
+        } else {
+            alpha = 0
+        }
+    }}
     var color: UIColor? {
         didSet {
             backgroundColor = color
@@ -305,8 +335,10 @@ class FooterMoreInformationCell: UICollectionViewCell {
         backgroundColor = .red
         addSubview(moreInformationLabel)
         addSubview(moreInformationIcon)
-        addTapGestureRecognizer {
-            self.delegate?.didPressMoreInformation()
+        addTapGestureRecognizer { [weak self] in
+            if let b = self?.hasPersonalInformation, b {
+                self?.delegate?.didPressMoreInformation()
+            }
         }
         
         moreInformationLabel.setContentCompressionResistancePriority(UILayoutPriority(rawValue: 1000), for: .horizontal)
@@ -326,7 +358,41 @@ class FooterMoreInformationCell: UICollectionViewCell {
 }
 
 
-class HeaderPersonalInformationCell : UICollectionViewCell {
+protocol HeaderReviewVisitDelegate {
+    func didPressReviewVisit(with answer: ReviewAnswer)
+    func didPressVisitEdit()
+    func didPressAddPersonalInformation()
+}
+
+class HeaderPersonalInformationCell : UICollectionViewCell, MGLMapViewDelegate {
+    var delegate: HeaderReviewVisitDelegate?
+    var hasPersonalInformation: Bool = true { didSet {
+        if !hasPersonalInformation {
+            instructionsLabel.text = "We do not have any personal information for this place at the moment."
+        } else {
+            instructionsLabel.text = "Please validate the inferences using the marks on the cards presented below."
+        }
+        
+    }}
+    var color: UIColor = Constants.colors.orange {
+        didSet {
+            mapView.tintColor = color
+            visitReviewView.textColor = color
+            visitReviewView.backgroundColor = color.withAlphaComponent(0.3)
+            instructionsLabel.textColor = color
+            addPersonalInformationLabel.textColor = color
+            addPersonalInformationLabel.backgroundColor = color.withAlphaComponent(0.3)
+        }
+    }
+    var coordinates: CLLocationCoordinate2D? {
+        didSet {
+            let annotation = MGLPointAnnotation()
+            annotation.coordinate = coordinates!
+            mapView.addAnnotation(annotation)
+            mapView.centerCoordinate = coordinates!
+        }
+    }
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Personal information"
@@ -338,16 +404,63 @@ class HeaderPersonalInformationCell : UICollectionViewCell {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
-    private let instructionsLabel: UILabel = {
+    private lazy var instructionsLabel: UILabel = {
         let label = UILabel()
-        label.text = "Please tap the squares to validate the inferences presented below"
+        label.text = "Please validate the inferences using the marks on the cards presented below."
         label.font = UIFont.italicSystemFont(ofSize: 14.0)
-        label.textColor = Constants.colors.primaryLight
+        label.textColor = color
         label.lineBreakMode = .byWordWrapping
         label.numberOfLines = 2
         label.textAlignment = .left
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }()
+    private lazy var visitReviewView: ReviewCardView = {
+        let review = ReviewCardView(title: "Did you visit this place?", color: Constants.colors.primaryLight)
+        let yesAction: ()->() = { [weak self] in
+            self?.visitReviewView.selected = .yes
+            self?.delegate?.didPressReviewVisit(with: .yes)
+        }
+        let noAction: ()->() = { [weak self] in
+            self?.visitReviewView.selected = .no
+            self?.delegate?.didPressReviewVisit(with: .no)
+        }
+        let commentAction: ()->() = { [weak self] in
+            self?.delegate?.didPressVisitEdit()
+        }
+        review.questionView.unselectedColor = .white
+        review.hideEdit()
+        review.noAction = noAction
+        review.yesAction = yesAction
+        review.commentAction = commentAction
+        return review
+    }()
+    
+    private lazy var mapView: MGLMapView = {
+        let map = MGLMapView(frame: .zero, styleURL: MGLStyle.lightStyleURL())
+        map.delegate = self
+        map.tintColor = color
+        map.zoomLevel = 14
+        map.attributionButton.alpha = 0
+        map.layer.cornerRadius = 5.0
+        map.backgroundColor = .white
+        map.clipsToBounds = true
+        map.layer.masksToBounds = true
+        map.translatesAutoresizingMaskIntoConstraints = false
+        return map
+    }()
+    
+    private lazy var addPersonalInformationLabel: UILabel = {
+        let l = UILabel()
+        l.layer.cornerRadius = 5.0
+        l.layer.masksToBounds = true
+        l.text = "Add personal information"
+        l.textAlignment = .center
+        l.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
+        l.textColor = color
+        l.backgroundColor = Constants.colors.superLightGray
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
     }()
     
     override init(frame: CGRect) {
@@ -362,18 +475,63 @@ class HeaderPersonalInformationCell : UICollectionViewCell {
     func setupViews() {
         addSubview(titleLabel)
         addSubview(instructionsLabel)
+        addSubview(visitReviewView)
+        addSubview(mapView)
+        addSubview(addPersonalInformationLabel)
         
         // add constraints
-        addVisualConstraint("V:|-14-[title][instructions]-14-|", views: ["title": titleLabel, "instructions": instructionsLabel])
-        
+        addVisualConstraint("V:|-14-[map(125)]-14-[review]-14-[title][instructions]-14-[addPI(64)]-14-|", views: ["map": mapView, "review": visitReviewView, "title": titleLabel, "instructions": instructionsLabel, "addPI": addPersonalInformationLabel])
+        addVisualConstraint("H:|-14-[map]-14-|", views: ["map" : mapView])
+        addVisualConstraint("H:|-14-[review]-14-|", views: ["review": visitReviewView])
         addVisualConstraint("H:|-14-[title]-14-|", views: ["title": titleLabel])
         addVisualConstraint("H:|-14-[instructions]-14-|", views: ["instructions": instructionsLabel])
+        addVisualConstraint("H:|-14-[addPI]-14-|", views: ["addPI": addPersonalInformationLabel])
+        
+        addPersonalInformationLabel.addTapGestureRecognizer { [weak self] in
+            self?.addPersonalInformationLabel.alpha = 0.7
+            self?.delegate?.didPressAddPersonalInformation()
+            UIView.animate(withDuration: 0.5) { [weak self] in
+                self?.addPersonalInformationLabel.alpha = 1
+            }
+        }
         
         translatesAutoresizingMaskIntoConstraints = false
     }
     
     func height() -> CGFloat {
-        return 14 + titleLabel.bounds.height + instructionsLabel.bounds.height + 14
+        return 14 + mapView.bounds.height + 14 + visitReviewView.height() + 14 + titleLabel.bounds.height + instructionsLabel.bounds.height + 14 + addPersonalInformationLabel.bounds.height + 14
+    }
+    
+    func setReviewAnswer(with answer: ReviewAnswer) {
+        visitReviewView.selected = answer
+    }
+    
+    // MARK: - MGLMapViewDelegate delegate methods
+    
+    func mapView(_ mapView: MGLMapView, viewFor annotation: MGLAnnotation) -> MGLAnnotationView? {
+        let reuseIdentifier = "map-marker"
+        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier)
+        
+        if annotationView == nil {
+            let marker = UIImageView(image: UIImage(named: "map-marker")!.withRenderingMode(.alwaysTemplate))
+            marker.tintColor = color
+            marker.contentMode = .scaleAspectFit
+            marker.clipsToBounds = true
+            marker.translatesAutoresizingMaskIntoConstraints = false
+            
+            annotationView = MGLAnnotationView(reuseIdentifier: reuseIdentifier)
+            annotationView?.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
+            annotationView?.addSubview(marker)
+            
+            // add constraints
+            let verticalConstraint = NSLayoutConstraint(item: marker, attribute: .centerY, relatedBy: .equal, toItem: annotationView, attribute: .centerY, multiplier: 1, constant: 0)
+            let horizontalConstraint = NSLayoutConstraint(item: marker, attribute: .centerX, relatedBy: .equal, toItem: annotationView, attribute: .centerX, multiplier: 1, constant: 0)
+            let widthConstraint = NSLayoutConstraint(item: marker, attribute: NSLayoutAttribute.width, relatedBy: NSLayoutRelation.equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 40)
+            let heightConstraint = NSLayoutConstraint(item: marker, attribute: NSLayoutAttribute.height, relatedBy: NSLayoutRelation.equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 40)
+            annotationView?.addConstraints([horizontalConstraint, verticalConstraint, widthConstraint, heightConstraint])
+        }
+        
+        return annotationView
     }
 }
 

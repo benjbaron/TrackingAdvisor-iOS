@@ -8,6 +8,7 @@
 
 import Foundation
 import CoreLocation
+import UIKit
 
 extension NSMutableAttributedString {
     @discardableResult func bold(_ text: String, of size: CGFloat = 17) -> NSMutableAttributedString {
@@ -201,5 +202,33 @@ extension CLLocationCoordinate2D {
         let result:CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: newLat, longitude: newLon)
         
         return result
+    }
+}
+
+public extension Int {
+    public func spellOut() -> String {
+        let numberFormatter = NumberFormatter()
+        numberFormatter.numberStyle = .spellOut
+        return numberFormatter.string(from: NSNumber(value: self))!
+    }
+}
+
+public extension UIImage {
+    func imageWithTint(tint: UIColor) -> UIImage {
+        UIGraphicsBeginImageContextWithOptions(size, false, scale)
+        
+        let context = UIGraphicsGetCurrentContext()
+        context?.translateBy(x: 0, y: size.height)
+        context?.scaleBy(x: 1.0, y: -1.0)
+        context?.setBlendMode(.normal)
+        
+        let rect = CGRect(origin: .zero, size: size)
+        context?.clip(to: rect, mask: cgImage!)
+        tint.setFill()
+        context?.fill(rect)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return image!
     }
 }

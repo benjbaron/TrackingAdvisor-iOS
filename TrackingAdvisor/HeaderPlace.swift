@@ -8,6 +8,51 @@
 
 import UIKit
 
+class PlaceHeader: UIView {
+    var placeName : String? {
+        didSet {
+            placeNameLabel.text = placeName
+        }
+    }
+    
+    internal let placeNameLabel: UILabel = {
+        let label = UILabel()
+        label.text = "place name"
+        label.font = UIFont.systemFont(ofSize: 25, weight: .heavy)
+        label.textColor = Constants.colors.white
+        label.lineBreakMode = .byWordWrapping
+        label.numberOfLines = 2
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+    
+    convenience init() {
+        self.init(frame: CGRect.zero)
+        setupViews()
+    }
+    
+    required init(coder aDecoder: NSCoder) {
+        fatalError("This class does not support NSCoding")
+    }
+    
+    func setupViews() {
+        addSubview(placeNameLabel)
+        
+        // add constraints
+        addVisualConstraint("V:|-(28@750)-[title]-(14@750)-|", views: ["title": placeNameLabel])
+        
+        addVisualConstraint("H:|-75-[title]-75-|", views: ["title": placeNameLabel])
+        
+        translatesAutoresizingMaskIntoConstraints = false
+    }
+
+}
+
 class HeaderPlace: UIView {
     var placeName : String? {
         didSet {
@@ -26,7 +71,7 @@ class HeaderPlace: UIView {
         label.font = UIFont.systemFont(ofSize: 25, weight: .heavy)
         label.textColor = Constants.colors.white
         label.lineBreakMode = .byWordWrapping
-        label.numberOfLines = 0
+        label.numberOfLines = 2
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -111,7 +156,7 @@ class HeaderPlaceDetail : HeaderPlace {
         addSubview(placeTimesLabel)
         
         // add constraints
-        addVisualConstraint("V:|-(28@750)-[title][address][city]-(12@750)-[times]-(18@750)-|", views: ["title": placeNameLabel, "address": placeAddressLabel, "city": placeCityLabel, "times": placeTimesLabel])
+        addVisualConstraint("V:|-(35@750)-[title][address][city]-(12@750)-[times]-(18@750)-|", views: ["title": placeNameLabel, "address": placeAddressLabel, "city": placeCityLabel, "times": placeTimesLabel])
         
         addVisualConstraint("H:|-75-[title]-75-|", views: ["title": placeNameLabel])
         addVisualConstraint("H:|-25-[address]-25-|", views: ["address": placeAddressLabel])

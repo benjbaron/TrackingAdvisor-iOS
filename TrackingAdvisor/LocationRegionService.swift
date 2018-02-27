@@ -32,14 +32,15 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
     
     var currentLocation:UserLocation? = nil
     var currentRegions: [CLCircularRegion] = []
-    var id: String = Settings.getUUID()
+    var id: String = Settings.getUserId() ?? ""
     var locationUpdateType: LocationRegionUpdateType = .significant
     
     var regions:[CLCircularRegion] = []
     var regionLocations:[String:CLLocation] = [:]
     let numberOfRegions = 6
-    let distanceOfRegionToCenterLocation = 125.0
-    let regionRadius = 100.0
+    let distanceOfRegionToCenterLocation = 200.0
+    let regionRadius = 150.0
+    var previousLocation:CLLocation?
     
     let regionRadiuses = [25.0, 50.0, 100.0, 250.0, 500.0, 750.0, 1000.0]
 
@@ -98,13 +99,13 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
     }
     
     func restartUpdatingLocation() {
-        FileService.shared.log("restartUpdatingLocation called", classname: "LocationRegionService")
+//        FileService.shared.log("restartUpdatingLocation called", classname: "LocationRegionService")
         stopUpdatingLocation()
         startUpdatingLocation()
     }
     
     func deleteRegions() {
-        FileService.shared.log("Delete all regions", classname: "LocationRegionService")
+//        FileService.shared.log("Delete all regions", classname: "LocationRegionService")
         for region in locationManager.monitoredRegions {
             locationManager.stopMonitoring(for: region)
         }
@@ -114,6 +115,27 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
     }
     
     func updateRegions(for location: CLLocation) {
+        // Stop monitoring the current regions
+        deleteRegions()
+    
+        // update the surrounding region
+        var radius: CLLocationDistance = 100.0
+        if let prev = previousLocation {
+            let s = location.speed(with: prev)
+            if s > 5.0 {
+                radius = min(100.0, max(100.0 * sqrt(s), 500.0))
+            }
+            FileService.shared.log("Speed: \(s)", classname: "LocationRegionService")
+        }
+        
+        let region = CLCircularRegion(center: location.coordinate, radius: radius, identifier: "currentRegion")
+        currentRegions.append(region)
+        locationManager.startMonitoring(for: region)
+        previousLocation = location
+    }
+    
+    
+    func updateRegionsOld(for location: CLLocation) {
         // Stop monitoring the current regions
         deleteRegions()
         
@@ -147,7 +169,6 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
     
     // MARK - Delegate methods
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-//        FileService.shared.log("location updated with \(locationManager.desiredAccuracy) and type \(locationUpdateType)", classname: "LocationRegionService")
         let location = locations.last!
         
         DispatchQueue.global(qos: .background).async {
@@ -167,7 +188,7 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
     func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
         let location = regionLocations[region.identifier]
         guard let loc = location else { return }
-        FileService.shared.log("didEnterRegion \(region.identifier) and location \(loc)", classname: "LocationRegionService")
+//        FileService.shared.log("didEnterRegion \(region.identifier) and location \(loc)", classname: "LocationRegionService")
         DispatchQueue.global(qos: .background).async {
             self.updateRegions(for: loc)
         }
@@ -176,7 +197,7 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
     }
     
     func locationManager(_ manager: CLLocationManager, didVisit visit: CLVisit) {
-        FileService.shared.log("didVisit \(visit)", classname: "LocationRegionService")
+//        FileService.shared.log("didVisit \(visit)", classname: "LocationRegionService")
         restartUpdatingLocation()
         locationUpdateType = .visit
     }
@@ -217,7 +238,6 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
         FileService.shared.log("locationDidUpdate \(location.latitude),\(location.longitude)", classname: "LocationRegionService")
         let loc = CLLocation(latitude: location.latitude, longitude: location.longitude)
         updateRegions(for: loc)
-        
     }
 }
 
@@ -233,5 +253,14 @@ extension CLLocationCoordinate2D {
         let lon2 = lon1 + atan2(sin(bearing) * sin(distRadians) * cos(lat1), cos(distRadians) - sin(lat1) * sin(lat2))
         
         return CLLocationCoordinate2D(latitude: lat2 * 180 / Double.pi, longitude: lon2 * 180 / Double.pi)
+    }
+}
+
+extension CLLocation {
+    func speed(with location: CLLocation) -> CLLocationSpeed {
+        let d = distance(from: location)
+        let t = abs(timestamp.timeIntervalSince1970 - location.timestamp.timeIntervalSince1970)
+        
+        return d/t
     }
 }

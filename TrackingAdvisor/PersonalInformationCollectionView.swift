@@ -21,11 +21,16 @@ class PersonalInformationCategoryCell: UICollectionViewCell, UICollectionViewDat
             if let name = personalInformationCategory?.name {
                 nameLabel.text = name
             }
+            if let icon = personalInformationCategory?.icon {
+                iconView.icon = icon
+            }
             infoCollectionView.reloadData()
         }
     }
     var personalInformation: [PersonalInformation]? = []
-    var color: UIColor?
+    var color: UIColor? {
+        didSet { iconView.iconColor = color }
+    }
     
     fileprivate let cellId = "infoCellId"
     fileprivate let cellAddId = "infoCellAddId"
@@ -45,6 +50,10 @@ class PersonalInformationCategoryCell: UICollectionViewCell, UICollectionViewDat
         label.font = UIFont.systemFont(ofSize: 20, weight: .heavy)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }()
+    
+    let iconView: IconView = {
+        return IconView(icon: "user-circle", iconColor: Constants.colors.primaryLight)
     }()
     
     let infoCollectionView: UICollectionView = {
@@ -72,6 +81,7 @@ class PersonalInformationCategoryCell: UICollectionViewCell, UICollectionViewDat
         addSubview(infoCollectionView)
         addSubview(dividerLineView)
         addSubview(nameLabel)
+        addSubview(iconView)
         
         infoCollectionView.dataSource = self
         infoCollectionView.delegate = self
@@ -79,7 +89,10 @@ class PersonalInformationCategoryCell: UICollectionViewCell, UICollectionViewDat
         infoCollectionView.register(PersonalInformationCell.self, forCellWithReuseIdentifier: cellId)
         infoCollectionView.register(PersonalInformationAddCell.self, forCellWithReuseIdentifier: cellAddId)
         
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-14-[v0]-14-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": nameLabel]))
+        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-14-[icon(20)]-[text]-14-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["icon": iconView, "text": nameLabel]))
+    
+        iconView.centerYAnchor.constraint(equalTo: nameLabel.centerYAnchor).isActive = true
+        
         
         addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-14-[v0]-14-|", options: NSLayoutFormatOptions(), metrics: nil, views: ["v0": dividerLineView]))
         
@@ -230,8 +243,8 @@ fileprivate class PersonalInformationAddCell: UICollectionViewCell {
         let v = UIView()
         v.layer.cornerRadius = 16
         v.layer.masksToBounds = true
-        v.translatesAutoresizingMaskIntoConstraints = false
         v.backgroundColor = Constants.colors.superLightGray
+        v.translatesAutoresizingMaskIntoConstraints = false
         return v
     }()
     

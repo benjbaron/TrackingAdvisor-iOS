@@ -208,15 +208,19 @@ open class ISTimeline: UIScrollView {
             timelineTitleLabel.text = timelineTitle
         }
     }
-    
-    fileprivate let timelineTitleOffset:CGFloat = 90.0
+    open var timelineSubtitle:String! { didSet {
+            timelineSubtitleLabel.text = timelineSubtitle
+        }
+    }
+    fileprivate let timelineTitleOffset:CGFloat = 120.0
     fileprivate var timelineTitleLabel: UILabel!
+    fileprivate var timelineSubtitleLabel: UILabel!
     fileprivate var timelineEditButton: UIButton!
     fileprivate let screenSize:CGRect = UIScreen.main.bounds
     fileprivate var isEditing = false { didSet {
             if isEditing {
                 timelineEditButton.setTitle("Done", for: .normal)
-                timelineEditButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+                timelineEditButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
             } else {
                 if timelineEditButton != nil {
                   timelineEditButton.setTitle("Edit", for: .normal)
@@ -228,7 +232,7 @@ open class ISTimeline: UIScrollView {
     
     fileprivate var isAnimating = false
     
-    fileprivate var sections:[(point:CGPoint, bubbleRect:CGRect, descriptionRect:CGRect?, titleLabel:UILabel, descriptionLabel:UILabel?, pointColor:CGColor, lineColor:CGColor, fill:Bool, icon:UIImage, iconBg:CGColor, iconCenter:CGPoint, feedbackRect:CGRect)] = []
+    fileprivate var sections:[(point:CGPoint, bubbleRect:CGRect, descriptionRect:CGRect?, descriptionSuppRect:CGRect?, titleLabel:UILabel, descriptionLabel:UILabel?, descriptionSuppView:UIView?, pointColor:CGColor, lineColor:CGColor, fill:Bool, icon:UIImage, iconBg:CGColor, iconCenter:CGPoint, feedbackRect:CGRect?)] = []
     
     override public init(frame: CGRect) {
         super.init(frame: frame)
@@ -244,6 +248,7 @@ open class ISTimeline: UIScrollView {
         self.clipsToBounds = true
         self.showsVerticalScrollIndicator = false
         buildTimelineTitleLabel()
+        buildTimelineSubtitleLabel()
     }
     
     @objc fileprivate func editTimeline() {
@@ -316,7 +321,9 @@ open class ISTimeline: UIScrollView {
         
         // Place the timeline title label
         timelineTitleLabel.frame = CGRect(x: 1.0, y: 29.0, width: rect.width-1.0, height: 40)
+        timelineSubtitleLabel.frame = CGRect(x: 1.0, y: 75.0, width: rect.width-1.0, height: 20)
         self.addSubview(timelineTitleLabel)
+        self.addSubview(timelineSubtitleLabel)
         
         // Place the timeline edit button
         timelineEditButton = UIButton(type: UIButtonType.system)
@@ -351,7 +358,8 @@ open class ISTimeline: UIScrollView {
                 // Add button (with opacity = 0)
                 let addIconPosition = CGPoint(x: sections[i].point.x - lineWidth/2,
                                               y: sections[i+1].point.y + CGFloat(i) * 50 - 10)
-                let addIconView = drawIcon(addIconPosition, fill: Constants.colors.primaryLight.cgColor, image: UIImage(named: "add")!)
+                
+                let addIconView = drawIcon(addIconPosition, fill: Constants.colors.primaryLight.cgColor, image: UIImage(named: "plus")!)
                 addIconView.alpha = 0
                 addButtons.append(MoveableView(view: addIconView, position: i, maxPosition: sections.count - 2))
                 self.addSubview(addIconView)
@@ -390,9 +398,19 @@ open class ISTimeline: UIScrollView {
                 layers[i]!.append(MoveableView(view: descriptionLayer, position: i, maxPosition: sections.count - 1))
             }
             
-            let feedbackView = buildFeedbackView(sections[i].feedbackRect)
-            self.addSubview(feedbackView)
-            layers[i]?.append(MoveableView(view: feedbackView, position: i, maxPosition: sections.count - 1))
+            let descriptionSuppView = sections[i].descriptionSuppView
+            if (descriptionSuppView != nil) {
+                let descriptionSuppLayer = drawDescriptionSupp(sections[i].descriptionSuppRect!, descriptionSupp: sections[i].descriptionSuppView!)
+                self.addSubview(descriptionSuppLayer)
+                layers[i]!.append(MoveableView(view: descriptionSuppLayer, position: i, maxPosition: sections.count - 1))
+            }
+            
+            let feedbackRect = sections[i].feedbackRect
+            if feedbackRect != nil {
+                let feedbackView = buildFeedbackView(feedbackRect!)
+                self.addSubview(feedbackView)
+                layers[i]?.append(MoveableView(view: feedbackView, position: i, maxPosition: sections.count - 1))
+            }
         }
         
         ctx.restoreGState()
@@ -406,21 +424,25 @@ open class ISTimeline: UIScrollView {
         for i in 0 ..< points.count {
             let titleLabel = buildTitleLabel(i)
             let descriptionLabel = buildDescriptionLabel(i)
+            let descriptionSuppView = points[i].descriptionSupp
             
             let titleHeight = titleLabel.intrinsicContentSize.height
             var height:CGFloat = titleHeight
             if descriptionLabel != nil {
                 height += descriptionLabel!.intrinsicContentSize.height
             }
+            if descriptionSuppView != nil {
+                height += descriptionSuppView!.frame.height
+            }
             height += 1.2 * iconDiameter // feedbackRect
             
             let iconCenter = CGPoint(
                 x: self.bounds.origin.x + self.contentInset.left,
-                y: y + (titleHeight + ISTimeline.gap) / 2 + (pointDiameter - iconDiameter) / 2)
+                y: y + (pointDiameter - iconDiameter) / 2 + ISTimeline.gap)
             
             let point = CGPoint(
                 x: self.bounds.origin.x + self.contentInset.left + iconDiameter + lineWidth,
-                y: y + (titleHeight + ISTimeline.gap) / 2)
+                y: y + ISTimeline.gap)
             
             let maxTitleWidth = calcWidth()
             var titleWidth = titleLabel.intrinsicContentSize.width + 20
@@ -444,16 +466,31 @@ open class ISTimeline: UIScrollView {
                     height: descriptionLabel!.intrinsicContentSize.height)
             }
             
-            let rect = descriptionRect != nil ? descriptionRect! : bubbleRect
-            let feebackRect = CGRect(x: rect.origin.x, y: rect.origin.y + rect.height,
-                                     width: calcWidth(), height: 1.2*iconDiameter)
+            var rect = descriptionRect != nil ? descriptionRect! : bubbleRect
             
-            sections.append((point, bubbleRect, descriptionRect, titleLabel, descriptionLabel, points[i].pointColor.cgColor, points[i].lineColor.cgColor, points[i].fill, points[i].icon, points[i].iconBg.cgColor, iconCenter, feebackRect))
+            var descriptionSuppRect:CGRect?
+            if descriptionSuppView != nil {
+                descriptionSuppRect = CGRect(
+                    x: rect.origin.x,
+                    y: rect.origin.y + rect.height + 10,
+                    width: calcWidth(),
+                    height: descriptionSuppView!.frame.height)
+            }
+                        
+            rect = descriptionSuppRect != nil ? descriptionSuppRect! : rect
+            
+            var feebackRect:CGRect?
+            if points[i].showFeedback {
+                feebackRect = CGRect(x: rect.origin.x, y: rect.origin.y + rect.height,
+                                     width: calcWidth(), height: 1.2*iconDiameter)
+            }
+
+            sections.append((point, bubbleRect, descriptionRect, descriptionSuppRect, titleLabel, descriptionLabel, descriptionSuppView, points[i].pointColor.cgColor, points[i].lineColor.cgColor, points[i].fill, points[i].icon, points[i].iconBg.cgColor, iconCenter, feebackRect))
             
             y += height
             y += ISTimeline.gap * 2.2 // section gap
         }
-        y += pointDiameter / 2
+        y += pointDiameter / 2.0 + 40.0
         self.contentSize = CGSize(width: self.bounds.width - (self.contentInset.left + self.contentInset.right), height: y)
     }
     
@@ -462,6 +499,14 @@ open class ISTimeline: UIScrollView {
         timelineTitleLabel.text = timelineTitle
         timelineTitleLabel.font = UIFont.systemFont(ofSize: 36, weight: .heavy)
         timelineTitleLabel.preferredMaxLayoutWidth = calcWidth()
+    }
+    
+    fileprivate func buildTimelineSubtitleLabel() {
+        timelineSubtitleLabel = UILabel()
+        timelineSubtitleLabel.text = timelineSubtitle
+        timelineSubtitleLabel.textColor = Constants.colors.descriptionColor
+        timelineSubtitleLabel.font = UIFont.systemFont(ofSize: 20, weight: .light)
+        timelineSubtitleLabel.preferredMaxLayoutWidth = calcWidth()
     }
     
     fileprivate func buildTitleLabel(_ index:Int) -> UILabel {
@@ -522,7 +567,7 @@ open class ISTimeline: UIScrollView {
         if (text != nil) {
             let descriptionLabel = UILabel()
             descriptionLabel.text = text
-            descriptionLabel.font = UIFont.systemFont(ofSize: 14.0)
+            descriptionLabel.font = UIFont.systemFont(ofSize: 14.0, weight: .light)
             descriptionLabel.lineBreakMode = .byWordWrapping
             descriptionLabel.numberOfLines = 0
             descriptionLabel.preferredMaxLayoutWidth = calcWidth()
@@ -610,7 +655,7 @@ open class ISTimeline: UIScrollView {
         shapeLayer.lineWidth = 0
         iconView.layer.addSublayer(shapeLayer)
         
-        let imageView = UIImageView(image: image)
+        let imageView = UIImageView(image: image.withRenderingMode(.alwaysTemplate))
         imageView.tintColor = UIColor.white
         imageView.contentMode = .scaleAspectFit
         imageView.frame = CGRect(x: point.x + (1.0-scale)/2*iconDiameter, y: point.y + (1.0-scale)/2*iconDiameter, width: scale*iconDiameter, height: scale*iconDiameter)
@@ -635,6 +680,11 @@ open class ISTimeline: UIScrollView {
         return descriptionLabel
     }
     
+    fileprivate func drawDescriptionSupp(_ rect:CGRect, descriptionSupp:UIView) -> UIView {
+        descriptionSupp.frame = CGRect(x: rect.origin.x, y: rect.origin.y, width: rect.width - 10, height: rect.height)
+        return descriptionSupp
+    }
+    
     override open func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         let point = touches.first!.location(in: self)
         
@@ -650,11 +700,12 @@ open class ISTimeline: UIScrollView {
         } else {
             for (index, section) in sections.enumerated() {
                 if (section.bubbleRect.contains(point) ||
-                    (section.descriptionRect != nil && section.descriptionRect!.contains(point))) {
+                    (section.descriptionRect != nil && section.descriptionRect!.contains(point)) ||
+                    (section.descriptionSuppRect != nil && section.descriptionSuppRect!.contains(point))) {
                     points[index].touchUpInside?(points[index])
                     return
                 }
-                if (section.feedbackRect.contains(point)) {
+                if (section.feedbackRect != nil && section.feedbackRect!.contains(point)) {
                     points[index].feedbackTouchUpInside?(points[index])
                     return
                 }

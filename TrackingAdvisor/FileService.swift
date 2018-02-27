@@ -19,7 +19,13 @@ class FileService : NSObject {
     
     func getFilePath(for file: String) -> URL? {
         guard let dir = self.dir else { return nil }
-        return dir.appendingPathComponent(file)
+        let pathComponent = dir.appendingPathComponent(file)
+        let filePath = pathComponent.path
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: filePath) {
+            return pathComponent
+        }
+        return nil
     }
     
     func listFiles() -> [URL] {
@@ -102,7 +108,7 @@ class FileService : NSObject {
     
     class func upload(file: URL, callback: @escaping (DataResponse<Any>) -> Void) {
         NSLog("upload file \(file)")
-        let id: String = Settings.getUUID()
+        let id: String = Settings.getUserId() ?? ""
         Alamofire.upload(
             multipartFormData: { multipartFormData in
                 multipartFormData.append(file,

@@ -87,7 +87,7 @@ class PersonalInformationCategory: NSObject, NSCoding, Decodable {
     
     // MARK: udpate the personal information categories from the server
     class func retrieveLatestPersonalInformationCategories() {
-        let userid = Settings.getUUID()
+        let userid = Settings.getUserId() ?? ""
         let parameters: Parameters = ["userid": userid]
         Alamofire.request(Constants.urls.personalInformationCategoriesURL, method: .get, parameters: parameters).responseJSON { response in
             if response.result.isSuccess {
@@ -106,16 +106,13 @@ class PersonalInformationCategory: NSObject, NSCoding, Decodable {
     }
     
     class func updateIfNeeded() {
-        let defaults = UserDefaults.standard
-        if let lastUpdate = defaults.object(forKey: Constants.defaultsKeys.lastPersonalInformationCategoryUpdate) as? Date {
+        if let lastUpdate = Settings.getLastPersonalInformationCategoryUpdate() {
             let pics = loadPersonalInformationCategories()
             if pics == nil || pics?.count == 0 || abs(lastUpdate.timeIntervalSinceNow) > Constants.variables.minimumDurationBetweenPersonalInformationCategoryUpdates {
                 FileService.shared.log("update the personal information categories in the background", classname: "PersonalInformationCategory")
                 DispatchQueue.global(qos: .background).async {
                     PersonalInformationCategory.retrieveLatestPersonalInformationCategories()
-                    let defaults = UserDefaults.standard
-                    let date = Date()
-                    defaults.set(date, forKey: Constants.defaultsKeys.lastPersonalInformationCategoryUpdate)
+                    Settings.saveLastPersonalInformationCategoryUpdate(with: Date())
                 }
             }
         }

@@ -31,6 +31,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
     @IBOutlet weak var timeline: ISTimeline!
     
     var timelineTitle: String!
+    var timelineSubtitle: String!
     var timelineDay: String!
     var isAnimating = false
     var isFolded = true
@@ -40,6 +41,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         super.viewDidLoad()
         
         timeline.delegate = self
+        timeline.alwaysBounceVertical = true
         mapView?.delegate = self
         
         timeline.contentInset = UIEdgeInsetsMake(20.0, 20.0, 20.0, 20.0)
@@ -57,7 +59,6 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
     func reload() {
         guard let timeline = self.timeline else { return }
         
-        print("reload timeline for \(timelineDay)")
         let visits = DataStoreService.shared.getVisits(for: timelineDay)
                 
         let touchAction = { [weak self] (point:ISPoint) in
@@ -119,21 +120,22 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             let departureTime = dateFormatter.string(from: visit.departure!)
             var icon = UIImage(named: "location")!
             let placeName = visit.place!.name!
-            let placePersonalInformationString = visit.place!.getPersonalInformationPhrase()
-            let times = "\(arrivalTime) - \(departureTime)"
-            
-            var description = "\(times)"
-            if placePersonalInformationString != "" {
-                description += "\n\(placePersonalInformationString)"
-            }
+            let placePersonalInformationIcons = visit.place?.getPersonalInformationIcons()
+            let times = "Visited from \(arrivalTime) to \(departureTime)"
             
             if placeName == "Home" {
-                icon = UIImage(named: "home-1")!.withRenderingMode(.alwaysTemplate)
+                icon = UIImage(named: "home")!.withRenderingMode(.alwaysTemplate)
             }
             
             let lineColor = Constants.colors.primaryDark
             
-            let point = ISPoint(title: placeName, description: description, pointColor: Constants.colors.primaryLight, lineColor: lineColor, touchUpInside: touchAction, feedbackTouchUpInside: feebackTouchAction, addPlaceTouchUpInside: addPlaceTouchAction, icon: icon, iconBg: Constants.colors.primaryLight, fill: true)
+            var showFeedback = true
+            if visit.review?.answer == .yes {
+                showFeedback = false
+            }
+            
+            let point = ISPoint(title: placeName, description: times, descriptionSupp: placePersonalInformationIcons, pointColor: Constants.colors.primaryLight, lineColor: lineColor, touchUpInside: touchAction, feedbackTouchUpInside: feebackTouchAction, addPlaceTouchUpInside: addPlaceTouchAction, icon: icon, iconBg: Constants.colors.primaryLight, fill: true, showFeedback: showFeedback)
+            
             point.visit = visit
             timelinePoints.append(point)
             
@@ -149,6 +151,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         timeline.points = timelinePoints
         timeline.bubbleArrows = false
         timeline.timelineTitle = timelineTitle
+        timeline.timelineSubtitle = timelineSubtitle
     }
     
     private func showAnnotations() {
@@ -245,6 +248,13 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         showAnnotations()
     }
     
+    // DataStoreUpdateProtocol methods
+    func dataStoreDidUpdate(for day: String?) {
+        print("called dataStoreDidUpdate")
+        if day != nil && day == timelineDay {
+            reload()
+        }
+    }
     
     
 }

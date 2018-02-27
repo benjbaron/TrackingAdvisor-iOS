@@ -19,7 +19,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>2</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>MGLMapboxAccessToken</key>
@@ -30,13 +30,13 @@
 		<true/>
 	</dict>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>To show your location</string>
+	<string>To collect your location information</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>To show your location</string>
+	<string>To collect your location information</string>
 	<key>NSLocationUsageDescription</key>
-	<string>To show your location</string>
+	<string>To collect your location information</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>To show your location</string>
+	<string>To collect your location information</string>
 	<key>NSMotionUsageDescription</key>
 	<string>We need to get your motion to increase the performance of the location accuracy and battery</string>
 	<key>UIBackgroundModes</key>
@@ -56,7 +56,6 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>

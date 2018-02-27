@@ -7,17 +7,14 @@
 //
 
 import Foundation
+import UIKit
 
-class PlacePersonalInformationController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, LargePersonalInformationCellDelegate {
+class PlacePersonalInformationController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, LargePersonalInformationCellDelegate, DataStoreUpdateProtocol, FooterDoneDelegate {
     
-    @objc func done(_ sender: UIBarButtonItem) {
-        // TODO: - perform save action
-        presentingViewController?.dismiss(animated: true)
-    }
-    
-    @objc func back(_ sender: UIBarButtonItem) {
+    func goBack() {
         guard let controllers = navigationController?.viewControllers else { return }
         let count = controllers.count
+        UserUpdateHandler.sendReviewUpdate(reviews: updatedReviews)
         if count == 2 {
             // get the previous place detail controller
             if let vc = controllers[0] as? OneTimelinePlaceDetailViewController {
@@ -30,6 +27,16 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
         }
     }
     
+    @objc func done(_ sender: UIBarButtonItem) {
+        // perform save action to the server
+        UserUpdateHandler.sendReviewUpdate(reviews: updatedReviews)
+        presentingViewController?.dismiss(animated: true)
+    }
+    
+    @objc func back(_ sender: UIBarButtonItem) {
+        goBack()
+    }
+    
     var collectionView: UICollectionView!
     lazy var headerView: HeaderPlaceDetail = {
         return HeaderPlaceDetail()
@@ -37,6 +44,7 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
     
     let cellId = "CellId"
     let headerCellId = "HeaderCellId"
+    let footerCellId = "FooterCellId"
     var color = Constants.colors.orange
     
     var visit: Visit? {
@@ -46,18 +54,26 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
             headerView.placeName = place.name
             headerView.placeCity = place.city
             headerView.placeTimes = visit.getTimesPhrase()
+            
             color = place.getPlaceColor()
             headerView.backgroundColor = color
+            
             personalInformation = place.getPersonalInformation()
+            pics = personalInformation!.keys.sorted(by: { $0 < $1 })
         }
     }
-    var personalInformation: [String: [PersonalInformation]]?
+    var personalInformation: [String : [PersonalInformation]]?
+    var pics: [String]?
+    var updatedReviews: [String:Int32] = [:]  // [reviewId : Answer]
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.tabBarController?.tabBar.isHidden = false
         
+        DataStoreService.shared.delegate = self
+        
         setupNavBarButtons()
+        updatedReviews.removeAll()
         collectionView.reloadData()
     }
     
@@ -78,7 +94,8 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
         collectionView.alwaysBounceVertical = true
         collectionView.register(LargePersonalInformationCell.self, forCellWithReuseIdentifier: cellId)
         collectionView.register(HeaderLargePersonalInformationCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, withReuseIdentifier: headerCellId)
-        
+        collectionView.register(FooterDoneCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionFooter, withReuseIdentifier: footerCellId)
+
         setupViews()
     }
     
@@ -120,8 +137,8 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         
-        if let pi = personalInformation {
-            let category = Array(pi.keys)[section]
+        if let pi = personalInformation, let pics = pics {
+            let category = pics[section]
             if let count = pi[category]?.count {
                 return count
             }
@@ -131,8 +148,8 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! LargePersonalInformationCell
-        guard let pi = personalInformation else { return cell }
-        let category = Array(pi.keys)[indexPath.section]
+        guard let pi = personalInformation, let pics = pics else { return cell }
+        let category = pics[indexPath.section]
         cell.personalInformation = pi[category]?[indexPath.item]
         cell.indexPath = indexPath
         cell.color = color
@@ -144,15 +161,15 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
         
         // 1 - instanciate a new cell
         let cell = LargePersonalInformationCell()
-        guard let pi = personalInformation else {
+        guard let pi = personalInformation, let pics = pics else {
             return CGSize(width: view.frame.width, height: 200)
         }
-        let category = Array(pi.keys)[indexPath.section]
+        
+        let category = pics[indexPath.section]
         cell.personalInformation = pi[category]?[indexPath.item]
         
         // 3 - get the height
         let height = cell.height()
-        print("height for pi \(category): \(height)")
         
         // 4 - return the correct size
         return CGSize(width: view.frame.width, height: height)
@@ -162,16 +179,29 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
         if kind == UICollectionElementKindSectionHeader {
             let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerCellId, for: indexPath) as! HeaderLargePersonalInformationCell
             
-            guard let pi = personalInformation else { return headerView }
-            let picid = Array(pi.keys)[indexPath.section]
-            let category = PersonalInformationCategory.getPersonalInformationCategory(with: picid)
+            guard let pics = pics else { return headerView }
+            let picid = pics[indexPath.section]
+            if let category = PersonalInformationCategory.getPersonalInformationCategory(with: picid) {
+                headerView.title = category.name
+                headerView.subtitle = category.detail
+                headerView.icon = category.icon
+            }
+            if let place = visit?.place {
+                headerView.color = place.getPlaceColor()
+            }
             
-            headerView.title = category?.name
-            headerView.subtitle = category?.detail
             return headerView
+        } else if kind == UICollectionElementKindSectionFooter {
+            let footerCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: footerCellId, for: indexPath) as! FooterDoneCell
+            footerCell.delegate = self
+            footerCell.color = color
+            footerCell.text = "Done"
+            return footerCell
         } else {
             assert(false, "Unexpected element kind")
         }
+        
+        return UICollectionReusableView()
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
@@ -180,9 +210,11 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
         
         // 1 - instanciate a new header
         let headerView = HeaderLargePersonalInformationCell()
-        guard let pi = personalInformation else { return CGSize(width: collectionView.frame.width, height: 100) }
+        guard let pics = pics else {
+            return CGSize(width: collectionView.frame.width, height: 100)
+        }
         
-        let picid = Array(pi.keys)[section]
+        let picid = pics[section]
         let category = PersonalInformationCategory.getPersonalInformationCategory(with: picid)
         headerView.title = category?.name
         
@@ -198,17 +230,34 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
         return CGSize(width: collectionView.frame.width, height: height)
     }
     
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForFooterInSection section: Int) -> CGSize {
+        if let count = pics?.count, section == count-1 {
+            return CGSize(width: collectionView.frame.width, height: 100)
+        }
+        return CGSize(width: collectionView.frame.width, height: 0)
+    }
+    
     // MARK: - LargePersonalInformationCellDelegate method
     func wasPersonalInfromationCellChanged(at indexPath: IndexPath?) {
-        print("Personal information cell was changed")
         // update the layout of the cells
-//        collectionView.reloadData()
-//        collectionView.performBatchUpdates(nil, completion: nil)
         if indexPath != nil {
             UIView.performWithoutAnimation {
                 collectionView.reloadItems(at: [indexPath!])
             }
         }
+    }
+    
+    // MARK: - DataStoreUpdateProtocol method
+    func dataStoreDidUpdateReviewAnswer(for reviewId: String?, with answer: Int32) {
+        if let reviewId = reviewId {
+            updatedReviews[reviewId] = answer
+            print("updated review \(reviewId) with \(answer) -- \(updatedReviews.count)")
+        }
+    }
+    
+    // MARK: - FooterDoneDelegate method
+    func didPressDone() {
+        goBack()
     }
 }
 
@@ -337,17 +386,15 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
     }()
     
     let personalInformationEditView: CommentRow = {
-        let row = CommentRow(with: "It would be great if you could tell us the correct personal information", icon: "chevron-right", backgroundColor: UIColor.clear) {
+        let row = CommentRow(with: "It would be great if you could tell us the correct personal information", icon: "chevron-right", backgroundColor: UIColor.clear, color: Constants.colors.superLightGray) {
             print("tapped on personal information edit")
             // TODO: - present PlacePersonalInformationEditController
         }
-        row.color = Constants.colors.superLightGray
         return row
     }()
     var personalInformationEditHeight: NSLayoutConstraint?
     
     lazy var questionExplanationView: QuestionRow = {
-        
         let row = QuestionRow(with: "question", yesAction: { [weak self] in
             if let review = self?.personalInformation?.getReview(of: .explanation) {
                 review.answer = .yes
@@ -372,11 +419,10 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
     }()
     var questionExplanationViewHeight: NSLayoutConstraint?
     let questionExplanationEditView: CommentRow = {
-        let row = CommentRow(with: "It would be great if you could tell us how we can improve the explanation", icon: "chevron-right", backgroundColor: UIColor.clear) {
+        let row = CommentRow(with: "It would be great if you could tell us how we can improve the explanation", icon: "chevron-right", backgroundColor: UIColor.clear, color: Constants.colors.superLightGray) {
             print("tapped on explanation edit")
             // TODO: - present PlacePersonalInformationExplanationEditController
         }
-        row.color = Constants.colors.superLightGray
         return row
     }()
     var questionExplanationEditViewHeight: NSLayoutConstraint?
@@ -452,16 +498,17 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
     }
     
     private func constraintsUpdatePersonalInformation(_ answer: ReviewAnswer) {
-        if answer == .yes {
+        switch answer {
+        case .yes:
             personalInformationEditHeight?.constant = 0
             questionExplanationViewHeight?.constant = 40
             questionPrivacyViewHeight?.constant = 40
-        } else if answer == .no {
+        case .no:
             personalInformationEditHeight?.constant = 40
             questionExplanationViewHeight?.constant = 0
             questionPrivacyViewHeight?.constant = 0
             questionExplanationEditViewHeight?.constant = 0
-        } else {
+        case .none:
             personalInformationEditHeight?.constant = 0
             questionExplanationViewHeight?.constant = 0
             questionPrivacyViewHeight?.constant = 0
@@ -470,12 +517,11 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
     }
     
     private func constraintsUpdateExplanation(_ answer: ReviewAnswer) {
-        if answer == .yes {
+        switch answer {
+        case .yes, .none:
             questionExplanationEditViewHeight?.constant = 0
-        } else if answer == .no {
+        case .no:
             questionExplanationEditViewHeight?.constant = 40
-        } else {
-            questionExplanationEditViewHeight?.constant = 0
         }
     }
     
@@ -490,7 +536,6 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
                 questionsHeight += 40.0
             }
         }
-        print("headerHeight: \(headerHeight), questionsHeight: \(questionsHeight)")
         return 8.0 + headerHeight + 8.0 + questionsHeight + 8.0
     }
 }
@@ -506,6 +551,18 @@ fileprivate class HeaderLargePersonalInformationCell : UICollectionViewCell {
             self.subtitleLabel.text = subtitle
         }
     }
+    var color: UIColor = Constants.colors.orange {
+        didSet {
+            self.iconView.iconColor = color
+            self.instructionsLabel.textColor = color
+        }
+    }
+    var icon: String = "user-circle" {
+        didSet {
+            self.iconView.icon = icon
+        }
+    }
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Personal information"
@@ -541,6 +598,10 @@ fileprivate class HeaderLargePersonalInformationCell : UICollectionViewCell {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
+    
+    lazy var iconView: IconView = {
+        return IconView(icon: icon, iconColor: Constants.colors.primaryLight)
+    }()
 
     
     override init(frame: CGRect) {
@@ -553,20 +614,86 @@ fileprivate class HeaderLargePersonalInformationCell : UICollectionViewCell {
     }
     
     func setupViews() {
-        addSubview(titleLabel)
-        addSubview(subtitleLabel)
-        addSubview(instructionsLabel)
+        let stackView = UIStackView(arrangedSubviews: [titleLabel,subtitleLabel,instructionsLabel])
+        stackView.axis = .vertical
+        stackView.distribution = .equalSpacing
+        stackView.alignment = .leading
+        stackView.spacing = 0
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(stackView)
+        addSubview(iconView)
         
         // add constraints
-        addVisualConstraint("V:|-20-[title][subtitle][instructions]-|", views: ["title": titleLabel, "subtitle": subtitleLabel,"instructions": instructionsLabel])
-        addVisualConstraint("H:|-14-[title]-14-|", views: ["title": titleLabel])
-        addVisualConstraint("H:|-14-[subtitle]-14-|", views: ["subtitle": subtitleLabel])
-        addVisualConstraint("H:|-14-[instructions]-14-|", views: ["instructions": instructionsLabel])
+        addVisualConstraint("V:|-20-[stack]-|", views: ["stack": stackView])
+        addVisualConstraint("V:|-20-[icon(30)]", views: ["icon": iconView])
+        addVisualConstraint("H:|-14-[icon(30)]-[stack]-14-|", views: ["icon": iconView, "stack": stackView])
         
         translatesAutoresizingMaskIntoConstraints = false
     }
     
     func height() -> CGFloat {
-        return 14 + titleLabel.bounds.height + instructionsLabel.bounds.height + 14
+        return 14 + titleLabel.bounds.height + subtitleLabel.bounds.height + instructionsLabel.bounds.height + 14
+    }
+}
+
+protocol FooterDoneDelegate {
+    func didPressDone()
+}
+
+class FooterDoneCell: UICollectionViewCell {
+    var delegate: FooterDoneDelegate?
+    var color: UIColor? {
+        didSet {
+            doneLabel.backgroundColor = color
+            doneLabel.textColor = .white
+        }
+    }
+    var text: String? {
+        didSet {
+            doneLabel.text = text
+        }
+    }
+    
+    private lazy var doneLabel: UILabel = {
+        let l = UILabel()
+        l.layer.cornerRadius = 5.0
+        l.layer.masksToBounds = true
+        l.text = "Done"
+        l.textAlignment = .center
+        l.font = UIFont.systemFont(ofSize: 18.0, weight: .bold)
+        l.textColor = color
+        l.backgroundColor = color
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
+    }()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupViews()
+    }
+    
+    required init(coder aDecoder: NSCoder) {
+        fatalError("This class does not support NSCoding")
+    }
+    
+    func setupViews() {
+        addSubview(doneLabel)
+        addTapGestureRecognizer { [weak self] in
+            self?.doneLabel.alpha = 0.7
+            UIView.animate(withDuration: 0.5) { [weak self] in
+                self?.doneLabel.alpha = 1
+            }
+            self?.delegate?.didPressDone()
+        }
+        
+        // setup constraints
+        addVisualConstraint("H:|-14-[label]-14-|", views: ["label": doneLabel])
+        addVisualConstraint("V:|-20-[label]-20-|", views: ["label": doneLabel])
+        
+        translatesAutoresizingMaskIntoConstraints = false
+    }
+    
+    func height() -> CGFloat {
+        return 100
     }
 }

@@ -10,18 +10,23 @@ import UIKit
 
 class TimelineSwipeViewController: UIViewController, EMPageViewControllerDataSource, EMPageViewControllerDelegate, DataStoreUpdateProtocol {
     
+    var fullScreenView: FullScreenView?
     var pageViewController: EMPageViewController?
     var dataStoreService = DataStoreService.shared
-    var days: [String] = []
+    var days: [String] = [] { didSet {
+        if days.count > 0 {
+            fullScreenView?.removeFromSuperview()
+        }
+    }}
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        dataStoreService.delegate = self
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
+        dataStoreService.delegate = self
         
         setChildController()
     }
@@ -31,33 +36,46 @@ class TimelineSwipeViewController: UIViewController, EMPageViewControllerDataSou
         if currentViewController == nil {
             days = DataStoreService.shared.getUniqueVisitDays()
             
-            // Instantiate EMPageViewController and set the data source and delegate to 'self'
-            let pageViewController = EMPageViewController()
-            
-            // Or, for a vertical orientation
-            // let pageViewController = EMPageViewController(navigationOrientation: .Vertical)
-            pageViewController.dataSource = self
-            pageViewController.delegate = self
-            
-            // Set the initially selected view controller
-            // IMPORTANT: If you are using a dataSource, make sure you set it BEFORE calling selectViewController:direction:animated:completion
-            guard let currentViewController = self.viewController(at: 0) else { return }
-            pageViewController.selectViewController(currentViewController, direction: .forward, animated: false, completion: nil)
-            
-            // Add EMPageViewController to the root view controller
-            self.addChildViewController(pageViewController)
-            self.view.insertSubview(pageViewController.view, at: 0) // Insert the page controller view below the navigation buttons
-            self.pageViewController = pageViewController
-            pageViewController.didMove(toParentViewController: self)
+            if days.count == 0 && fullScreenView == nil {
+                // the user just installed the app, show an animation
+                fullScreenView = FullScreenView(frame: view.frame)
+                fullScreenView!.icon = "walking"
+                fullScreenView!.iconColor = Constants.colors.primaryLight
+                fullScreenView!.headerTitle = "Your timeline, here"
+                fullScreenView!.subheaderTitle = "After moving to a few places, you will find your timeline with the places that you visited here"
+                view.addSubview(fullScreenView!)
+            } else {
+                setupPageViewcontroller()
+            }
         } else {
             if let vc = currentViewController as? OneTimelineViewController {
                 vc.reload()
             }
         }
     }
+    
+    private func setupPageViewcontroller() {
+        // Instantiate EMPageViewController and set the data source and delegate to 'self'
+        let pageViewController = EMPageViewController()
+        
+        // Or, for a vertical orientation
+        // let pageViewController = EMPageViewController(navigationOrientation: .Vertical)
+        pageViewController.dataSource = self
+        pageViewController.delegate = self
+        
+        // Set the initially selected view controller
+        // IMPORTANT: If you are using a dataSource, make sure you set it BEFORE calling selectViewController:direction:animated:completion
+        guard let currentViewController = self.viewController(at: 0) else { return }
+        pageViewController.selectViewController(currentViewController, direction: .forward, animated: false, completion: nil)
+        
+        // Add EMPageViewController to the root view controller
+        self.addChildViewController(pageViewController)
+        self.view.insertSubview(pageViewController.view, at: 0) // Insert the page controller view below the navigation buttons
+        self.pageViewController = pageViewController
+        pageViewController.didMove(toParentViewController: self)
+    }
 
     // MARK: - EMPageViewController Data Source
-    
     func em_pageViewController(_ pageViewController: EMPageViewController, viewControllerBeforeViewController viewController: UIViewController) -> UIViewController? {
         if let viewControllerIndex = self.index(of: viewController as! OneTimelineViewController) {
             let beforeViewController = self.viewController(at: viewControllerIndex + 1)
@@ -82,8 +100,17 @@ class TimelineSwipeViewController: UIViewController, EMPageViewControllerDataSou
         }
         
         let viewController = self.storyboard!.instantiateViewController(withIdentifier: "OneTimelineViewController") as! OneTimelineViewController
-        viewController.timelineTitle = self.days[index]
-        viewController.timelineDay = self.days[index]
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let day = self.days[index]
+        let date = formatter.date(from: day)!
+        let title = date.dayAgo(since: Date())
+        let subtitle = DateHandler.dateToDayLetterString(from: date)
+    
+        viewController.timelineTitle = title
+        viewController.timelineSubtitle = subtitle
+        viewController.timelineDay = day
         return viewController
     }
     
@@ -97,11 +124,6 @@ class TimelineSwipeViewController: UIViewController, EMPageViewControllerDataSou
     
     
     // MARK: - EMPageViewController Delegate
-    func em_pageViewController(_ pageViewController: EMPageViewController, willStartScrollingFrom startViewController: UIViewController, destinationViewController: UIViewController) {
-        
-        let startGreetingViewController = startViewController as! OneTimelineViewController
-        let destinationGreetingViewController = destinationViewController as! OneTimelineViewController
-    }
     
     func em_pageViewController(_ pageViewController: EMPageViewController, isScrollingFrom startViewController: UIViewController, destinationViewController: UIViewController, progress: CGFloat) {
         let startGreetingViewController = startViewController as! OneTimelineViewController
@@ -113,16 +135,11 @@ class TimelineSwipeViewController: UIViewController, EMPageViewControllerDataSou
         destinationGreetingViewController.timeline.alpha = pow(absoluteProgress, 2)
     }
     
-    func em_pageViewController(_ pageViewController: EMPageViewController, didFinishScrollingFrom startViewController: UIViewController?, destinationViewController: UIViewController, transitionSuccessful: Bool) {
-        let startViewController = startViewController as! OneTimelineViewController?
-        let destinationViewController = destinationViewController as! OneTimelineViewController
-    }
     
     // MARK: - DataStoreUpdateProtocol
     func dataStoreDidUpdate(for day: String?) {
-        print("Called dataStoreDidUpdate for \(day)")
-        
         // getting corresponding viewController
+        
         guard let day = day else { return }
         let currentViewController = self.pageViewController?.selectedViewController
         if currentViewController != nil {

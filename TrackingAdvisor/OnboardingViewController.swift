@@ -30,9 +30,7 @@ class OnboardingViewController: UINavigationController {
         bannerView.contentMode = .scaleAspectFit
         bannerView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(bannerView)
-        
-        print("Status bar height: \(UIApplication.shared.statusBarFrame.size.height)")
-        
+                
         view.addVisualConstraint("H:|[v0]|", views: ["v0": bannerView])
         view.addVisualConstraint("V:[v0(72)]", views: ["v0": bannerView])
         bannerView.topAnchor.constraint(equalTo: view.topAnchor, constant: UIApplication.shared.statusBarFrame.size.height).isActive = true // goes under the status bar (20pt or 44pt)
@@ -56,6 +54,119 @@ class OnboardingViewController: UINavigationController {
 
 }
 
+struct OnboardingItem {
+    let icon: String
+    let text: String
+    let color: UIColor
+}
+
+class OnboardingItemsViewController: UIViewController {
+    
+    var items: [OnboardingItem]? {
+        didSet {
+            if contentView != nil {
+                updateUI()
+            }
+        }
+    }
+    
+    private var scrollView: UIScrollView!
+    var contentView: UIView!
+    
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        
+        print("viewWillLayoutSubviews")
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        updateUI()
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        print("viewDidLoad")
+        print("view frame: \(self.view.frame)")
+        
+        scrollView = UIScrollView(frame: self.view.frame)
+        scrollView.sizeToFit()
+        scrollView.alwaysBounceVertical = true
+        scrollView.isScrollEnabled = true
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.backgroundColor = UIColor.white
+        self.view.addSubview(scrollView)
+        
+        contentView = UIView()
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.backgroundColor = UIColor.white
+        scrollView.addSubview(contentView!)
+        
+        let margins = self.view.layoutMarginsGuide
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: margins.topAnchor)
+            ])
+        self.view.addVisualConstraint("H:|[scrollView]|", views: ["scrollView" : scrollView])
+        self.view.addVisualConstraint("V:[scrollView]|",  views: ["scrollView" : scrollView])
+        
+        scrollView.addVisualConstraint("H:|[contentView]|", views: ["contentView" : contentView])
+        scrollView.addVisualConstraint("V:|[contentView]|", views: ["contentView" : contentView])
+        
+        // make the width of content view to be the same as that of the containing view.
+        self.view.addVisualConstraint("H:[contentView(==mainView)]", views: ["contentView" : contentView, "mainView" : self.view])
+        
+        
+        
+        scrollView.contentSize = CGSize(width: scrollView.contentSize.width, height: 2300)
+    }
+    
+    private func updateUI() {
+        guard let items = items else { return }
+        
+        view.layoutIfNeeded()
+        view.layoutSubviews()
+        
+        print("contentView: \(contentView.frame), scrollview: \(scrollView.frame)")
+        
+        let fixedWidth = contentView.frame.width - 50.0
+        
+        var height:CGFloat = 0.0
+        for item in items {
+            let textView = UITextView(frame: .zero)
+            
+            textView.text = item.text
+            textView.font = UIFont.systemFont(ofSize: 18.0)
+            textView.isEditable = false
+            textView.isSelectable = false
+            
+            textView.sizeThatFits(CGSize(width: fixedWidth, height: CGFloat.greatestFiniteMagnitude))
+            
+            let newSize = textView.sizeThatFits(CGSize(width: fixedWidth, height: CGFloat.greatestFiniteMagnitude))
+            
+            let newFrame = CGRect(x: 50.0, y: height, width: max(newSize.width, fixedWidth), height: newSize.height)
+            textView.frame = newFrame
+            
+            contentView.addSubview(textView)
+            
+            let image = UIImageView(image: UIImage(named: item.icon)?.withRenderingMode(.alwaysTemplate))
+            image.tintColor = item.color
+            image.contentMode = .scaleAspectFit
+            let yMiddle:CGFloat = height + newFrame.height / 2.0 - 20.0
+            image.frame = CGRect(x: 0.0, y: yMiddle, width: 40.0, height: 40.0)
+            
+            contentView.addSubview(image)
+            
+            height += newFrame.height + 20.0
+        }
+        
+        scrollView.contentSize = CGSize(width: scrollView.contentSize.width, height: max(height, scrollView.frame.height))
+        
+        print("height: \(height), \(scrollView.frame.height), \(contentView.frame), \(scrollView.contentSize)")
+    }
+}
+
 class OnboardingConsentFormViewController: UIViewController {
     
     private var form: [String]? {
@@ -65,7 +176,7 @@ class OnboardingConsentFormViewController: UIViewController {
     }
     
     private var scrollView: UIScrollView!
-    var contentView : UIView!
+    var contentView: UIView!
     
     private lazy var waitingView: UIView = {
         let view = UIView()
@@ -94,6 +205,8 @@ class OnboardingConsentFormViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        print("view frame: \(self.view.frame)")
         
         scrollView = UIScrollView(frame: self.view.frame)
         scrollView.sizeToFit()
@@ -167,6 +280,7 @@ class OnboardingConsentFormViewController: UIViewController {
         }
         
         scrollView.contentSize = CGSize(width: scrollView.contentSize.width, height: max(height, scrollView.frame.height))
+        print("height: \(height), \(scrollView.frame.height), \(contentView.frame)")
     }
     
     private func getConsentFormFromServer() {
@@ -189,6 +303,22 @@ class OnboardingConsentFormViewController: UIViewController {
 class OnboardingExpectationsViewController: UIViewController {
     @IBAction func cancel(_ sender: UIButton) {
         showCancelDialog(self)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "expectations" {
+            if let dest = segue.destination as? OnboardingItemsViewController {
+                
+                let items = [
+                    OnboardingItem(icon: "iphone4", text: "All you need to do is use your phone as usual.", color: Constants.colors.lightPurple),
+                    OnboardingItem(icon: "location-arrow", text: "The study will automatically collect and analyse your location data.", color: Constants.colors.lightPurple),
+                    OnboardingItem(icon: "notification", text: "We will ask you to give feedback on the places and personal information we extracted.", color: Constants.colors.lightPurple),
+                    OnboardingItem(icon: "log-out", text: "You can choose to leave the study at any time.", color: Constants.colors.lightPurple)
+                ]
+                dest.items = items
+            }
+            
+        }
     }
 }
 
@@ -214,8 +344,25 @@ class OnboardingPermissionsViewController: UIViewController, CLLocationManagerDe
             locationManager = CLLocationManager()
             locationManager?.delegate = self
             locationManager?.requestAlwaysAuthorization()
+        } else if identifier == "permissions" {
+            return true
         }
         return false
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "permissions" {
+            if let dest = segue.destination as? OnboardingItemsViewController {
+                
+                let items = [
+                    OnboardingItem(icon: "location-arrow", text: "Enable always-on location so that we automatically collect your location data.", color: Constants.colors.lightPurple),
+                    OnboardingItem(icon: "running", text: "Enable fitness and activity so that we fine-tune our place matching.", color: Constants.colors.lightPurple),
+                    OnboardingItem(icon: "notification", text: "Enable your iPhone to receive notifications so that we can ask you feedback.", color: Constants.colors.lightPurple)
+                ]
+                dest.items = items
+            }
+            
+        }
     }
     
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
@@ -253,9 +400,8 @@ class OnboardingPermissionsViewController: UIViewController, CLLocationManagerDe
 
 class OnboardingFinalViewController: UIViewController {
     @IBAction func done(_ sender: UIButton) {
-        print("The onboarding is done, register the user in the database and set up the various elements")
-        let defaults = UserDefaults.standard
-        defaults.set(true, forKey: Constants.defaultsKeys.onboarding)
+        Settings.saveOnboarding(with: true)
+        UserUpdateHandler.registerNewUser()
         
         DispatchQueue.main.async {
             let appDelegate = UIApplication.shared.delegate as! AppDelegate

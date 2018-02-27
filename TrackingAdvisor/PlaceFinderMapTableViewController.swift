@@ -46,6 +46,7 @@ enum VisitTimesEditType {
 enum VisitActionType: Int {
     case add  = 0
     case edit = 1
+    case delete = 2
 }
 
 protocol VisitTimesEditDelegate {
@@ -57,13 +58,24 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
 
     @objc func done(_ sender: Any) {
         // create a user place from the different information
+        let notificationView = NotificationView(text: "Updating the place...")
+        notificationView.frame = CGRect(x: 0, y: 0, width: view.frame.width - 50, height: 50)
+        notificationView.center = CGPoint(x: view.center.x, y: view.frame.height - 100.0)
+
         updateVisit {
-            print("Done")
+            notificationView.text = "Done"
+            UIView.animate(withDuration: 1.0, animations: {
+                notificationView.alpha = 0
+            }, completion: { success in
+                notificationView.removeFromSuperview()
+            })
         }
         
         // quit the modal window
         view.endEditing(true)
+
         presentingViewController?.dismiss(animated: true)
+        presentingViewController?.view.addSubview(notificationView)
     }
     
     @objc func back(_ sender: UIBarButtonItem) {
@@ -86,14 +98,35 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     }
     
     @objc func deletePlace(_ sender: Any) {
-        // TODO: - do a delete action and present a confirmation alert
-        print("Clicked on the delete button")
+        view.endEditing(true)
         let alertController = UIAlertController(title: "Delete this place", message: "This will delete this place from your timeline", preferredStyle: UIAlertControllerStyle.alert)
         
         let deletePlaceAction = UIAlertAction(title: "Delete this place",
                                             style: UIAlertActionStyle.destructive) {
-            (result : UIAlertAction) -> Void in
-            print("Delete the place -- proceed")
+            [weak self] result in
+            if let visitid = self?.visit?.id {
+                let actionType: VisitActionType = .delete
+                let parameters: Parameters = [
+                    "userid": Settings.getUserId() ?? "",
+                    "visitid": visitid,
+                    "type": actionType.rawValue
+                ]
+                Alamofire.request(Constants.urls.addvisitURL, method: .post, parameters: parameters, encoding: JSONEncoding.default)
+                    .responseJSON { [weak self] response in
+                        if response.result.isSuccess {
+                            guard let data = response.data else { return }
+                            do {
+                                let decoder = JSONDecoder()
+                                decoder.dateDecodingStrategy = .secondsSince1970
+                                _ = try decoder.decode(UserUpdate.self, from: data)
+                                DataStoreService.shared.deleteVisit(visitid: visitid)
+                                self?.presentingViewController?.dismiss(animated: true)
+                            } catch {
+                                print("Error serializing the json", error)
+                            }
+                        }
+                }
+            }
                                                 
         }
         let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel) {
@@ -195,7 +228,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                 let pointAnnotation = CustomPointAnnotation(coordinate: CLLocationCoordinate2D(latitude: point.lon, longitude: point.lat), title: nil, subtitle: nil)
                 pointAnnotation.reuseIdentifier = "customAnnotation\(count)"
                 // This dot image grows in size as more annotations are added to the array.
-                pointAnnotation.image = dot(size:15, color: color)
+                pointAnnotation.image = dot(size:15, color: color.withAlphaComponent(0.3))
                 
                 annotations.append(pointAnnotation)
             }
@@ -209,7 +242,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     var isShowingStartDatePicker = false
     var isShowingEndDatePicker = false
     var hasMadeChanges = false
-    var searchActive: Bool = false
+    var searchActive = false
     var marker = UIImageView()
     var isFetchingFromServer = false
     var searchResult:PlaceSearchResult? = nil
@@ -263,7 +296,6 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         // Center the map on the visit coordinates
         let coordinates = CLLocationCoordinate2D(latitude: latitude!, longitude: longitude!)
         mapView.centerCoordinate = coordinates
-        print("coordinates: \(coordinates)")
         
         // getting the raw trace from the server
         getRawTrace()
@@ -539,7 +571,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         isFetchingFromServer = true
         
         let parameters: Parameters = [
-            "userid": Settings.getUserId(),
+            "userid": Settings.getUserId() ?? "",
             "lon": longitude!,
             "lat": latitude!,
             "query": searchText
@@ -567,7 +599,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         guard let start = startDate, let end = endDate else { return }
         
         let parameters: Parameters = [
-            "userid": Settings.getUserId(),
+            "userid": Settings.getUserId() ?? "",
             "start": start.timeIntervalSince1970,
             "end": end.timeIntervalSince1970
         ]
@@ -588,16 +620,12 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     }
     
     private func updateVisit(_ callback: (()->Void)?) {
-        print("update visit - 0")
         if !hasMadeChanges { return }
-        
-        print("update visit - 1")
         
         guard let start = startDate, let end = endDate else { return }
         
-        print("update visit - 2")
         let parameters: Parameters = [
-            "userid": Settings.getUserId(),
+            "userid": Settings.getUserId() ?? "",
             "start": start.timeIntervalSince1970,
             "end": end.timeIntervalSince1970,
             "day": DateHandler.dateToDayString(from: start),
@@ -613,20 +641,14 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
             "venueid": selectedPlace?.venueid ?? "",
         ]
         
-        print("update visit - 3")
-        print(parameters)
-        
         Alamofire.request(Constants.urls.addvisitURL, method: .post, parameters: parameters, encoding: JSONEncoding.default)
-            .responseJSON { [weak self] response in
-                guard let strongSelf = self else { return }
+            .responseJSON { response in
                 if response.result.isSuccess {
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()
                         decoder.dateDecodingStrategy = .secondsSince1970
                         let userUpdate = try decoder.decode(UserUpdate.self, from: data)
-                        print("update visit - 4")
-                        print(userUpdate)
                         DataStoreService.shared.updateDatabase(with: userUpdate)
                         callback?()
                     } catch {
@@ -635,27 +657,6 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                 }
         }
         
-    }
-    
-    func dot(size: Int, color: UIColor) -> UIImage {
-        let floatSize = CGFloat(size)
-        let rect = CGRect(x: 0, y: 0, width: floatSize, height: floatSize)
-        let strokeWidth: CGFloat = 1
-        
-        UIGraphicsBeginImageContextWithOptions(rect.size, false, UIScreen.main.scale)
-        
-        let ovalPath = UIBezierPath(ovalIn: rect.insetBy(dx: strokeWidth, dy: strokeWidth))
-        color.withAlphaComponent(0.3).setFill()
-        ovalPath.fill()
-        
-        UIColor.white.setStroke()
-        ovalPath.lineWidth = strokeWidth
-        ovalPath.stroke()
-        
-        let image: UIImage = UIGraphicsGetImageFromCurrentImageContext()!
-        UIGraphicsEndImageContext()
-        
-        return image
     }
     
     // MARK: - Map view interactions
@@ -705,6 +706,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     }
 
     // MARK: - Keyboard notifications
+    
     @objc func keyboardWillShow(_ notification: NSNotification){
         let userInfo = notification.userInfo ?? [:]
         let keyboardFrame = (userInfo[UIKeyboardFrameBeginUserInfoKey] as! NSValue).cgRectValue
