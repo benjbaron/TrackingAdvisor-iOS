@@ -41,7 +41,6 @@ class ReviewVisit: Review {
                 // udpate the visit review
                 
                 let managedObject = matches[0]
-                print("update review visit \(userReview.rid)")
                 
                 managedObject.setValue(question, forKey: "question")
                 managedObject.setValue(userReview.a, forKey: "answer_")

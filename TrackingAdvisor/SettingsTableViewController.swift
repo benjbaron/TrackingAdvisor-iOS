@@ -7,19 +7,18 @@
 //
 
 import UIKit
+import Alamofire
 
 class SettingsTableTableViewController: UITableViewController {
 
+    @IBOutlet weak var versionNumber: UILabel!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         self.tableView.delegate = self
-
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem
+        
+        self.versionNumber.text = "\(Bundle.main.appName) v \(Bundle.main.versionNumber) (Build \(Bundle.main.buildNumber))"
     }
 
     override func didReceiveMemoryWarning() {
@@ -135,4 +134,60 @@ class SettingsTableTableViewController: UITableViewController {
     }
     */
 
+}
+
+fileprivate struct TermsStruct : Codable {
+    let type: String
+    let text: String
+}
+
+class SettingsStudyTermsViewController: UIViewController {
+    
+    @IBOutlet weak var text: UITextView!
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        getTermsFromServer()
+    }
+    
+    private func getTermsFromServer() {
+        Alamofire.request(Constants.urls.termsURL, method: .get, parameters: nil)
+            .responseJSON { [weak self] response in
+                guard let strongSelf = self else { return }
+                if response.result.isSuccess {
+                    guard let data = response.data else { return }
+                    do {
+                        let decoder = JSONDecoder()
+                        let terms = try decoder.decode([TermsStruct].self, from: data)
+                        strongSelf.formatText(terms)
+                        
+                    } catch {
+                        print("Error serializing the json", error)
+                    }
+                }
+        }
+    }
+    
+    private func formatText(_ terms: [TermsStruct]) {
+        let paraStyle = NSMutableParagraphStyle()
+        paraStyle.firstLineHeadIndent = 15.0
+        paraStyle.paragraphSpacingBefore = 10.0
+        
+        let textFont = [NSAttributedStringKey.font: UIFont.systemFont(ofSize: 14.0)]
+        let titleFont = [NSAttributedStringKey.font: UIFont.systemFont(ofSize: 25.0, weight: .black)]
+        
+        let textBlock = NSMutableAttributedString()
+        
+        for line in terms {
+            if line.type == "S" {
+                textBlock.append(NSAttributedString(string: "\n" + line.text + "\n\n", attributes: titleFont))
+            } else if line.type == "P" {
+                textBlock.append(NSAttributedString(string: line.text + "\n", attributes: textFont))
+            }
+        }
+        
+        text.attributedText = textBlock
+    }
+    
 }

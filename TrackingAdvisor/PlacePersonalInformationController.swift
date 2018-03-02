@@ -150,6 +150,7 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! LargePersonalInformationCell
         guard let pi = personalInformation, let pics = pics else { return cell }
         let category = pics[indexPath.section]
+        cell.parent = self
         cell.personalInformation = pi[category]?[indexPath.item]
         cell.indexPath = indexPath
         cell.color = color
@@ -200,8 +201,6 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
         } else {
             assert(false, "Unexpected element kind")
         }
-        
-        return UICollectionReusableView()
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
@@ -266,6 +265,7 @@ protocol LargePersonalInformationCellDelegate {
 }
 
 fileprivate class LargePersonalInformationCell: UICollectionViewCell {
+    var parent: PlacePersonalInformationController?
     var delegate: LargePersonalInformationCellDelegate?
     var indexPath: IndexPath?
     var personalInformation: PersonalInformation? {
@@ -286,7 +286,9 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
             if let review = personalInformation?.getReview(of: .explanation) {
                 questionExplanationView.question = review.question
                 questionExplanationView.selected = review.answer
-                constraintsUpdateExplanation(review.answer)
+                if let commented = personalInformation?.commented, !commented {
+                    constraintsUpdateExplanation(review.answer)
+                }
             }
             
             if let review = personalInformation?.getReview(of: .privacy) {
@@ -410,7 +412,9 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
                 DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: .no)
                 print("answered no to review \(review)")
             }
-            self?.constraintsUpdateExplanation(.no)
+            if let commented = self?.personalInformation?.commented, !commented {
+                self?.constraintsUpdateExplanation(.no)
+            }
             self?.delegate?.wasPersonalInfromationCellChanged(at: self?.indexPath)
         })
         row.selectedColor = color
@@ -418,10 +422,14 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
         return row
     }()
     var questionExplanationViewHeight: NSLayoutConstraint?
-    let questionExplanationEditView: CommentRow = {
+    lazy var questionExplanationEditView: CommentRow = {
         let row = CommentRow(with: "It would be great if you could tell us how we can improve the explanation", icon: "chevron-right", backgroundColor: UIColor.clear, color: Constants.colors.superLightGray) {
             print("tapped on explanation edit")
-            // TODO: - present PlacePersonalInformationExplanationEditController
+            let viewController = ExplanationFeedbackViewController()
+            viewController.personalInformation = self.personalInformation
+            viewController.visit = self.parent?.visit
+            
+            self.parent?.navigationController?.pushViewController(viewController, animated: true)
         }
         return row
     }()
@@ -504,7 +512,7 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
             questionExplanationViewHeight?.constant = 40
             questionPrivacyViewHeight?.constant = 40
         case .no:
-            personalInformationEditHeight?.constant = 40
+            personalInformationEditHeight?.constant = 0
             questionExplanationViewHeight?.constant = 0
             questionPrivacyViewHeight?.constant = 0
             questionExplanationEditViewHeight?.constant = 0
@@ -529,10 +537,10 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
         let headerHeight: CGFloat = 14.0 + 40 + 8.0 + 50 + 16.0
         var questionsHeight: CGFloat = 40.0
         if questionPersonalInformationView.selected == .no {
-            questionsHeight += 40.0
+            questionsHeight += 0.0
         } else if questionPersonalInformationView.selected == .yes {
             questionsHeight += 40.0 + 40.0
-            if questionExplanationView.selected == .no {
+            if questionExplanationView.selected == .no, let commented = personalInformation?.commented, !commented {
                 questionsHeight += 40.0
             }
         }

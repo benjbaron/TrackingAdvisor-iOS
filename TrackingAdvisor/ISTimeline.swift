@@ -11,7 +11,7 @@ import UIKit
 protocol Moveable {
     func hide()
     func show()
-    func move(to: CGPoint, with delay: CFTimeInterval)
+    func move(to: CGPoint, with delay: CFTimeInterval, force: Bool)
     func moveDown(by value: CGFloat, with delay:CFTimeInterval)
 }
 
@@ -36,9 +36,9 @@ class MoveableLayer : Moveable {
         layer.opacity = 1
     }
     
-    func move(to: CGPoint, with delay: CFTimeInterval) {
+    func move(to: CGPoint, with delay: CFTimeInterval, force: Bool = false) {
         guard let layer = layer else { return }
-        if position > 0 {
+        if force || (!force && position > 0) {
             let animation = CABasicAnimation(keyPath: "position")
             animation.fromValue = layer.position
             animation.toValue = to
@@ -53,7 +53,7 @@ class MoveableLayer : Moveable {
         var position = CGPoint()
         position.x = layer.position.x
         position.y = layer.position.y + value
-        move(to: position, with: delay)
+        move(to: position, with: delay, force: true)
     }
 }
 
@@ -80,14 +80,34 @@ class MovableLineLayer: MoveableLayer {
         position.y = line.position.y + value
         
         if self.position == self.maxPosition {
-            position.y += value / CGFloat(self.position)
+            let increment = self.position == 0 ? value : value / CGFloat(self.position)
+            position.y += increment
+            print("position: \(position.y)")
             line.strokeStart = value < 0 ? lineOffset : 0.0
             if let topCap = topCap {
                 topCap.position.y += value < 0 ? intermediateOffset : -1*intermediateOffset
             }
         }
         
-        move(to: position, with: delay)
+        move(to: position, with: delay, force: true)
+    }
+    
+    func moveBottomDown(by value: CGFloat, with delay: CFTimeInterval) {
+        guard let line = line else { return }
+        var position = CGPoint()
+        position.x = line.position.x
+        position.y = line.position.y + value
+        
+        if self.position == self.maxPosition {
+            let increment = self.position == 0 ? 0.0 : value / CGFloat(self.position)
+            position.y += increment
+            line.strokeStart = value < 0 ? lineOffset : 0.0
+            if let topCap = topCap {
+                topCap.position.y += value < 0 ? intermediateOffset : -1*intermediateOffset
+            }
+        }
+        
+        move(to: position, with: delay, force: true)
     }
 }
 
@@ -112,9 +132,9 @@ class MoveableView : Moveable {
         view.alpha = 1
     }
     
-    func move(to: CGPoint, with delay: CFTimeInterval) {
+    func move(to: CGPoint, with delay: CFTimeInterval, force: Bool = false) {
         guard let view = view else { return }
-        if self.position > 0 {
+        if force || (!force && self.position > 0) {
             UIView.animate(withDuration: delay) {
                 view.center = to
             }
@@ -126,7 +146,7 @@ class MoveableView : Moveable {
         var position = CGPoint()
         position.x = view.center.x
         position.y = view.center.y + value
-        move(to: position, with: delay)
+        move(to: position, with: delay, force: true)
     }
 }
 
@@ -212,10 +232,15 @@ open class ISTimeline: UIScrollView {
             timelineSubtitleLabel.text = timelineSubtitle
         }
     }
-    fileprivate let timelineTitleOffset:CGFloat = 120.0
+    open var timelineUpdateTouchAction: (()->Void)?
+    open var timelimeAddPlaceFirstTouchAction: ((_ pt1:ISPoint?, _ pt2:ISPoint?)->Void)?
+    open var timelimeAddPlaceLastTouchAction: ((_ pt1:ISPoint?, _ pt2:ISPoint?)->Void)?
+    
+    fileprivate let timelineTitleOffset:CGFloat = 160.0
     fileprivate var timelineTitleLabel: UILabel!
     fileprivate var timelineSubtitleLabel: UILabel!
     fileprivate var timelineEditButton: UIButton!
+    fileprivate var timelineUpdateButton: UIButton!
     fileprivate let screenSize:CGRect = UIScreen.main.bounds
     fileprivate var isEditing = false { didSet {
             if isEditing {
@@ -251,6 +276,10 @@ open class ISTimeline: UIScrollView {
         buildTimelineSubtitleLabel()
     }
     
+    @objc fileprivate func updateTimeline() {
+        timelineUpdateTouchAction?()
+    }
+    
     @objc fileprivate func editTimeline() {
         if isAnimating { return }
         
@@ -273,16 +302,16 @@ open class ISTimeline: UIScrollView {
                 self?.isEditing = false
             }
             
-            for i in 1..<self.layers.count {
+            for i in 0..<self.layers.count {
                 for j in 0..<self.layers[i]!.count {
                     let layer = self.layers[i]![j]
-                    layer.moveDown(by: -1.0 * CGFloat(i) * 50, with: duration)
+                    layer.moveDown(by: -1.0 * CGFloat(i+1) * 50.0, with: duration)
                 }
             }
             
             CATransaction.commit()
             
-            self.contentSize = CGSize(width: self.contentSize.width, height: self.contentSize.height - CGFloat((self.layers.count-1))*50)
+            self.contentSize = CGSize(width: self.contentSize.width, height: self.contentSize.height - CGFloat(self.layers.count+1)*50)
             
         } else {
             let duration = 0.5
@@ -301,16 +330,16 @@ open class ISTimeline: UIScrollView {
                 strongSelf.isEditing = true
             }
             
-            for i in 1..<self.layers.count {
+            for i in 0..<self.layers.count {
                 for j in 0..<self.layers[i]!.count {
                     let layer = self.layers[i]![j]
-                    layer.moveDown(by: CGFloat(i) * 50, with: duration)
+                    layer.moveDown(by: CGFloat(i+1) * 50, with: duration)
                 }
             }
             
             CATransaction.commit()
             
-            self.contentSize = CGSize(width: self.contentSize.width, height: self.contentSize.height + CGFloat((self.layers.count-1))*50)
+            self.contentSize = CGSize(width: self.contentSize.width, height: self.contentSize.height + CGFloat(self.layers.count+1)*50)
         }
     }
     
@@ -319,9 +348,17 @@ open class ISTimeline: UIScrollView {
         let ctx:CGContext = UIGraphicsGetCurrentContext()!
         ctx.saveGState()
         
+        // Place the timeline update button
+        timelineUpdateButton = UIButton(type: UIButtonType.system)
+        timelineUpdateButton.contentHorizontalAlignment = .left
+        timelineUpdateButton.setTitle("Update", for: .normal)
+        timelineUpdateButton.addTarget(self, action: #selector(updateTimeline), for: .touchUpInside)
+        timelineUpdateButton.frame = CGRect(x: 1.0, y: 29.0, width: rect.width-76.0, height: 40)
+        self.addSubview(timelineUpdateButton)
+        
         // Place the timeline title label
-        timelineTitleLabel.frame = CGRect(x: 1.0, y: 29.0, width: rect.width-1.0, height: 40)
-        timelineSubtitleLabel.frame = CGRect(x: 1.0, y: 75.0, width: rect.width-1.0, height: 20)
+        timelineTitleLabel.frame = CGRect(x: 1.0, y: 69.0, width: rect.width-1.0, height: 40)
+        timelineSubtitleLabel.frame = CGRect(x: 1.0, y: 115.0, width: rect.width-1.0, height: 20)
         self.addSubview(timelineTitleLabel)
         self.addSubview(timelineSubtitleLabel)
         
@@ -333,6 +370,29 @@ open class ISTimeline: UIScrollView {
         timelineEditButton.setTitle("Edit", for: .normal)
         timelineEditButton.addTarget(self, action: #selector(ISTimeline.editTimeline), for: .touchUpInside)
         self.addSubview(timelineEditButton)
+        
+        // add the first add button
+        let addIconPosition = CGPoint(x: sections[0].point.x - lineWidth/2,
+                                      y: sections[0].point.y - pointDiameter)
+        
+        let addIconView = drawIcon(addIconPosition, fill: Constants.colors.primaryLight.cgColor, image: UIImage(named: "plus")!)
+        addIconView.alpha = 0
+        addButtons.append(MoveableView(view: addIconView, position: -1, maxPosition: sections.count - 2))
+        self.addSubview(addIconView)
+        
+        // Add text (button)
+        let addTextRect = CGRect(
+            x: addIconPosition.x + 35,
+            y: addIconPosition.y + 2,
+            width: 100,
+            height: 25)
+        let addTextLabel = buildAddLabel(text: "Add a place")
+        
+        let addTextLayer = drawDescription(addTextRect, textColor: Constants.colors.black, descriptionLabel: addTextLabel!)
+        addTextLayer.alpha = 0
+        addButtons.append(MoveableView(view: addTextLayer, position: -1, maxPosition: sections.count - 2))
+        addButtonViews.append(addTextLayer)
+        self.addSubview(addTextLayer)
         
         for i in 0 ..< sections.count {
             layers[i] = []
@@ -357,7 +417,39 @@ open class ISTimeline: UIScrollView {
                 
                 // Add button (with opacity = 0)
                 let addIconPosition = CGPoint(x: sections[i].point.x - lineWidth/2,
-                                              y: sections[i+1].point.y + CGFloat(i) * 50 - 10)
+                                              y: 50.0 + sections[i+1].point.y + CGFloat(i) * 50 - 10)
+                
+                let addIconView = drawIcon(addIconPosition, fill: Constants.colors.primaryLight.cgColor, image: UIImage(named: "plus")!)
+                addIconView.alpha = 0
+                addButtons.append(MoveableView(view: addIconView, position: i, maxPosition: sections.count - 2))
+                self.addSubview(addIconView)
+                
+                // Add text (button)
+                let addTextRect = CGRect(
+                    x: addIconPosition.x + 35,
+                    y: addIconPosition.y + 2,
+                    width: 100,
+                    height: 25)
+                let addTextLabel = buildAddLabel(text: "Add a place")
+                
+                let addTextLayer = drawDescription(addTextRect, textColor: Constants.colors.black, descriptionLabel: addTextLabel!)
+                addTextLayer.alpha = 0
+                addButtons.append(MoveableView(view: addTextLayer, position: i, maxPosition: sections.count - 2))
+                addButtonViews.append(addTextLayer)
+                self.addSubview(addTextLayer)
+                
+            } else if i == sections.count - 1 {
+                
+                // get the maxY position
+                var positionY = sections[i].bubbleRect.maxY
+                if let rect = sections[i].descriptionRect, positionY < rect.maxY {
+                    positionY = rect.maxY
+                }
+                if let rect = sections[i].descriptionSuppRect, positionY < rect.maxY {
+                    positionY = rect.maxY
+                }
+                let addIconPosition = CGPoint(x: sections[i].point.x - lineWidth/2,
+                                              y: 50.0 + positionY + CGFloat(i) * 50.0 + 30.0)
                 
                 let addIconView = drawIcon(addIconPosition, fill: Constants.colors.primaryLight.cgColor, image: UIImage(named: "plus")!)
                 addIconView.alpha = 0
@@ -490,7 +582,7 @@ open class ISTimeline: UIScrollView {
             y += height
             y += ISTimeline.gap * 2.2 // section gap
         }
-        y += pointDiameter / 2.0 + 40.0
+        y += pointDiameter / 2.0 + 100.0
         self.contentSize = CGSize(width: self.bounds.width - (self.contentInset.left + self.contentInset.right), height: y)
     }
     
@@ -691,9 +783,14 @@ open class ISTimeline: UIScrollView {
         if isEditing {
             for (index, addButton) in addButtonViews.enumerated() {
                 if addButton.frame.contains(point) {
-                    print("Tapped on add a place no. \(index)")
                     isEditing = false
-                    points[index].addPlaceTouchUpInside?(points[index], points[index+1])
+                    if index == 0 {
+                        timelimeAddPlaceFirstTouchAction?(points.first, nil)
+                    } else if index == addButtonViews.count - 1 {
+                        timelimeAddPlaceLastTouchAction?(nil, points.last)
+                    } else {
+                        points[index-1].addPlaceTouchUpInside?(points[index-1], points[index])
+                    }
                     return
                 }
             }

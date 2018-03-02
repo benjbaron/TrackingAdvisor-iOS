@@ -16,8 +16,7 @@ class ProfileViewController: UIViewController, UIScrollViewDelegate, MGLMapViewD
     
     var numberOfDaysStudy: Int? { didSet {
         studySummary.bigText.bigText = String(numberOfDaysStudy!)
-        if numberOfDaysStudy == 0 {
-            studySummary.bigText.bigText = "1"
+        if numberOfDaysStudy == 1 {
             studySummary.descriptionText = "This is your first day in the study!"
         } else {
             studySummary.descriptionText = "You have been participating in the study for \(numberOfDaysStudy!) days!"
@@ -263,7 +262,7 @@ class ProfileViewController: UIViewController, UIScrollViewDelegate, MGLMapViewD
         
         // compute the number of days since the start of the study
         if let firstVisit = allVisits.first {
-            numberOfDaysStudy = today.numberOfDays(to: firstVisit.arrival)
+            numberOfDaysStudy = today.numberOfDays(to: firstVisit.arrival)! + 1
         }
         
         if allVisits.count == 0 {

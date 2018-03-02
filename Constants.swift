@@ -67,6 +67,7 @@ struct Constants {
         static let registerURL = "https://iss-lab.geog.ucl.ac.uk/semantica/register"
         static let updateUserInfoURL = "https://iss-lab.geog.ucl.ac.uk/semantica/updateuserinfo"
         static let personalInformationUpdateURL = "https://iss-lab.geog.ucl.ac.uk/semantica/personalinformationupdate"
+        static let termsURL = "https://iss-lab.geog.ucl.ac.uk/semantica/terms"
     }
     
 }

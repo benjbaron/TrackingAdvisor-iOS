@@ -208,6 +208,7 @@ class ReviewCardView: UIView {
         addVisualConstraint("V:[v1]-12-|", views: ["v1": questionEditView])
         questionView.centerYAnchor.constraint(equalTo: textLabel.centerYAnchor).isActive = true
         questionEditViewHeight = NSLayoutConstraint(item: questionEditView, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 0.0)
+        questionEditViewHeight?.isActive = true
         questionEditViewSpacing = NSLayoutConstraint(item: textLabel, attribute: .bottom, relatedBy: .equal, toItem: questionEditView, attribute: .top, multiplier: 1.0, constant: 0.0)
         questionEditViewSpacing?.isActive = true
         
@@ -215,13 +216,13 @@ class ReviewCardView: UIView {
     }
     
     func showEdit() {
-        questionEditViewHeight?.isActive = false
+        questionEditViewHeight?.constant = 40
         questionEditViewSpacing?.constant = -5.0
         isEditButtonHidden = false
     }
     
     func hideEdit() {
-        questionEditViewHeight?.isActive = true
+        questionEditViewHeight?.constant = 0.0
         questionEditViewSpacing?.constant = 0.0
         isEditButtonHidden = true
     }

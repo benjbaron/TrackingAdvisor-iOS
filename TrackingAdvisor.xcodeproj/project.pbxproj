@@ -11,6 +11,7 @@
 		853C01657F4ED808C7BDAE59 /* Pods_TrackingAdvisorUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37ABB7F43432CF7884BB75CC /* Pods_TrackingAdvisorUITests.framework */; };
 		B1A4BA59013AF66EF8A2333A /* Pods_TrackingAdvisorTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 91862FEE6D71D340ED381975 /* Pods_TrackingAdvisorTests.framework */; };
 		B507BB5C1FFFCA1F00FEBC34 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B507BB5B1FFFCA1F00FEBC34 /* ProfileViewController.swift */; };
+		B50B66912049BC5600427222 /* UnifiedPlaceInformationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B66902049BC5600427222 /* UnifiedPlaceInformationViewController.swift */; };
 		B50EF6B21FA8AFAC0008ADFB /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50EF6B11FA8AFAC0008ADFB /* LocationService.swift */; };
 		B511C4FF1FD5C039006A312C /* GetInTouchFormViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B511C4FE1FD5C039006A312C /* GetInTouchFormViewController.swift */; };
 		B512ED441FBC8EB60062B9E1 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B512ED431FBC8EB60062B9E1 /* Constants.swift */; };
@@ -27,6 +28,8 @@
 		B53FB6FB1FAB74630000112E /* ActivityServiceOld.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53FB6FA1FAB74630000112E /* ActivityServiceOld.swift */; };
 		B53FB6FD1FAB9A870000112E /* FileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53FB6FC1FAB9A870000112E /* FileService.swift */; };
 		B54C36B1200EBAFC0085BFEA /* PersonalInformationCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54C36B0200EBAFC0085BFEA /* PersonalInformationCollectionView.swift */; };
+		B54D98EC2048161F00CBECA4 /* ExplanationFeedbackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54D98EB2048161F00CBECA4 /* ExplanationFeedbackViewController.swift */; };
+		B54D98EE2049AFF700CBECA4 /* LocationServicesDenied.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B54D98ED2049AFF700CBECA4 /* LocationServicesDenied.storyboard */; };
 		B55C10101FED736B001EE08D /* PlaceReviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55C100F1FED736B001EE08D /* PlaceReviewViewController.swift */; };
 		B55DE5D41FAB582B00CACB47 /* DataStoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55DE5D31FAB582B00CACB47 /* DataStoreService.swift */; };
 		B568B3B2202B037F00425A20 /* OnboardingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568B3B1202B037F00425A20 /* OnboardingViewController.swift */; };
@@ -107,6 +110,7 @@
 		991C7F852DBD270BE0CA474C /* Pods-TrackingAdvisorTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrackingAdvisorTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-TrackingAdvisorTests/Pods-TrackingAdvisorTests.debug.xcconfig"; sourceTree = "<group>"; };
 		9D48B79E01ECEFA6565DD968 /* Pods_TrackingAdvisor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrackingAdvisor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B507BB5B1FFFCA1F00FEBC34 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
+		B50B66902049BC5600427222 /* UnifiedPlaceInformationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedPlaceInformationViewController.swift; sourceTree = "<group>"; };
 		B50EF6B11FA8AFAC0008ADFB /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		B511C4FE1FD5C039006A312C /* GetInTouchFormViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetInTouchFormViewController.swift; sourceTree = "<group>"; };
 		B512ED431FBC8EB60062B9E1 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = SOURCE_ROOT; };
@@ -123,6 +127,8 @@
 		B53FB6FA1FAB74630000112E /* ActivityServiceOld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityServiceOld.swift; sourceTree = "<group>"; };
 		B53FB6FC1FAB9A870000112E /* FileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileService.swift; sourceTree = "<group>"; };
 		B54C36B0200EBAFC0085BFEA /* PersonalInformationCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalInformationCollectionView.swift; sourceTree = "<group>"; };
+		B54D98EB2048161F00CBECA4 /* ExplanationFeedbackViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplanationFeedbackViewController.swift; sourceTree = "<group>"; };
+		B54D98ED2049AFF700CBECA4 /* LocationServicesDenied.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LocationServicesDenied.storyboard; sourceTree = "<group>"; };
 		B55C100F1FED736B001EE08D /* PlaceReviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceReviewViewController.swift; sourceTree = "<group>"; };
 		B55DE5D31FAB582B00CACB47 /* DataStoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataStoreService.swift; sourceTree = "<group>"; };
 		B568B3B1202B037F00425A20 /* OnboardingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewController.swift; sourceTree = "<group>"; };
@@ -299,6 +305,7 @@
 				B599B3A71FA0B57F006D70B4 /* Main.storyboard */,
 				B599B3AF1FA0B57F006D70B4 /* LaunchScreen.storyboard */,
 				B568B3BB202B05EC00425A20 /* Onboarding.storyboard */,
+				B54D98ED2049AFF700CBECA4 /* LocationServicesDenied.storyboard */,
 				B584C21E1FA0F16B002582D1 /* Assets.xcassets */,
 				B5105ED220363A6C008D7C06 /* walking */,
 				B599B3A31FA0B57F006D70B4 /* AppDelegate.swift */,
@@ -317,6 +324,8 @@
 				B507BB5B1FFFCA1F00FEBC34 /* ProfileViewController.swift */,
 				B568B3B1202B037F00425A20 /* OnboardingViewController.swift */,
 				B5317A9D203DCE420057B857 /* PersonalInformationChooserViewController.swift */,
+				B54D98EB2048161F00CBECA4 /* ExplanationFeedbackViewController.swift */,
+				B50B66902049BC5600427222 /* UnifiedPlaceInformationViewController.swift */,
 			);
 			path = TrackingAdvisor;
 			sourceTree = "<group>";
@@ -514,6 +523,7 @@
 			files = (
 				B599B3B11FA0B57F006D70B4 /* LaunchScreen.storyboard in Resources */,
 				B584C21F1FA0F16B002582D1 /* Assets.xcassets in Resources */,
+				B54D98EE2049AFF700CBECA4 /* LocationServicesDenied.storyboard in Resources */,
 				B599B3A91FA0B57F006D70B4 /* Main.storyboard in Resources */,
 				B568B3BC202B05EC00425A20 /* Onboarding.storyboard in Resources */,
 			);
@@ -734,8 +744,10 @@
 				B5C347481FB092D40078C12E /* TimelineSwipeViewController.swift in Sources */,
 				B58A6E141FCC4CF9003DA168 /* SettingsTableViewController.swift in Sources */,
 				B58CAAFC2019F6FD0050A344 /* PersonalInformation.swift in Sources */,
+				B50B66912049BC5600427222 /* UnifiedPlaceInformationViewController.swift in Sources */,
 				B530432D1FDEDBD400DBC7C0 /* Networking.swift in Sources */,
 				B53FB6FB1FAB74630000112E /* ActivityServiceOld.swift in Sources */,
+				B54D98EC2048161F00CBECA4 /* ExplanationFeedbackViewController.swift in Sources */,
 				B568D8821FB45FD800E051B1 /* ActivityService.swift in Sources */,
 				B58B79181FC734A1007BA1BC /* Visit.swift in Sources */,
 				B512ED441FBC8EB60062B9E1 /* Constants.swift in Sources */,

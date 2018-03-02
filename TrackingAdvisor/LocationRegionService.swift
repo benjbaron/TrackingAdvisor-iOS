@@ -70,6 +70,10 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
         }
     }
     
+    class func getLocationServiceStatus() -> CLAuthorizationStatus {
+        return CLLocationManager.authorizationStatus()
+    }
+    
     func startUpdatingLocation() {
         requestPermission()
 

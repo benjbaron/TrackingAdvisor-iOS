@@ -30,6 +30,8 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
     @IBOutlet weak var mapViewHeight: NSLayoutConstraint!
     @IBOutlet weak var timeline: ISTimeline!
     
+    var mapCloseView: CloseView!
+    
     var timelineTitle: String!
     var timelineSubtitle: String!
     var timelineDay: String!
@@ -65,7 +67,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             guard let strongSelf = self else { return }
             
             // Load the place detail view and the navigation controller
-            let controller = OneTimelinePlaceDetailViewController()
+            let controller = UnifiedPlaceInformationViewController()
             controller.visit = point.visit
             
             let controllerNavigation = UINavigationController(rootViewController: controller)
@@ -86,17 +88,37 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             strongSelf.present(controllerNavigation, animated: true, completion: nil)
         }
         
-        let addPlaceTouchAction = { [weak self] (pt1: ISPoint, pt2: ISPoint) in
+        let addPlaceTouchAction = { [weak self] (pt1: ISPoint?, pt2: ISPoint?) in
             guard let strongSelf = self else { return }
             let controller = PlaceFinderMapTableViewController()
             controller.color = Constants.colors.primaryDark
             controller.name = "Add a place"
             controller.address = "Pick a place with the map and search bar below"
-            controller.startDate = pt1.visit?.departure
-            controller.endDate = pt2.visit?.arrival
+            
+            if let startPt = pt1 {
+                controller.startDate = startPt.visit?.arrival?.startOfDay
+                controller.endDate = startPt.visit?.arrival
+            }
+            if let endPt = pt2 {
+                controller.startDate = endPt.visit?.departure
+                controller.endDate = endPt.visit?.departure?.endOfDay
+            }
+            if let startPt = pt1, let endPt = pt2 {
+                controller.startDate = startPt.visit?.departure
+                controller.endDate = endPt.visit?.arrival
+            }
+            
             controller.showDeleteButton = false
             controller.type = .add
-            if let place1 = pt1.visit?.place, let place2 = pt2.visit?.place {
+            if let place1 = pt1?.visit?.place {
+                controller.latitude = place1.latitude
+                controller.longitude = place1.longitude
+            }
+            if let place2 = pt2?.visit?.place {
+                controller.latitude = place2.latitude
+                controller.longitude = place2.longitude
+            }
+            if let place1 = pt1?.visit?.place, let place2 = pt2?.visit?.place {
                 let coords = CLLocationCoordinate2D.middlePoint(of: [
                     CLLocationCoordinate2D(latitude: place1.latitude, longitude: place1.longitude),
                     CLLocationCoordinate2D(latitude: place2.latitude, longitude: place2.longitude) ])
@@ -108,6 +130,15 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             controllerNavigation.modalTransitionStyle = .crossDissolve
             controllerNavigation.modalPresentationStyle = .fullScreen
             strongSelf.present(controllerNavigation, animated: true, completion: nil)
+        }
+        
+        let updateTimelineTouchAction = { [weak self] in
+            guard let strongSelf = self else { return }
+            print("Update the timeline")
+            UserUpdateHandler.retrieveLatestUserUpdates(for: strongSelf.timelineDay, force: true) {
+                strongSelf.reload()
+            }
+            
         }
         
         let dateFormatter = DateFormatter()
@@ -152,6 +183,9 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         timeline.bubbleArrows = false
         timeline.timelineTitle = timelineTitle
         timeline.timelineSubtitle = timelineSubtitle
+        timeline.timelineUpdateTouchAction = updateTimelineTouchAction
+        timeline.timelimeAddPlaceFirstTouchAction = addPlaceTouchAction
+        timeline.timelimeAddPlaceLastTouchAction = addPlaceTouchAction
     }
     
     private func showAnnotations() {
@@ -169,10 +203,11 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         UIView.animate(withDuration: 0.5, animations: { [weak self] in
             self?.mapViewHeight.constant = 0
             self?.view.layoutIfNeeded()
-            }, completion: { c in
+            }, completion: { [weak self] c in
                 if c {
-                    self.isAnimating = false
-                    self.isFolded = true
+                    self?.isAnimating = false
+                    self?.isFolded = true
+                    self?.mapCloseView.removeFromSuperview()
                 }
         })
     }
@@ -182,21 +217,26 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         UIView.animate(withDuration: 0.5, animations: { [weak self] in
             self?.mapViewHeight.constant = 350
             self?.view.layoutIfNeeded()
-            }, completion: { completed in
+            }, completion: { [weak self] completed in
                 if completed {
-                    self.isAnimating = false
-                    self.isFolded = false
-                    self.showAnnotations()
+                    self?.isAnimating = false
+                    self?.isFolded = false
+                    self?.showAnnotations()
+                    if let map = self?.mapView {
+                        self?.mapCloseView = CloseView(text: "Close")
+                        self?.mapCloseView.frame = CGRect(x: 0, y: 0, width: 95.0, height: 40)
+                        self?.mapCloseView.center = CGPoint(x: map.center.x - 20.0, y: map.frame.height - 40)
+                        map.addSubview((self?.mapCloseView)!)
+                        self?.mapCloseView.addTapGestureRecognizer { [weak self] in
+                            self?.mapCloseView.alpha = 0.7
+                            self?.foldMapView()
+                            UIView.animate(withDuration: 0.5) { [weak self] in
+                                self?.mapCloseView.alpha = 1
+                            }
+                        }
+                    }
                 }
         })
-    }
-    
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        if isAnimating { return }
-        let y = scrollView.contentOffset.y
-        if !isFolded && y > 350 {
-            foldMapView()
-        }
     }
     
     func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
@@ -255,8 +295,6 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             reload()
         }
     }
-    
-    
 }
 
 // MGLAnnotationView subclass

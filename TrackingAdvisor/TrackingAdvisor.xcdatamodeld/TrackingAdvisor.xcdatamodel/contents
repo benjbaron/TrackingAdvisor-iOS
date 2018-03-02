@@ -11,6 +11,7 @@
     </entity>
     <entity name="PersonalInformation" representedClassName="PersonalInformation" syncable="YES" codeGenerationType="category">
         <attribute name="category" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="commented" optional="YES" attributeType="Boolean" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="desc" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="explanation" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="icon" optional="YES" attributeType="String" syncable="YES"/>
@@ -68,7 +69,7 @@
     </entity>
     <elements>
         <element name="Move" positionX="-504" positionY="48" width="128" height="150"/>
-        <element name="PersonalInformation" positionX="-297" positionY="-211" width="128" height="193"/>
+        <element name="PersonalInformation" positionX="-297" positionY="-211" width="128" height="210"/>
         <element name="Place" positionX="-324" positionY="20" width="128" height="210"/>
         <element name="Review" positionX="7" positionY="-136" width="128" height="105"/>
         <element name="ReviewChallenge" positionX="-126" positionY="-333" width="128" height="150"/>

@@ -53,9 +53,7 @@ class Place: NSManagedObject {
                 
                 // update the place with the new value
                 let managedObject = matches[0]
-                
-                print("update place \(userPlace.pid)")
-                
+                                
                 managedObject.setValue(userPlace.a, forKey: "address")
                 managedObject.setValue(userPlace.t, forKey: "type")
                 managedObject.setValue(userPlace.c, forKey: "city")

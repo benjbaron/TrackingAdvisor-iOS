@@ -28,7 +28,7 @@ class DataStoreService: NSObject {
         super.init()
     }
     
-    func updateDatabase(with userUpdate: UserUpdate) {
+    func updateDatabase(with userUpdate: UserUpdate, callback:(()->Void)? = nil) {
         container?.performBackgroundTask { [weak self] context in
             if let places = userUpdate.p {
                 for userPlace in places {
@@ -69,6 +69,7 @@ class DataStoreService: NSObject {
             
             DispatchQueue.main.async { () -> Void in
                 self?.delegate?.dataStoreDidUpdate?(for: userUpdate.days?.first)
+                callback?()
             }
         }
     }
@@ -118,6 +119,18 @@ class DataStoreService: NSObject {
             
             DispatchQueue.main.async { () -> Void in
                 self?.delegate?.dataStoreDidUpdateReviewChallenge?(for: rcid)
+            }
+        }
+    }
+    
+    func updatePersonalInformationComment(with piid: String) {
+        container?.performBackgroundTask { [weak self] context in
+            try? PersonalInformation.updateCommented(for: piid, in: context)
+            
+            do {
+                try context.save()
+            } catch {
+                print("error saving the database")
             }
         }
     }

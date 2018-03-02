@@ -40,9 +40,7 @@ class ReviewPersonalInformation: Review {
                 
                 // update the review
                 let managedObject = matches[0]
-                
-                print("update review pi \(userReview.rid)")
-                
+                                
                 if let oldPlace = managedObject.place {
                     oldPlace.removeFromReviews(managedObject)
                 }

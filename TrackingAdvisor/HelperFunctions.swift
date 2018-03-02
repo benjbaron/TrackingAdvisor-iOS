@@ -317,6 +317,66 @@ class NotificationView: UIView {
     }
 }
 
+class CloseView: UIView {
+    var color: UIColor = Constants.colors.primaryDark {
+        didSet {
+            self.backgroundColor = color.withAlphaComponent(0.5)
+        }
+    }
+    
+    var text: String = "Some text here" {
+        didSet {
+            label.text = text
+            layoutIfNeeded()
+        }
+    }
+    
+    var closeIcon: IconView = {
+        return IconView(icon: "times", iconColor: .white)
+    }()
+    
+    lazy var label: UILabel = {
+        let l = UILabel()
+        l.text = text
+        l.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        l.textColor = .white
+        l.textAlignment = .right
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
+    }()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+    
+    convenience init(text: String) {
+        self.init(frame: CGRect.zero)
+        
+        self.text = text
+        setupViews()
+    }
+    
+    required init(coder aDecoder: NSCoder) {
+        fatalError("This class does not support NSCoding")
+    }
+    
+    func setupViews() {
+        self.layer.cornerRadius = 20.0
+        self.backgroundColor = color
+        
+        self.clipsToBounds = true
+        self.layer.masksToBounds = true
+        
+        addSubview(label)
+        addSubview(closeIcon)
+        
+        addVisualConstraint("V:|-[v0]-|", views: ["v0": label])
+        addVisualConstraint("H:|-14-[v0(15)][v1]-14-|", views: ["v0": closeIcon, "v1": label])
+        closeIcon.widthAnchor.constraint(equalToConstant: 15).isActive = true
+        closeIcon.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+    }
+}
+
 func dot(size: Int, color: UIColor) -> UIImage {
     let floatSize = CGFloat(size)
     let rect = CGRect(x: 0, y: 0, width: floatSize, height: floatSize)

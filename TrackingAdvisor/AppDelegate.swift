@@ -33,6 +33,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             handleRemoteNotifications(with: notification)
         }
         
+        let locationStatus = LocationRegionService.getLocationServiceStatus()
+        if locationStatus == .denied || locationStatus == .restricted {
+            launchStoryboard(storyboard: "LocationServicesDenied")
+            return true
+        }
+        
         // check if this is the first app launch
         if !Settings.getOnboarding() {
             launchStoryboard(storyboard: "Onboarding")
@@ -41,31 +47,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             launchStoryboard(storyboard: "Main")
         }
         
-        // start updating the location services again
-        LocationRegionService.shared.startUpdatingLocation()
+        handleLaunchingOperations(application)
         
-        // retrieve the latest data from the server
-        DispatchQueue.global(qos: .background).async {
-            
-            // force upload last locations to server
-            UserLocation.upload(force: true, callback: nil)
-            
-            // update the personal categories if needed
-            PersonalInformationCategory.updateIfNeeded()
-            
-            // get today's update
-            UserUpdateHandler.retrieveLatestUserUpdates(for: DateHandler.dateToDayString(from: Date()))
-            
-            let reviewChallenges = DataStoreService.shared.getLatestReviewChallenge()
-            DispatchQueue.main.async { () -> Void in
-                if reviewChallenges.count > 0 {
-                    application.applicationIconBadgeNumber = 1
-                } else {
-                    application.applicationIconBadgeNumber = 0
-                }
-            }
-        }
-                
         return true
     }
     
@@ -92,7 +75,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func applicationWillEnterForeground(_ application: UIApplication) {
         // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
         FileService.shared.log("call -- applicationWillEnterForeground", classname: "AppDelegate")
+        
+        let locationStatus = LocationRegionService.getLocationServiceStatus()
+        if locationStatus == .denied || locationStatus == .restricted {
+            launchStoryboard(storyboard: "LocationServicesDenied")
+            return
+        }
+        
+        // check if this is the first app launch
+        if !Settings.getOnboarding() {
+            launchStoryboard(storyboard: "Onboarding")
+            return
+        } else {
+            launchStoryboard(storyboard: "Main")
+        }
+        
         LocationRegionService.shared.restartUpdatingLocation()
+        handleLaunchingOperations(application)
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
@@ -227,6 +226,33 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                             (self?.window?.rootViewController as? UITabBarController)?.selectedIndex = 1
                         }
                     }
+                }
+            }
+        }
+    }
+    
+    private func handleLaunchingOperations(_ application: UIApplication) {
+        // start updating the location services again
+        LocationRegionService.shared.startUpdatingLocation()
+        
+        // retrieve the latest data from the server
+        DispatchQueue.global(qos: .background).async {
+            
+            // force upload last locations to server
+            UserLocation.upload(force: true, callback: nil)
+            
+            // update the personal categories if needed
+            PersonalInformationCategory.updateIfNeeded()
+            
+            // get today's update
+            UserUpdateHandler.retrieveLatestUserUpdates(for: DateHandler.dateToDayString(from: Date()))
+            
+            let reviewChallenges = DataStoreService.shared.getLatestReviewChallenge()
+            DispatchQueue.main.async { () -> Void in
+                if reviewChallenges.count > 0 {
+                    application.applicationIconBadgeNumber = 1
+                } else {
+                    application.applicationIconBadgeNumber = 0
                 }
             }
         }

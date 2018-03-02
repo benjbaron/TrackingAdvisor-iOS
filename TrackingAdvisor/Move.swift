@@ -22,9 +22,7 @@ class Move: NSManagedObject {
             let matches = try context.fetch(request)
             if matches.count > 0 {
                 assert(matches.count == 1, "Move.findOrCreateMove -- database inconsistency")
-                
-                print("update move \(userMove.mid)")
-                
+                                
                 // update the move
                 let managedObject = matches[0]
                 

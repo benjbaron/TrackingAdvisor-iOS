@@ -357,11 +357,10 @@ class OnboardingPermissionsViewController: UIViewController, CLLocationManagerDe
                 let items = [
                     OnboardingItem(icon: "location-arrow", text: "Enable always-on location so that we automatically collect your location data.", color: Constants.colors.lightPurple),
                     OnboardingItem(icon: "running", text: "Enable fitness and activity so that we fine-tune our place matching.", color: Constants.colors.lightPurple),
-                    OnboardingItem(icon: "notification", text: "Enable your iPhone to receive notifications so that we can ask you feedback.", color: Constants.colors.lightPurple)
+                    OnboardingItem(icon: "notification", text: "(Optional) Enable your iPhone to receive notifications so that we can ask you feedback.", color: Constants.colors.lightPurple)
                 ]
                 dest.items = items
             }
-            
         }
     }
     
@@ -441,3 +440,16 @@ fileprivate func showCancelDialog(_ controller: UIViewController, handler: (() -
     
     controller.present(alertController, animated: true, completion: nil)
 }
+
+
+class LocationServicesDeniedViewController: UIViewController {
+    
+    @IBAction func goLocationServices(_ sender: UIButton) {
+        if let url = URL(string: "App-Prefs:root=Privacy&path=LOCATION") {
+            // If general location settings are disabled then open general location settings
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
+    }
+}
+
+

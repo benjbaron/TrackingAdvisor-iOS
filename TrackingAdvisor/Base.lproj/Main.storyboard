@@ -186,6 +186,9 @@
                         </connections>
                     </tableView>
                     <navigationItem key="navigationItem" title="Settings" id="YYw-SK-UFH"/>
+                    <connections>
+                        <outlet property="versionNumber" destination="QsB-jf-YIo" id="nna-Eu-WLI"/>
+                    </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="a6l-o8-LQ9" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -209,7 +212,7 @@
         <!--Terms-->
         <scene sceneID="URq-U8-5Vi">
             <objects>
-                <viewController title="Terms" id="Zpb-rs-q1x" sceneMemberID="viewController">
+                <viewController title="Terms" id="Zpb-rs-q1x" customClass="SettingsStudyTermsViewController" customModule="TrackingAdvisor" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="yJd-PC-E2q">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -249,6 +252,9 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="E9D-tO-Nwi"/>
                     </view>
+                    <connections>
+                        <outlet property="text" destination="vAC-hP-7ky" id="rdW-4u-lCI"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Hv8-Fs-fZA" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

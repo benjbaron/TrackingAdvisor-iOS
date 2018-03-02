@@ -41,9 +41,7 @@ class PersonalInformation : NSManagedObject {
                 
                 // update the personal information
                 let managedObject = matches[0]
-                
-                print("update personal information \(userPersonalInformation.piid)")
-                
+                                
                 if let oldPlace = managedObject.place {
                     oldPlace.removeFromPersonalInformation(managedObject)
                 }
@@ -97,6 +95,22 @@ class PersonalInformation : NSManagedObject {
         return personalInformation
     }
     
+    class func updateCommented(for piid: String, in context: NSManagedObjectContext) throws {
+        let request: NSFetchRequest<PersonalInformation> = PersonalInformation.fetchRequest()
+        request.predicate = NSPredicate(format: "id = %@", piid)
+        
+        do {
+            let matches = try context.fetch(request)
+            if matches.count > 0 {
+                assert(matches.count == 1, "PersonalInformation.updateCommented -- database inconsistency")
+                let managedObject = matches[0]
+                managedObject.setValue(true, forKey: "commented")
+            }
+        } catch {
+            throw error
+        }
+    }
+    
     func getReview(of type: ReviewType) -> Review? {
         guard let reviews = reviews else { return nil }
         for case let review as Review in reviews {
@@ -108,7 +122,8 @@ class PersonalInformation : NSManagedObject {
     }
         
     func getPersonalInformationPhrase() -> String {
-        guard let pi  = name else { return "" }
+        guard let pi = name else { return "" }
         return "This place gives information about \(pi.lowercased())"
     }
+    
 }

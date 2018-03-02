@@ -93,14 +93,14 @@ class UserUpdateHandler {
     static var isRetrievingUserUpdateFromServer = false
     static var isRetrievingReviewChallengeFromServer = false
     
-    class func retrieveLatestUserUpdates(for day: String) {
+    class func retrieveLatestUserUpdates(for day: String, force: Bool = false, callback: (()->Void)? = nil) {
         if isRetrievingUserUpdateFromServer { return }
         
         var days:[String] = []
         let calendar = Calendar.current
         // See if the data needs to be uploaded to the server
         if let lastUserUpdate = Settings.getLastUserUpdate() {
-            if abs(lastUserUpdate.timeIntervalSinceNow) < Constants.variables.minimumDurationBetweenUserUpdates {
+            if !force && abs(lastUserUpdate.timeIntervalSinceNow) < Constants.variables.minimumDurationBetweenUserUpdates {
                 return
             }
             
@@ -124,7 +124,6 @@ class UserUpdateHandler {
             ]
             
             Alamofire.request(Constants.urls.userUpdateURL, method: .get, parameters: parameters).responseJSON { response in
-                print(response)
                 if response.result.isSuccess {
                     FileService.shared.log("Retrieved latest user update from server", classname: "UserUpdateHandler")
                     guard let data = response.data else { return }
@@ -132,8 +131,10 @@ class UserUpdateHandler {
                         let decoder = JSONDecoder()
                         decoder.dateDecodingStrategy = .secondsSince1970
                         let userUpdate = try decoder.decode(UserUpdate.self, from: data)
-                        DataStoreService.shared.updateDatabase(with: userUpdate)
-                        Settings.saveLastUserUpdate(with: Date())
+                        DataStoreService.shared.updateDatabase(with: userUpdate) {
+                            Settings.saveLastUserUpdate(with: Date())
+                            callback?()
+                        }                        
                     } catch {
                         print("Error serializing the json", error)
                     }
@@ -240,6 +241,7 @@ class UserUpdateHandler {
         DispatchQueue.global(qos: .background).async {
             let userid = Settings.getUserId() ?? ""
             let parameters: Parameters = [
+                "t": 0,
                 "userid": userid,
                 "pid": pid,
                 "picid": picid,
@@ -248,12 +250,41 @@ class UserUpdateHandler {
             
             Alamofire.request(Constants.urls.personalInformationUpdateURL, method: .post, parameters: parameters, encoding: JSONEncoding.default).responseJSON { response in
                 if response.result.isSuccess {
-                    FileService.shared.log("Sent personal information update to server", classname: "UserUpdateHandler")
+                    FileService.shared.log("Sent personal information addition to server", classname: "UserUpdateHandler")
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()
                         let userUpdate = try decoder.decode(UserUpdate.self, from: data)
                         DataStoreService.shared.updateDatabase(with: userUpdate)
+                        callback?()
+                    } catch {
+                        print("Error serializing the json", error)
+                    }
+                } else {
+                    print("Error in response \(response.result)")
+                }
+            }
+        }
+    }
+    
+    class func updatePersonalInformation(for piid: String, with comment: String, callback: (()->Void)?) {
+        DispatchQueue.global(qos: .background).async {
+            let userid = Settings.getUserId() ?? ""
+            let parameters: Parameters = [
+                "t": 1,
+                "userid": userid,
+                "piid": piid,
+                "comment": comment
+            ]
+            
+            Alamofire.request(Constants.urls.personalInformationUpdateURL, method: .post, parameters: parameters, encoding: JSONEncoding.default).responseJSON { response in
+                if response.result.isSuccess {
+                    FileService.shared.log("Sent personal information update to server", classname: "UserUpdateHandler")
+                    guard let data = response.data else { return }
+                    do {
+                        let decoder = JSONDecoder()
+                        _ = try decoder.decode(UserUpdate.self, from: data)
+                        DataStoreService.shared.updatePersonalInformationComment(with: piid)
                         callback?()
                     } catch {
                         print("Error serializing the json", error)

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13771" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="3Mp-Lb-WTr">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Location Services Denied View Controller-->
+        <scene sceneID="97o-2w-fcz">
+            <objects>
+                <viewController storyboardIdentifier="FirstScreenInitialOnboarding" id="zbF-qb-X4H" customClass="LocationServicesDeniedViewController" customModule="TrackingAdvisor" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="tcM-Zw-F2a">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="location-arrow" translatesAutoresizingMaskIntoConstraints="NO" id="Zvl-BO-HZ6">
+                                <rect key="frame" x="27" y="120" width="53" height="53"/>
+                                <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="53" id="TUr-oB-yXD"/>
+                                    <constraint firstAttribute="height" constant="53" id="cPv-YM-LeR"/>
+                                </constraints>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="tintColor">
+                                        <color key="value" red="0.77647058820000003" green="0.69019607839999997" blue="0.73725490199999999" alpha="1" colorSpace="calibratedRGB"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="TrackingAdvisor" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="oWo-WM-6um">
+                                <rect key="frame" x="27" y="181" width="328" height="37"/>
+                                <fontDescription key="fontDescription" type="system" weight="heavy" pointSize="36"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                                <variation key="heightClass=regular-widthClass=compact">
+                                    <fontDescription key="fontDescription" type="system" weight="heavy" pointSize="31"/>
+                                </variation>
+                            </label>
+                            <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Dwj-eM-GVa">
+                                <rect key="frame" x="20" y="553" width="335" height="52"/>
+                                <color key="backgroundColor" red="0.31372549020000001" green="0.027450980390000001" blue="0.47058823529999999" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="52" id="c1P-3i-JyP"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
+                                <state key="normal" title="Enable location services">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="5"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                                <connections>
+                                    <action selector="goLocationServices:" destination="zbF-qb-X4H" eventType="touchUpInside" id="XQg-Ch-35R"/>
+                                </connections>
+                            </button>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" contentInsetAdjustmentBehavior="never" editable="NO" textAlignment="natural" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="lab-zT-goW">
+                                <rect key="frame" x="20" y="226" width="335" height="315"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <mutableString key="text">We need always-on location services so that we automatically collect your location data. This is really important to us, as location data is at the core of our research. To enable location services, please visit the General settings of your phone.  Please let us know if you have any questions and comments about the user study, we will be happy to hear from you and answer any of the concerns you may have.</mutableString>
+                                <fontDescription key="fontDescription" type="system" pointSize="18"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="oWo-WM-6um" firstAttribute="top" secondItem="Zvl-BO-HZ6" secondAttribute="bottom" constant="8" id="Hls-Z7-TaC"/>
+                            <constraint firstItem="Dwj-eM-GVa" firstAttribute="centerX" secondItem="ch1-DN-VTC" secondAttribute="centerX" id="IoZ-rL-UgE"/>
+                            <constraint firstItem="ch1-DN-VTC" firstAttribute="trailing" secondItem="lab-zT-goW" secondAttribute="trailing" constant="20" id="Nef-Oi-KJ8"/>
+                            <constraint firstItem="ch1-DN-VTC" firstAttribute="trailing" secondItem="Dwj-eM-GVa" secondAttribute="trailing" constant="20" id="Wki-Fa-XaG"/>
+                            <constraint firstItem="lab-zT-goW" firstAttribute="top" secondItem="oWo-WM-6um" secondAttribute="bottom" constant="8" id="Yrf-Sb-z5o"/>
+                            <constraint firstItem="Dwj-eM-GVa" firstAttribute="leading" secondItem="ch1-DN-VTC" secondAttribute="leading" constant="20" id="cpA-OJ-e1P"/>
+                            <constraint firstItem="Zvl-BO-HZ6" firstAttribute="leading" secondItem="ch1-DN-VTC" secondAttribute="leading" constant="27" id="fnV-iB-Wwj"/>
+                            <constraint firstItem="lab-zT-goW" firstAttribute="leading" secondItem="ch1-DN-VTC" secondAttribute="leading" constant="20" id="hyh-ZF-byj"/>
+                            <constraint firstItem="ch1-DN-VTC" firstAttribute="trailing" secondItem="oWo-WM-6um" secondAttribute="trailing" constant="20" id="qjQ-cv-Hp7"/>
+                            <constraint firstItem="Zvl-BO-HZ6" firstAttribute="top" secondItem="ch1-DN-VTC" secondAttribute="top" constant="56" id="rR7-Zw-K0R"/>
+                            <constraint firstItem="oWo-WM-6um" firstAttribute="leading" secondItem="ch1-DN-VTC" secondAttribute="leading" constant="27" id="tR3-3A-5rJ"/>
+                            <constraint firstItem="Dwj-eM-GVa" firstAttribute="top" secondItem="lab-zT-goW" secondAttribute="bottom" constant="12" id="vkz-4O-T68"/>
+                            <constraint firstItem="ch1-DN-VTC" firstAttribute="bottom" secondItem="Dwj-eM-GVa" secondAttribute="bottom" constant="62" id="xUd-W4-fC9"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="ch1-DN-VTC"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="PuE-7m-clY"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="50l-Sa-J44" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="183.75" y="-22.183098591549296"/>
+        </scene>
+        <!--Onboarding View Controller-->
+        <scene sceneID="C4r-f9-qhG">
+            <objects>
+                <navigationController storyboardIdentifier="InitialOnboarding" automaticallyAdjustsScrollViewInsets="NO" id="3Mp-Lb-WTr" customClass="OnboardingViewController" customModule="TrackingAdvisor" customModuleProvider="target" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="gD2-5D-tcL">
+                        <rect key="frame" x="0.0" y="20" width="375" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="zbF-qb-X4H" kind="relationship" relationship="rootViewController" id="ACd-aQ-elQ"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="ogx-5y-fsO" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-670" y="-21"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="location-arrow" width="384" height="384"/>
+    </resources>
+</document>
