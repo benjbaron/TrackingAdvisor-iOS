@@ -154,7 +154,7 @@ class UserUpdateHandler {
                         let decoder = JSONDecoder()
                         decoder.dateDecodingStrategy = .secondsSince1970
                         let userUpdate = try decoder.decode(UserUpdate.self, from: data)
-                        DataStoreService.shared.updateDatabase(with: userUpdate) {
+                        DataStoreService.shared.updateDatabase(with: userUpdate, delete: true) {
                             Settings.saveLastUserUpdate(with: Date())
                             callback?()
                         }                        

@@ -325,6 +325,10 @@ class PersonalInformationReviewCell: UICollectionViewCell {
     }()
     
     func setupViews() {
+        // for performance improvements
+        layer.shouldRasterize = true
+        layer.rasterizationScale = UIScreen.main.scale
+        
         addSubview(bgView)
         bgView.addSubview(nameLabel)
         bgView.addSubview(explanationLabel)

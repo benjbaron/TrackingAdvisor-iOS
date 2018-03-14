@@ -33,16 +33,36 @@ class DataStoreService: NSObject {
         super.init()
     }
     
-    func updateDatabase(with userUpdate: UserUpdate, callback:(()->Void)? = nil) {
+    func updateDatabase(with userUpdate: UserUpdate, delete: Bool = false, callback:(()->Void)? = nil) {
         container?.performBackgroundTask { [weak self] context in
+            guard let strongSelf = self else { return }
+            
             if let places = userUpdate.p {
                 for userPlace in places {
                     _ = try? Place.findOrCreatePlace(matching: userPlace, in: context)
                 }
             }
-            if let visits = userUpdate.v {
+            if let visits = userUpdate.v, let days = userUpdate.days {
+                var savedVisits: Set<String> = Set()
+                for day in days {
+                    for v in strongSelf.getVisits(for: day) {
+                        if let vid = v.id {
+                            savedVisits.insert(vid)
+                        }
+                    }
+                }
+                
                 for userVisit in visits {
                     _ = try? Visit.findOrCreateVisit(matching: userVisit, in: context)
+                    savedVisits.remove(userVisit.vid)
+                }
+                
+                if delete {
+                    for vid in savedVisits {
+                        if let v = try! Visit.findVisit(matching: vid, in: context) {
+                            context.delete(v)
+                        }
+                    }
                 }
             }
             if let moves = userUpdate.m {

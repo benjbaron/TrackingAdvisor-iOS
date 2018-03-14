@@ -406,7 +406,6 @@ class OnboardingPrivacyPolicyContentViewController: UIViewController {
     }
     
     private func getPrivacyPolicyFromServer() {
-        print("getPrivacyPolicyFromServer")
         Alamofire.request(Constants.urls.privacyPolicyURL, method: .get, parameters: nil)
             .responseJSON { [weak self] response in
                 if response.result.isSuccess {
@@ -422,7 +421,6 @@ class OnboardingPrivacyPolicyContentViewController: UIViewController {
     }
     
     private func formatText(_ terms: [TermsStruct]) {
-        print("formatText")
         let paraStyle = NSMutableParagraphStyle()
         paraStyle.firstLineHeadIndent = 15.0
         paraStyle.paragraphSpacingBefore = 10.0
@@ -570,8 +568,8 @@ class OnboardingPermissionsViewController: UIViewController, CLLocationManagerDe
             if let dest = segue.destination as? OnboardingItemsViewController {
                 
                 let items = [
-                    OnboardingItem(icon: "location-arrow", text: "Enable always-on location so that we automatically collect your location data.", color: Constants.colors.lightPurple),
-                    OnboardingItem(icon: "running", text: "Enable fitness and activity so that we fine-tune our place matching.", color: Constants.colors.lightPurple),
+                    OnboardingItem(icon: "location-arrow", text: "Enable always-on location so that we automatically collect your location data, necessary for the purpose of this study.", color: Constants.colors.lightPurple),
+                    OnboardingItem(icon: "running", text: "(Optional) Enable fitness and activity so that we fine-tune our place matching algorithm.", color: Constants.colors.lightPurple),
                     OnboardingItem(icon: "notification", text: "(Optional) Enable your iPhone to receive notifications so that we can ask you feedback.", color: Constants.colors.lightPurple)
                 ]
                 dest.items = items
@@ -584,28 +582,28 @@ class OnboardingPermissionsViewController: UIViewController, CLLocationManagerDe
         switch status {
         case .notDetermined:
             locationManager?.requestAlwaysAuthorization()
-        case .authorizedAlways:
-            print("authorizedAlways")
+        case .authorizedAlways, .authorizedWhenInUse:
             // activity and motion permission
             ActivityService.shared.getSteps(from: Date(), to: Date(), callback: {_ in
                 // notification permission
                 UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge]) {
                     [weak self] (granted, error) in
                     
-                    if granted {
-                        DispatchQueue.main.async {
-                            let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                            appDelegate.getNotificationSettings()
-                            
-                            // we are good to go
-                            guard let strongSelf = self else { return }
-                            strongSelf.performSegue(withIdentifier: strongSelf.segueId, sender: nil)
-                        }
+                    // continue whether it is granted or not
+                    DispatchQueue.main.async {
+                        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                        appDelegate.getNotificationSettings()
+                        
+                        // we are good to go
+                        guard let strongSelf = self else { return }
+                        strongSelf.performSegue(withIdentifier: strongSelf.segueId, sender: nil)
                     }
                 }
             })
         default:
-            print("permission denied")
+            // launch storyboard
+            let appDelegate = UIApplication.shared.delegate as! AppDelegate
+            appDelegate.launchStoryboard(storyboard: "LocationServicesDenied")
         }
     }
 }

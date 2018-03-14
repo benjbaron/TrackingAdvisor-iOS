@@ -32,7 +32,17 @@ class FileService : NSObject {
         guard let dir = dir else { return [] }
         do {
             let directoryContents = try FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil, options: [])
-            return directoryContents
+            
+            var res: [URL] = []
+            for url in directoryContents {
+                let name = url.deletingPathExtension().lastPathComponent
+                let match = matches(for: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$", in: name)
+                if !match.isEmpty {
+                    res.append(url)
+                }
+            }
+            
+            return res
         } catch {
             print(error.localizedDescription)
         }

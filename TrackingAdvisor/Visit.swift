@@ -93,6 +93,7 @@ class Visit: NSManagedObject {
         }
     }
     
+    
     func getTimesPhrase() -> String {
         guard let arrival = arrival, let departure = departure else { return "" }
         

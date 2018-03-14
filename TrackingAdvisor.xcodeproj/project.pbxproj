@@ -233,13 +233,6 @@
 			name = Timeline;
 			sourceTree = "<group>";
 		};
-		B5105ED220363A6C008D7C06 /* walking */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = walking;
-			sourceTree = "<group>";
-		};
 		B54C36A7200EB8550085BFEA /* UIViews */ = {
 			isa = PBXGroup;
 			children = (
@@ -322,7 +315,6 @@
 				B54D98ED2049AFF700CBECA4 /* LocationServicesDenied.storyboard */,
 				B528F10D2056AAC500C0F059 /* OptOut.storyboard */,
 				B584C21E1FA0F16B002582D1 /* Assets.xcassets */,
-				B5105ED220363A6C008D7C06 /* walking */,
 				B599B3A31FA0B57F006D70B4 /* AppDelegate.swift */,
 				B5FE77F21FA9F2F6002B5F0C /* MapCalendarContainerViewController.swift */,
 				B5C3474B1FB0B4760078C12E /* RawCollectedDataTextViewController.swift */,
