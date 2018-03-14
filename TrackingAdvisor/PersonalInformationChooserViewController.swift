@@ -287,8 +287,6 @@ class PersonalInformationChooserViewController: UIViewController, UICollectionVi
         collectionView.collectionViewLayout = flowLayout
         collectionView.isPagingEnabled = false
         collectionView.contentInset = UIEdgeInsets(top: insetY, left: insetX, bottom: insetY, right: insetX)
-        
-        
     }
     
     // MARK: - UICollectionViewDataSource delegate methods

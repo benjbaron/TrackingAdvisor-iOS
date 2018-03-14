@@ -40,7 +40,7 @@ class Visit: NSManagedObject {
                 
                 // update the visit
                 let managedObject = matches[0]
-                                
+                                                
                 if let oldPlace = managedObject.place {
                     oldPlace.removeFromVisits(managedObject)
                 }
@@ -75,6 +75,22 @@ class Visit: NSManagedObject {
         }
         
         return visit
+    }
+    
+    class func updateVisit(for vid: String, visited: Int32, in context: NSManagedObjectContext) throws {
+        let request: NSFetchRequest<Visit> = Visit.fetchRequest()
+        request.predicate = NSPredicate(format: "id = %@", vid)
+        
+        do {
+            let matches = try context.fetch(request)
+            if matches.count > 0 {
+                assert(matches.count == 1, "Visit.updateVisit -- database inconsistency")
+                let managedObject = matches[0]
+                managedObject.setValue(visited, forKey: "visited")
+            }
+        } catch {
+            throw error
+        }
     }
     
     func getTimesPhrase() -> String {

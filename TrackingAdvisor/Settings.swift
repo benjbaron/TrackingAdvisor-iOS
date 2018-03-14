@@ -22,6 +22,7 @@ open class Settings {
             defaults.set(Date(), forKey: Constants.defaultsKeys.lastPersonalInformationCategoryUpdate)
             defaults.set(String(), forKey: Constants.defaultsKeys.pushNotificationToken)
             defaults.set(false, forKey: Constants.defaultsKeys.onboarding)
+            defaults.set(false, forKey: Constants.defaultsKeys.optOut)
         }
     }
     
@@ -64,6 +65,10 @@ open class Settings {
         return defaults.bool(forKey: Constants.defaultsKeys.onboarding)
     }
     
+    open class func getOptOut() -> Bool {
+        let defaults = UserDefaults.standard
+        return defaults.bool(forKey: Constants.defaultsKeys.optOut)
+    }
     
     open class func savePushNotificationId(with pnid: String) {
         let defaults = UserDefaults.standard
@@ -78,6 +83,11 @@ open class Settings {
     open class func saveOnboarding(with value: Bool) {
         let defaults = UserDefaults.standard
         defaults.set(value, forKey: Constants.defaultsKeys.onboarding)
+    }
+    
+    open class func saveOptOut(with value: Bool) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: Constants.defaultsKeys.optOut)
     }
     
     open class func saveLastPersonalInformationCategoryUpdate(with value: Date) {

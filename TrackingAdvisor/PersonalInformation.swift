@@ -52,6 +52,7 @@ class PersonalInformation : NSManagedObject {
                 managedObject.setValue(userPersonalInformation.s, forKey: "source")
                 managedObject.setValue(userPersonalInformation.p, forKey: "privacy")
                 managedObject.setValue(userPersonalInformation.picid, forKey: "category")
+                managedObject.setValue(userPersonalInformation.r, forKey: "rating")
                 
                 if userPersonalInformation.e != nil {
                     managedObject.setValue(userPersonalInformation.e, forKey: "explanation")
@@ -79,6 +80,7 @@ class PersonalInformation : NSManagedObject {
         personalInformation.source = userPersonalInformation.s
         personalInformation.privacy = userPersonalInformation.p
         personalInformation.category = userPersonalInformation.picid
+        personalInformation.rating = userPersonalInformation.r
         
         if let place = try! Place.findPlace(matching: userPersonalInformation.pid, in: context) {
             personalInformation.place = place
@@ -94,17 +96,17 @@ class PersonalInformation : NSManagedObject {
         
         return personalInformation
     }
-    
-    class func updateCommented(for piid: String, in context: NSManagedObjectContext) throws {
+        
+    class func updateRating(for piid: String, rating: Int32, in context: NSManagedObjectContext) throws {
         let request: NSFetchRequest<PersonalInformation> = PersonalInformation.fetchRequest()
         request.predicate = NSPredicate(format: "id = %@", piid)
         
         do {
             let matches = try context.fetch(request)
             if matches.count > 0 {
-                assert(matches.count == 1, "PersonalInformation.updateCommented -- database inconsistency")
+                assert(matches.count == 1, "PersonalInformation.updateRating -- database inconsistency")
                 let managedObject = matches[0]
-                managedObject.setValue(true, forKey: "commented")
+                managedObject.setValue(rating, forKey: "rating")
             }
         } catch {
             throw error

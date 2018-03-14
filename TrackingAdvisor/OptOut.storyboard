@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13771" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="n46-De-4QG">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Location Services Denied View Controller-->
+        <scene sceneID="VhB-Nd-wqJ">
+            <objects>
+                <viewController storyboardIdentifier="FirstScreenInitialOnboarding" id="pR3-LK-FMR" customClass="LocationServicesDeniedViewController" customModule="TrackingAdvisor" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="cwL-Qa-xgs">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="location-arrow" translatesAutoresizingMaskIntoConstraints="NO" id="IXX-ac-dRa">
+                                <rect key="frame" x="27" y="120" width="53" height="53"/>
+                                <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="53" id="Dz5-MJ-A8B"/>
+                                    <constraint firstAttribute="height" constant="53" id="exa-S9-gzn"/>
+                                </constraints>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="tintColor">
+                                        <color key="value" red="0.77647058820000003" green="0.69019607839999997" blue="0.73725490199999999" alpha="1" colorSpace="calibratedRGB"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="You have opted-out of the study" textAlignment="natural" lineBreakMode="wordWrap" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3PZ-CY-Wws">
+                                <rect key="frame" x="27" y="181" width="328" height="74"/>
+                                <fontDescription key="fontDescription" type="system" weight="heavy" pointSize="36"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                                <variation key="heightClass=regular-widthClass=compact">
+                                    <fontDescription key="fontDescription" type="system" weight="heavy" pointSize="31"/>
+                                </variation>
+                            </label>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" contentInsetAdjustmentBehavior="never" editable="NO" textAlignment="natural" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="W6O-1r-WI5">
+                                <rect key="frame" x="20" y="263" width="335" height="364"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <mutableString key="text">You decided to opt-out of this user study. All the data we have collected about you during your participation in the study has been removed from our servers. You can now safely delete the application from your phone.   We will be happy to hear from you about the study and answer any of the concerns you may have.  Thank you again for using our application!</mutableString>
+                                <fontDescription key="fontDescription" type="system" pointSize="18"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="3PZ-CY-Wws" firstAttribute="top" secondItem="IXX-ac-dRa" secondAttribute="bottom" constant="8" id="6b4-BW-10B"/>
+                            <constraint firstItem="IXX-ac-dRa" firstAttribute="top" secondItem="YRE-Ip-SGY" secondAttribute="top" constant="100" id="Cbo-2c-LUH"/>
+                            <constraint firstItem="YRE-Ip-SGY" firstAttribute="trailing" secondItem="3PZ-CY-Wws" secondAttribute="trailing" constant="20" id="KaY-nC-Ybc"/>
+                            <constraint firstItem="YRE-Ip-SGY" firstAttribute="bottom" secondItem="W6O-1r-WI5" secondAttribute="bottom" constant="40" id="Lk2-mt-ac1"/>
+                            <constraint firstItem="IXX-ac-dRa" firstAttribute="leading" secondItem="YRE-Ip-SGY" secondAttribute="leading" constant="27" id="QiC-Yv-HYa"/>
+                            <constraint firstItem="W6O-1r-WI5" firstAttribute="top" secondItem="3PZ-CY-Wws" secondAttribute="bottom" constant="8" id="Wi2-sa-e3J"/>
+                            <constraint firstItem="YRE-Ip-SGY" firstAttribute="trailing" secondItem="W6O-1r-WI5" secondAttribute="trailing" constant="20" id="XXH-wa-dNu"/>
+                            <constraint firstItem="3PZ-CY-Wws" firstAttribute="leading" secondItem="YRE-Ip-SGY" secondAttribute="leading" constant="27" id="dIl-Zh-m8z"/>
+                            <constraint firstItem="W6O-1r-WI5" firstAttribute="leading" secondItem="YRE-Ip-SGY" secondAttribute="leading" constant="20" id="q79-EU-dWi"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="YRE-Ip-SGY"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="ySk-gZ-21v"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="q6q-Ju-ng5" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="183.75" y="-22.183098591549296"/>
+        </scene>
+        <!--Onboarding View Controller-->
+        <scene sceneID="hZX-tb-xqR">
+            <objects>
+                <navigationController storyboardIdentifier="InitialOnboarding" automaticallyAdjustsScrollViewInsets="NO" navigationBarHidden="YES" id="n46-De-4QG" customClass="OnboardingViewController" customModule="TrackingAdvisor" customModuleProvider="target" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="HW8-6D-m8c">
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="pR3-LK-FMR" kind="relationship" relationship="rootViewController" id="DvU-2o-1T0"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="awM-5l-DEo" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-670" y="-21"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="location-arrow" width="384" height="384"/>
+    </resources>
+</document>

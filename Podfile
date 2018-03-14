@@ -9,6 +9,7 @@ target 'TrackingAdvisor' do
   pod 'Alamofire', '~> 4.6'
   pod 'Eureka', '~> 4.0'
   pod 'Mapbox-iOS-SDK', '~> 3.7'
+  pod 'FloatRatingView', '~> 3.0'
 
   target 'TrackingAdvisorTests' do
     inherit! :search_paths

@@ -35,11 +35,13 @@ class ActivityService {
         }
     }
     
-    func getActivity(from start: Date, to end: Date, callback: @escaping ([ActivityType:Int]) -> Void) {
+    func getActivity(from start: Date, to end: Date, callback: @escaping ([ActivityType:Int]?) -> Void) {
         activityManager.queryActivityStarting(from: start, to: end, to: OperationQueue.main) {
             (arr, err) -> Void in
             if let activities = arr {
                 callback(self.activitiesToDict(activities))
+            } else {
+                callback(nil)
             }
         }
     }
@@ -51,7 +53,11 @@ class ActivityService {
         getSteps(from: start, to: end) { nbSteps in
             FileService.shared.log("nbSteps: \(nbSteps)", classname: "ActivityService")
             if nbSteps > 50 {
-                self.getActivity(from: start, to: end) { activities in
+                self.getActivity(from: start, to: end) { arr in
+                    guard let activities = arr else {
+                        callback(false)
+                        return
+                    }
                     let (activity, confidence) = ActivityService.mostLikelyActivity(activities: activities)
                     DispatchQueue.main.async { () -> Void in
                         FileService.shared.log("nbSteps: \(nbSteps), ativities: \(activities), activity: \(activity), \(confidence)", classname: "ActivityService")
@@ -133,11 +139,13 @@ class ActivityService {
         return res
     }
     
-    class func mostLikelyActivity(activities: [ActivityType:Int]) -> (ActivityType,Int) {
-        if activities.count == 0 { return (ActivityType.unknown, 0) }
+    class func mostLikelyActivity(activities: [ActivityType:Int]?) -> (ActivityType,Int) {
+        guard let act = activities, act.count > 0 else {
+            return (ActivityType.unknown, 0)
+        }
         var bestActivity = ActivityType.unknown
         var bestConfidence = 0
-        for (activity, confidence) in activities {
+        for (activity, confidence) in act {
             if confidence > bestConfidence {
                 bestActivity = activity
                 bestConfidence = confidence

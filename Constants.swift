@@ -19,6 +19,7 @@ struct Constants {
         static let pushNotificationToken = "pushNotificationToken"
         static let userid = "userid"
         static let onboarding = "onboarding"
+        static let optOut = "optOut"
     }
     
     struct variables {
@@ -68,6 +69,10 @@ struct Constants {
         static let updateUserInfoURL = "https://iss-lab.geog.ucl.ac.uk/semantica/updateuserinfo"
         static let personalInformationUpdateURL = "https://iss-lab.geog.ucl.ac.uk/semantica/personalinformationupdate"
         static let termsURL = "https://iss-lab.geog.ucl.ac.uk/semantica/terms"
+        static let privacyPolicyURL = "https://iss-lab.geog.ucl.ac.uk/semantica/privacypolicy"
+        static let personalInformationReviewUpdateURL = "https://iss-lab.geog.ucl.ac.uk/semantica/personalinformationreviews"
+        static let optOutURL = "https://iss-lab.geog.ucl.ac.uk/semantica/optout"
+        static let aggregatedPersonalInformationURL = "https://iss-lab.geog.ucl.ac.uk/semantica/aggregatepersonalinformation"
     }
     
 }

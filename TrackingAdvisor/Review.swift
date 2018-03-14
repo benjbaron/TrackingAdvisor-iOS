@@ -20,6 +20,8 @@ import CoreData
     case personalInformation = 1
     case explanation         = 2
     case privacy             = 3
+    
+    static let allValuesPI = [personalInformation, explanation, privacy]
 }
 
 @objc(Review)

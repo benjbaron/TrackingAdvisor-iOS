@@ -11,6 +11,7 @@ import CoreData
 
 @objc(ReviewPersonalInformation)
 class ReviewPersonalInformation: Review {
+    
     class func findReviewPersonalInformation(matching userReviewId: String, in context: NSManagedObjectContext) throws -> ReviewPersonalInformation? {
         let request: NSFetchRequest<ReviewPersonalInformation> = ReviewPersonalInformation.fetchRequest()
         request.predicate = NSPredicate(format: "id = %@", userReviewId)

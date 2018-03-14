@@ -103,7 +103,6 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
         DispatchQueue.global(qos: .background).async {
             if self.locations.count == 0 { return }
             
-            FileService.shared.log("stopUpdatingLocationAfterXSeconds", classname: "LocationAdaptiveService")
             var bestLocation:CLLocation?
             var bestAccuracy = 3000.0
             
@@ -126,7 +125,6 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
             if let cur = self.currentLocation {
                 let previousLocation = CLLocation(latitude: cur.latitude, longitude: cur.longitude)
                 let distanceMoved = previousLocation.distance(from: newLocation)
-                FileService.shared.log("Distance moved: \(distanceMoved), prev: \(previousLocation), new: \(newLocation)", classname: "LocationAdaptiveService")
                 if distanceMoved > 25 {
                     self.isStationary = false
                 } else {
@@ -147,7 +145,6 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
                     UserLocation.upload(callback: nil)
                     
                     DispatchQueue.main.async { () -> Void in
-                        NSLog("call delegate method for location handler")
                         if strongSelf.delegate != nil {
                             strongSelf.delegate.locationDidUpdate(location: loc)
                         }
@@ -167,7 +164,6 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
             self.bgTask = UIBackgroundTaskInvalid
         })
         
-        FileService.shared.log("didUpdateLocations, updating: \(updating), timer: \(timer.isValid), delayTimer: \(delayTimer.isValid)", classname: "LocationAdaptiveService")
         if !updating {
             return
         }
@@ -182,8 +178,7 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
         
         // if the timer is still valid, the code below is not executed
         if timer.isValid { return }
-        
-        
+                
         // determine the new timeout
     //        if self.isStationary {
     //            self.timeout = min(self.timeout+self.minTimeout, self.maxTimeout)

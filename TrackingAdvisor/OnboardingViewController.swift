@@ -75,8 +75,6 @@ class OnboardingItemsViewController: UIViewController {
     
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
-        
-        print("viewWillLayoutSubviews")
     }
     
     override func viewDidLayoutSubviews() {
@@ -87,9 +85,6 @@ class OnboardingItemsViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        print("viewDidLoad")
-        print("view frame: \(self.view.frame)")
         
         scrollView = UIScrollView(frame: self.view.frame)
         scrollView.sizeToFit()
@@ -128,8 +123,6 @@ class OnboardingItemsViewController: UIViewController {
         view.layoutIfNeeded()
         view.layoutSubviews()
         
-        print("contentView: \(contentView.frame), scrollview: \(scrollView.frame)")
-        
         let fixedWidth = contentView.frame.width - 50.0
         
         var height:CGFloat = 0.0
@@ -162,8 +155,6 @@ class OnboardingItemsViewController: UIViewController {
         }
         
         scrollView.contentSize = CGSize(width: scrollView.contentSize.width, height: max(height, scrollView.frame.height))
-        
-        print("height: \(height), \(scrollView.frame.height), \(contentView.frame), \(scrollView.contentSize)")
     }
 }
 
@@ -206,8 +197,6 @@ class OnboardingConsentFormViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        print("view frame: \(self.view.frame)")
-        
         scrollView = UIScrollView(frame: self.view.frame)
         scrollView.sizeToFit()
         scrollView.alwaysBounceVertical = true
@@ -244,6 +233,7 @@ class OnboardingConsentFormViewController: UIViewController {
         
         if form.count == 0 {
             waitingView.isHidden = false
+            return
         } else {
             waitingView.isHidden = true
         }
@@ -280,7 +270,6 @@ class OnboardingConsentFormViewController: UIViewController {
         }
         
         scrollView.contentSize = CGSize(width: scrollView.contentSize.width, height: max(height, scrollView.frame.height))
-        print("height: \(height), \(scrollView.frame.height), \(contentView.frame)")
     }
     
     private func getConsentFormFromServer() {
@@ -297,6 +286,162 @@ class OnboardingConsentFormViewController: UIViewController {
                     }
                 }
         }
+    }
+}
+
+class OnboardingPrivacyPolicyContentViewController: UIViewController {
+    
+    private var privacyPolicy: [TermsStruct]? {
+        didSet {
+            updateUI()
+        }
+    }
+    
+    private var scrollView: UIScrollView!
+    var contentView: UIView!
+    var textview: UITextView = {
+        let view = UITextView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private lazy var waitingView: UIView = {
+        let view = UIView()
+        
+        let activityView = UIActivityIndicatorView(activityIndicatorStyle: .gray)
+        activityView.startAnimating()
+        activityView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(activityView)
+        
+        let label = UILabel()
+        label.text = "Getting the latest privacy policy"
+        label.numberOfLines = 2
+        label.font = UIFont.systemFont(ofSize: 16.0)
+        label.textAlignment = .center
+        label.textColor = Constants.colors.midPurple
+        label.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(label)
+        
+        view.addVisualConstraint("H:|[v0]|", views: ["v0": activityView])
+        view.addVisualConstraint("H:|[v0]|", views: ["v0": label])
+        view.addVisualConstraint("V:|-40-[v0]-[v1]-40-|", views: ["v0": activityView, "v1": label])
+        
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        scrollView = UIScrollView(frame: self.view.frame)
+        scrollView.sizeToFit()
+        scrollView.alwaysBounceVertical = true
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.backgroundColor = UIColor.white
+        self.view.addSubview(scrollView)
+        
+        contentView = UIView()
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.backgroundColor = UIColor.white
+        scrollView.addSubview(contentView)
+        
+        let margins = self.view.layoutMarginsGuide
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: margins.topAnchor)
+            ])
+        self.view.addVisualConstraint("H:|[scrollView]|", views: ["scrollView" : scrollView])
+        self.view.addVisualConstraint("V:[scrollView]|",  views: ["scrollView" : scrollView])
+        
+        scrollView.addVisualConstraint("H:|[contentView]|", views: ["contentView" : contentView])
+        scrollView.addVisualConstraint("V:|[contentView]|", views: ["contentView" : contentView])
+        
+        // make the width of content view to be the same as that of the containing view.
+        self.view.addVisualConstraint("H:[contentView(==mainView)]", views: ["contentView" : contentView, "mainView" : self.view])
+        
+        contentView.addSubview(waitingView)
+        contentView.addVisualConstraint("H:|-40-[v0]-40-|", views: ["v0": waitingView])
+        
+        getPrivacyPolicyFromServer()
+    }
+    
+    private func updateUI() {
+        guard let policy = privacyPolicy else { return }
+        
+        if policy.count == 0 {
+            waitingView.isHidden = false
+            textview.removeFromSuperview()
+        } else {
+            waitingView.removeFromSuperview()
+            
+            let fixedWidth = contentView.frame.width - 8.0
+            
+            var height:CGFloat = 0.0
+            for line in policy {
+                let textView = UITextView(frame: .zero)
+                
+                if line.type == "S" {  // section
+                    textView.text = line.text
+                    textView.font = UIFont.boldSystemFont(ofSize: 16.0)
+                    height += 20.0
+                } else if line.type == "P" {  // paragraph
+                    textView.text = line.text
+                    textView.font = UIFont.systemFont(ofSize: 14.0)
+                }
+                
+                textView.isEditable = false
+                textView.isSelectable = false
+
+                textView.sizeThatFits(CGSize(width: fixedWidth, height: CGFloat.greatestFiniteMagnitude))
+                
+                let newSize = textView.sizeThatFits(CGSize(width: fixedWidth, height: CGFloat.greatestFiniteMagnitude))
+                let newFrame = CGRect(x: 0.0, y: height, width: max(newSize.width, fixedWidth), height: newSize.height)
+                textView.frame = newFrame
+                
+                contentView.addSubview(textView)
+                height += newFrame.height - 8.0
+            }
+            
+            scrollView.contentSize = CGSize(width: scrollView.contentSize.width, height: max(height + 10.0, scrollView.frame.height))
+        }
+    }
+    
+    private func getPrivacyPolicyFromServer() {
+        print("getPrivacyPolicyFromServer")
+        Alamofire.request(Constants.urls.privacyPolicyURL, method: .get, parameters: nil)
+            .responseJSON { [weak self] response in
+                if response.result.isSuccess {
+                    guard let data = response.data else { return }
+                    do {
+                        let decoder = JSONDecoder()
+                        self?.privacyPolicy = try decoder.decode([TermsStruct].self, from: data)
+                    } catch {
+                        print("Error serializing the json", error)
+                    }
+                }
+        }
+    }
+    
+    private func formatText(_ terms: [TermsStruct]) {
+        print("formatText")
+        let paraStyle = NSMutableParagraphStyle()
+        paraStyle.firstLineHeadIndent = 15.0
+        paraStyle.paragraphSpacingBefore = 10.0
+        
+        let textFont = [NSAttributedStringKey.font: UIFont.systemFont(ofSize: 14.0)]
+        let titleFont = [NSAttributedStringKey.font: UIFont.systemFont(ofSize: 25.0, weight: .black)]
+        
+        let textBlock = NSMutableAttributedString()
+        
+        for line in terms {
+            if line.type == "S" {
+                textBlock.append(NSAttributedString(string: "\n" + line.text + "\n\n", attributes: titleFont))
+            } else if line.type == "P" {
+                textBlock.append(NSAttributedString(string: line.text + "\n", attributes: textFont))
+            }
+        }
+        
+        textview.attributedText = textBlock
+        textview.sizeToFit()
     }
 }
 
@@ -323,8 +468,80 @@ class OnboardingExpectationsViewController: UIViewController {
 }
 
 class OnboardingRequirementsViewController: UIViewController {
+    
+    let segueId = "agree"
+    let segueConsentFormId = "consent form"
+    
     @IBAction func cancel(_ sender: UIButton) {
         showCancelDialog(self)
+    }
+    
+    override func shouldPerformSegue(withIdentifier identifier: String, sender: Any?) -> Bool {
+        if (identifier == segueId) {
+            let alertController = UIAlertController(title: "Terms of the study", message: "Do you agree with the terms of the study?", preferredStyle: UIAlertControllerStyle.alert)
+            
+            let notAgreeAction = UIAlertAction(title: "I do not agree",
+                                                style: UIAlertActionStyle.destructive) { [weak self]
+                                                    (result : UIAlertAction) -> Void in
+                                                    guard let strongSelf = self else { return }
+                                                    let storyboard = UIStoryboard(name: "Onboarding", bundle: nil)
+                                                    let failedViewController = storyboard.instantiateViewController(withIdentifier: "FailedEnrolling")
+                                                    strongSelf.navigationController?.pushViewController(failedViewController, animated: true)
+
+            }
+            
+            let agreeAction = UIAlertAction(title: "I do agree", style: UIAlertActionStyle.default) { [weak self]
+                (result : UIAlertAction) -> Void in
+                guard let strongSelf = self else { return }
+                strongSelf.performSegue(withIdentifier: strongSelf.segueId, sender: strongSelf)
+            }
+            
+            alertController.addAction(agreeAction)
+            alertController.addAction(notAgreeAction)
+            self.present(alertController, animated: true, completion: nil)
+        } else if identifier == segueConsentFormId {
+            return true
+        }
+        return false
+    }
+}
+
+class OnboardingPrivacyPolicyViewController: UIViewController {
+    
+    let segueId = "agree privacy policy"
+    let seguePrivacyPolicyId = "privacy policy"
+    
+    @IBAction func cancel(_ sender: UIButton) {
+        showCancelDialog(self)
+    }
+    
+    override func shouldPerformSegue(withIdentifier identifier: String, sender: Any?) -> Bool {
+        if identifier == segueId {
+            let alertController = UIAlertController(title: "Privacy policy", message: "Do you agree with the privacy policy associated to this study?", preferredStyle: UIAlertControllerStyle.alert)
+            
+            let notAgreeAction = UIAlertAction(title: "I do not agree",
+                                               style: UIAlertActionStyle.destructive) { [weak self]
+                                                (result : UIAlertAction) -> Void in
+                                                guard let strongSelf = self else { return }
+                                                let storyboard = UIStoryboard(name: "Onboarding", bundle: nil)
+                                                let failedViewController = storyboard.instantiateViewController(withIdentifier: "FailedEnrolling")
+                                                strongSelf.navigationController?.pushViewController(failedViewController, animated: true)
+                                                
+            }
+            
+            let agreeAction = UIAlertAction(title: "I do agree", style: UIAlertActionStyle.default) { [weak self]
+                (result : UIAlertAction) -> Void in
+                guard let strongSelf = self else { return }
+                strongSelf.performSegue(withIdentifier: strongSelf.segueId, sender: strongSelf)
+            }
+            
+            alertController.addAction(agreeAction)
+            alertController.addAction(notAgreeAction)
+            self.present(alertController, animated: true, completion: nil)
+        } else if identifier == seguePrivacyPolicyId {
+            return true
+        }
+        return false
     }
 }
 
@@ -338,8 +555,6 @@ class OnboardingPermissionsViewController: UIViewController, CLLocationManagerDe
     
     override func shouldPerformSegue(withIdentifier identifier: String, sender: Any?) -> Bool {
         if (identifier == segueId) {
-            print("Show all the permission prompts here")
-            
             // location permission
             locationManager = CLLocationManager()
             locationManager?.delegate = self
@@ -365,7 +580,6 @@ class OnboardingPermissionsViewController: UIViewController, CLLocationManagerDe
     }
     
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-        print("didChangeAuthorization with status \(status)")
         
         switch status {
         case .notDetermined:
@@ -377,7 +591,6 @@ class OnboardingPermissionsViewController: UIViewController, CLLocationManagerDe
                 // notification permission
                 UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge]) {
                     [weak self] (granted, error) in
-                    print("Permission granted: \(granted)")
                     
                     if granted {
                         DispatchQueue.main.async {

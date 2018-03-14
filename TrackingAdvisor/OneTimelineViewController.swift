@@ -62,12 +62,12 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         guard let timeline = self.timeline else { return }
         
         let visits = DataStoreService.shared.getVisits(for: timelineDay)
-                
+        
         let touchAction = { [weak self] (point:ISPoint) in
             guard let strongSelf = self else { return }
             
             // Load the place detail view and the navigation controller
-            let controller = UnifiedPlaceInformationViewController()
+            let controller = OneTimelinePlaceDetailViewController()
             controller.visit = point.visit
             
             let controllerNavigation = UINavigationController(rootViewController: controller)
@@ -134,11 +134,9 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         
         let updateTimelineTouchAction = { [weak self] in
             guard let strongSelf = self else { return }
-            print("Update the timeline")
             UserUpdateHandler.retrieveLatestUserUpdates(for: strongSelf.timelineDay, force: true) {
                 strongSelf.reload()
             }
-            
         }
         
         let dateFormatter = DateFormatter()
@@ -225,12 +223,12 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
                     if let map = self?.mapView {
                         self?.mapCloseView = CloseView(text: "Close")
                         self?.mapCloseView.frame = CGRect(x: 0, y: 0, width: 95.0, height: 40)
-                        self?.mapCloseView.center = CGPoint(x: map.center.x - 20.0, y: map.frame.height - 40)
+                        self?.mapCloseView.center = CGPoint(x: map.center.x, y: map.frame.height - 40)
                         map.addSubview((self?.mapCloseView)!)
                         self?.mapCloseView.addTapGestureRecognizer { [weak self] in
                             self?.mapCloseView.alpha = 0.7
                             self?.foldMapView()
-                            UIView.animate(withDuration: 0.5) { [weak self] in
+                            UIView.animate(withDuration: 0.3) { [weak self] in
                                 self?.mapCloseView.alpha = 1
                             }
                         }

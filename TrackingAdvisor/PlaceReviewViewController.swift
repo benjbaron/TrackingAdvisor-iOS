@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import FloatRatingView
 
 protocol PlaceReviewCellDelegate {
     func didEndPlaceReview()
@@ -105,7 +106,7 @@ class PlaceReviewViewController: UIViewController, UICollectionViewDataSource, P
         collectionView.collectionViewLayout = flowLayout
         collectionView.isPagingEnabled = false
         collectionView.isScrollEnabled = false
-        collectionView.contentInset = UIEdgeInsets(top: insetY - 10.0, left: insetX, bottom: insetY + 10.0, right: insetX)
+        collectionView.contentInset = UIEdgeInsets(top: insetY - 10.0, left: insetX, bottom: insetY + 10.0, right: insetX) // shift the view up
         
         collectionView.layoutIfNeeded()
     }
@@ -599,7 +600,7 @@ class PlaceReviewLayout: UICollectionViewFlowLayout {
     var cellWidth: CGFloat = 50
     var cellHeight: CGFloat = 50
     var xCellFrameScaling: CGFloat = 0.8
-    var yCellFrameScaling: CGFloat = 1.0
+    var yCellFrameScaling: CGFloat = 0.95
     var cellScaling: CGFloat = 0.95
     
     override init() {
@@ -763,11 +764,245 @@ class QuestionRow : UIView {
     }
 }
 
+
+class QuestionRatingRow : UIView, FloatRatingViewDelegate {
+    var question: String? {
+        didSet {
+            questionLabel?.text = question
+        }
+    }
+    var ratingChanged: ((Double) -> ())?
+    var color: UIColor? = Constants.colors.primaryDark {
+        didSet {
+            ratingView?.tintColor = color
+            questionLabel?.textColor = color
+        }
+    }
+    
+    private var ratingView: FloatRatingView?
+    private var questionLabel: UILabel?
+    
+    var rating: Float = 1.0 { didSet {
+        ratingView?.rating = Double(rating)
+    }}
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+    
+    convenience init(with question: String?, onChange: ((Double)->())?) {
+        self.init(frame: CGRect.zero)
+        self.question = question
+        self.ratingChanged = onChange
+        setupViews()
+    }
+    
+    required init(coder aDecoder: NSCoder) {
+        fatalError("This class does not support NSCoding")
+    }
+    
+    func setupViews() {
+        ratingView = FloatRatingView()
+        questionLabel = UILabel()
+        guard let ratingView = ratingView, let questionLabel = questionLabel else { return }
+        
+        ratingView.delegate = self
+        ratingView.backgroundColor = UIColor.clear
+        ratingView.contentMode = UIViewContentMode.scaleAspectFit
+        ratingView.type = .wholeRatings
+        ratingView.emptyImage = UIImage(named: "star-half")
+        ratingView.fullImage = UIImage(named: "star")
+        ratingView.tintColor = color
+        ratingView.minRating = 1
+        ratingView.rating = 2
+        ratingView.maxRating = 3
+        ratingView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(ratingView)
+        
+        // add constraints
+        questionLabel.text = question
+        questionLabel.font = UIFont.boldSystemFont(ofSize: 14)
+        questionLabel.numberOfLines = 0
+        questionLabel.textAlignment = .left
+        questionLabel.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(questionLabel)
+        
+        addVisualConstraint("V:|[v0]|", views: ["v0": questionLabel])
+        addVisualConstraint("H:|-14-[v0]-10-[rating(100)]-14-|", views: ["v0": questionLabel, "rating": ratingView])
+        ratingView.centerYAnchor.constraint(equalTo: questionLabel.centerYAnchor).isActive = true
+        ratingView.heightAnchor.constraint(equalToConstant: 25).isActive = true
+        
+        translatesAutoresizingMaskIntoConstraints = false
+    }
+    
+    // MARK: - FloatRatingViewDelegate methods
+    
+    func floatRatingView(_ ratingView: FloatRatingView, didUpdate rating: Double) {
+        print("didUpdate rating to \(rating)")
+        ratingChanged?(rating)
+    }
+}
+
+enum FeedbackType : Int32 {
+    case none = 0
+    case no  = 1
+    case meh = 2
+    case yes = 3
+}
+
+class FeedbackRow : UIView {
+    var feedbackChanged: ((FeedbackType) -> ())?
+    let iconDiameter:CGFloat = 35.0
+    var color: UIColor! = Constants.colors.primaryDark {
+        didSet {
+            resetColors()
+        }
+    }
+    var selectedFeedback: FeedbackType = .meh {
+        didSet {
+            print("didSet selectedFeedback \(selectedFeedback)")
+            resetColors()
+            switch selectedFeedback {
+            case .yes:
+                yesView.color = color
+                yesView.imageColor = color
+                yesLabel.textColor = color
+            case .no:
+                noView.color = color
+                noView.imageColor = color
+                noLabel.textColor = color
+            case .meh:
+                mehView.color = color
+                mehView.imageColor = color
+                mehLabel.textColor = color
+            case .none:
+                break
+            }
+        }
+    }
+    
+    private func resetColors() {
+        print("resetColors")
+        yesView.color = color.withAlphaComponent(0.3)
+        yesView.imageColor = color.withAlphaComponent(0.3)
+        yesLabel.textColor = color.withAlphaComponent(0.3)
+        noView.color = color.withAlphaComponent(0.3)
+        noView.imageColor = color.withAlphaComponent(0.3)
+        noLabel.textColor = color.withAlphaComponent(0.3)
+        mehView.color = color.withAlphaComponent(0.3)
+        mehView.imageColor = color.withAlphaComponent(0.3)
+        mehLabel.textColor = color.withAlphaComponent(0.3)
+    }
+    
+    private lazy var yesView: RoundIconView = {
+        return RoundIconView(image: UIImage(named: "check")!, color: color, imageColor: color, diameter: iconDiameter, scale: 0.6, fill: false)
+    }()
+    
+    private lazy var yesLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Yes!"
+        label.font = UIFont.systemFont(ofSize: 16.0)
+        return label
+    }()
+    
+    private lazy var mehView: RoundIconView = {
+        return RoundIconView(image: UIImage(named: "meh")!, color: color, imageColor: color, diameter: iconDiameter, scale: 0.6, fill: false)
+    }()
+    
+    private lazy var mehLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Not really"
+        label.font = UIFont.systemFont(ofSize: 16.0)
+        return label
+    }()
+    
+    private lazy var noView: RoundIconView = {
+        return RoundIconView(image: UIImage(named: "times")!, color: color, imageColor: color, diameter: iconDiameter,  scale: 0.6, fill: false)
+    }()
+    
+    private lazy var noLabel: UILabel = {
+        let label = UILabel()
+        label.text = "No"
+        label.font = UIFont.systemFont(ofSize: 16.0)
+        return label
+    }()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+    
+    convenience init(onChange: ((FeedbackType)->())?) {
+        self.init(frame: CGRect.zero)
+        self.feedbackChanged = onChange
+        setupViews()
+    }
+
+    required init(coder aDecoder: NSCoder) {
+        fatalError("This class does not support NSCoding")
+    }
+    
+    func setupViews() {
+        yesView.widthAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        yesView.heightAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        noView.widthAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        noView.heightAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        mehView.widthAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        mehView.heightAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        
+        let yesStackView = UIStackView(arrangedSubviews: [yesView, yesLabel])
+        yesStackView.axis = .vertical
+        yesStackView.distribution = .fillProportionally
+        yesStackView.alignment = .center
+        yesStackView.spacing = 5
+        yesStackView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(yesStackView)
+        
+        let noStackView = UIStackView(arrangedSubviews: [noView, noLabel])
+        noStackView.axis = .vertical
+        noStackView.distribution = .fillProportionally
+        noStackView.alignment = .center
+        noStackView.spacing = 5
+        noStackView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(noStackView)
+        
+        let mehStackView = UIStackView(arrangedSubviews: [mehView, mehLabel])
+        mehStackView.axis = .vertical
+        mehStackView.distribution = .fillProportionally
+        mehStackView.alignment = .center
+        mehStackView.spacing = 5
+        mehStackView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(mehStackView)
+        
+        // add tap recognizers
+        yesStackView.addTapGestureRecognizer { [weak self] in
+            self?.selectedFeedback = .yes
+            self?.feedbackChanged?(.yes)
+        }
+        mehStackView.addTapGestureRecognizer { [weak self] in
+            self?.selectedFeedback = .meh
+            self?.feedbackChanged?(.meh)
+        }
+        noStackView.addTapGestureRecognizer { [weak self] in
+            self?.selectedFeedback = .no
+            self?.feedbackChanged?(.no)
+        }
+        
+        // add constraints
+        addVisualConstraint("V:|-[stack(60)]-|", views: ["stack": yesStackView])
+        addVisualConstraint("V:|-[stack(60)]-|", views: ["stack": noStackView])
+        addVisualConstraint("V:|-[stack(60)]-|", views: ["stack": mehStackView])
+        addVisualConstraint("H:|-14-[stack1]-30-[stack2]-30-[stack3]-14-|", views: ["stack1": yesStackView, "stack2": mehStackView, "stack3": noStackView])
+        
+        translatesAutoresizingMaskIntoConstraints = false
+    }
+}
+
+
 class CommentRow : UIView {
     var action: (() -> ())?
     var text: String?
     var icon: String?
-    var color: UIColor = Constants.colors.primaryLight {
+    var color: UIColor? = Constants.colors.primaryLight {
         didSet {
             textLabel.textColor = color
             iconView.iconColor = color
@@ -785,14 +1020,14 @@ class CommentRow : UIView {
     }()
     
     private lazy var iconView: IconView = {
-        return IconView(icon: self.icon!, iconColor: color)
+        return IconView(icon: self.icon, iconColor: color)
     }()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
     }
     
-    convenience init(with text: String, icon: String, backgroundColor: UIColor, color: UIColor, action: @escaping () -> ()) {
+    convenience init(with text: String, icon: String, backgroundColor: UIColor, color: UIColor?, action: @escaping () -> ()) {
         self.init(frame: CGRect.zero)
         self.text = text
         self.color = color

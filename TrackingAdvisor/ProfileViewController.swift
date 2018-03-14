@@ -38,21 +38,19 @@ class ProfileViewController: UIViewController, UIScrollViewDelegate, MGLMapViewD
         }
     }}
     
-    var numberOfReviewsAnswered: Int? { didSet {
-        studyStats.statsTwo.bigText = String(numberOfReviewsAnswered!)
-        if numberOfReviewsAnswered! < 2 {
-            studyStats.statsTwo.smallBottomText = "REVIEW\nANSWERED"
-        } else {
-            studyStats.statsTwo.smallBottomText = "REVIEWS\nANSWERED"
+    var numberOfAggregatedPersonalInformation: Int? { didSet {
+        studyStats.statsTwo.bigText = String(numberOfAggregatedPersonalInformation!)
+        if numberOfAggregatedPersonalInformation! < 2 {
+            studyStats.statsTwo.smallBottomText = "PERSONAL\nINFORMATION"
         }
     }}
     
-    var numberOfReviewsTotal: Int? { didSet {
-        studyStats.statsThree.bigText = String(numberOfReviewsTotal!)
-        if numberOfReviewsTotal! < 2 {
-            studyStats.statsThree.smallBottomText = "REVIEW\nTOTAL"
+    var numberOfPlacesToReviewTotal: Int? { didSet {
+        studyStats.statsTwo.bigText = String(numberOfPlacesToReviewTotal!)
+        if numberOfPlacesToReviewTotal! < 2 {
+            studyStats.statsThree.smallBottomText = "PLACE TO\nREVIEW"
         } else {
-            studyStats.statsThree.smallBottomText = "REVIEWS\nTOTAL"
+            studyStats.statsThree.smallBottomText = "PLACES TO\nREVIEW"
         }
     }}
     
@@ -77,8 +75,8 @@ class ProfileViewController: UIViewController, UIScrollViewDelegate, MGLMapViewD
     
     var studyStats: StatsCardView = {
         return StatsCardView(statsOne: BigText(bigText: "0", smallBottomText: "PLACES\nVISITED"),
-                             statsTwo: BigText(bigText: "0", smallBottomText: "REVIEWS\nANSWERED"),
-                             statsThree: BigText(bigText: "0", smallBottomText: "REVIEWS\nTOTAL"))
+                             statsTwo: BigText(bigText: "0", smallBottomText: "PERSONAL\nINFORMATION"),
+                             statsThree: BigText(bigText: "0", smallBottomText: "PLACES TO\nREVIEW"))
     }()
     
     var mapView: MGLMapView = {
@@ -275,45 +273,28 @@ class ProfileViewController: UIViewController, UIScrollViewDelegate, MGLMapViewD
         let uniquePlaceIds = Array(Set(placeIds))
         numberofPlacesVisited = uniquePlaceIds.count
         
-        // compute the number of reviews answered
-        var reviewAnsweredIds: [String] = []
-        var reviewIds: [String] = []
-        for v in allVisits {
-            if let rv = v.review, let rvid = rv.id {
-                reviewIds.append(rvid)
-                if rv.answer != .none {
-                    reviewAnsweredIds.append(rvid)
-                }
-            }
-            if let pis = v.place?.personalInformation?.allObjects as? [PersonalInformation] {
-                for pi in pis {
-                    if let rpis = pi.reviews {
-                        for case let rpi as Review in rpis {
-                            if let rpiid = rpi.id {
-                                reviewIds.append(rpiid)
-                                if rpi.answer != .none {
-                                    reviewAnsweredIds.append(rpiid)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        let placesToReview = DataStoreService.shared.getAllPlacesToReview(sameContext: true)
+        numberOfPlacesToReviewTotal = placesToReview.count
         
-        numberOfReviewsTotal = reviewIds.count
-        numberOfReviewsAnswered = reviewAnsweredIds.count
+        let aggregatedPersonalInformation = DataStoreService.shared.getAllAggregatedPersonalInformation(sameContext: true)
+        numberOfAggregatedPersonalInformation = aggregatedPersonalInformation.count
         
         // put all the places in the map
         mapAnnotations.removeAll()
         for v in allVisits {
             guard let p = v.place else { return }
             
+            var color = Constants.colors.midPurple
+            let dayOfWeek = v.arrival?.dayOfWeek
+            if dayOfWeek == 1 || dayOfWeek == 7 {
+                color = Constants.colors.orange
+            }
+            
             let count = mapAnnotations.count + 1
             let pointAnnotation = CustomPointAnnotation(coordinate: CLLocationCoordinate2D(latitude: p.latitude, longitude: p.longitude), title: p.name, subtitle: nil)
             pointAnnotation.reuseIdentifier = "customAnnotation\(count)"
             // This dot image grows in size as more annotations are added to the array.
-            pointAnnotation.image = dot(size:20, color: p.getPlaceColor())
+            pointAnnotation.image = dot(size:20, color: color)
             
             mapAnnotations.append(pointAnnotation)
         }

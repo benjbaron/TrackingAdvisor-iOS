@@ -12,56 +12,41 @@ import Alamofire
 
 class ExplanationFeedbackViewController: UIViewController {
     @objc func send(_ sender: UIBarButtonItem) {
-        // TODO: Send to server
-        // add feedback to true in core data
-        
-        if let piid = personalInformation?.id, let comment = textField.text {
-            UserUpdateHandler.updatePersonalInformation(for: piid, with: comment) { [weak self] in
-                self?.goBack(nil)
-            }
-        }
+        sendToServerAndSaveLocally()
+        goBack(nil)
     }
     
     @objc func back(_ sender: UIBarButtonItem) {
+        sendToServerAndSaveLocally()
         goBack(nil)
     }
     
     func goBack(_ notificationView: NotificationView?) {
         view.endEditing(true)
         guard let controllers = navigationController?.viewControllers else { return }
-        let count = controllers.count
-        if count == 3 {
-            // get the previous place detail controller
-            if let vc = controllers[1] as? PlacePersonalInformationController {
-                navigationController?.popToViewController(vc, animated: true)
-                if let view = notificationView {
-                    vc.view.addSubview(view)
-                }
-            }
-        } else if count == 1 {
-            // return to the timeline
-            presentingViewController?.dismiss(animated: true)
-            if let view = notificationView {
-                presentingViewController?.view.addSubview(view)
+        if controllers.count == 2 {
+            // get the previous view controller
+            navigationController?.popToViewController(controllers[0], animated: true)
+        }
+    }
+    
+    func sendToServerAndSaveLocally() {
+        print("comment: \(textView.text)")
+        if let piid = personalInformation?.id, let comment = textView.text, comment != "" {
+            UserUpdateHandler.updatePersonalInformation(for: piid, with: comment) { [weak self] in
+                self?.goBack(nil)
             }
         }
     }
     
     lazy var headerView: PlaceHeader = {
-        return PlaceHeader()
+        let header = PlaceHeader()
+        header.backgroundColor = color
+        header.placeName = "Give a feedback on an explanation"
+        return header
     }()
     
     var color = Constants.colors.orange
-    var visit: Visit?
-    var place: Place? {
-        didSet {
-            guard let place = place else { return }
-            headerView.placeName = place.name
-            
-            color = place.getPlaceColor()
-            headerView.backgroundColor = color
-        }
-    }
     
     lazy private var explanationRow: ElementRowView = {
         let row = ElementRowView()
@@ -81,10 +66,9 @@ class ExplanationFeedbackViewController: UIViewController {
         return row
     }()
     
-    var personalInformation: PersonalInformation? {
+    var personalInformation: AggregatedPersonalInformation? {
         didSet {
-            place = personalInformation?.place
-            if let explanation = personalInformation?.explanation {
+            if let explanation = personalInformation?.getExplanation() {
                 print("explanation: \(explanation)")
                 explanationRow.text = explanation
             }
@@ -92,13 +76,16 @@ class ExplanationFeedbackViewController: UIViewController {
                 print("personal information: \(pi)")
                 piRow.text = pi
             }
+            if let comment = personalInformation?.comment {
+                print("comment: \(comment)")
+                textView.text = comment
+            }
         }
     }
     
-    lazy private var textField: UITextField = {
-        let view = UITextField()
-        view.placeholder = "Your comments here"
-        view.contentVerticalAlignment = .top
+    lazy private var textView: UITextView = {
+        let view = UITextView()
+        view.font = UIFont.systemFont(ofSize: 14.0)
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -119,6 +106,14 @@ class ExplanationFeedbackViewController: UIViewController {
     }
     
     func setupNavBarButtons() {
+        self.navigationController?.isNavigationBarHidden = false
+        
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.isTranslucent = true
+        self.navigationController?.view.backgroundColor = UIColor.clear
+        self.navigationController?.navigationBar.barStyle = .blackOpaque
+
         let doneButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(send))
         doneButton.tintColor = Constants.colors.superLightGray
         self.navigationItem.rightBarButtonItem = doneButton
@@ -136,13 +131,13 @@ class ExplanationFeedbackViewController: UIViewController {
         self.view.addSubview(headerView)
         self.view.addSubview(piRow)
         self.view.addSubview(explanationRow)
-        self.view.addSubview(textField)
+        self.view.addSubview(textView)
         self.view.addVisualConstraint("H:|[header]|", views: ["header" : headerView])
-        self.view.addVisualConstraint("H:|[v0]|", views: ["v0": piRow])
-        self.view.addVisualConstraint("H:|[v0]|", views: ["v0": explanationRow])
-        self.view.addVisualConstraint("H:|-[v0]-|", views: ["v0": textField])
+        self.view.addVisualConstraint("H:|[v0]-|", views: ["v0": piRow])
+        self.view.addVisualConstraint("H:|[v0]-|", views: ["v0": explanationRow])
+        self.view.addVisualConstraint("H:|-[v0]-|", views: ["v0": textView])
         
-        self.view.addVisualConstraint("V:|[header(100)][pi]-[ex]-[text]|", views: ["header": headerView, "pi": piRow, "ex": explanationRow, "text": textField])
+        self.view.addVisualConstraint("V:|[header(120)][pi]-[ex]-[text]|", views: ["header": headerView, "pi": piRow, "ex": explanationRow, "text": textView])
     }
     
 }

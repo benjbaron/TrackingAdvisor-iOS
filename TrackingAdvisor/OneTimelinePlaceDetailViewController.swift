@@ -9,7 +9,7 @@
 import UIKit
 import Mapbox
 
-class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, PersonalInformationCategoryCellDelegate, FooterMoreInformationDelegate, HeaderReviewVisitDelegate, DataStoreUpdateProtocol {
+class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, PersonalInformationCategoryCellDelegate, HeaderReviewVisitDelegate, DataStoreUpdateProtocol {
     
     private func presentEditVC() {
         let viewController = PlaceFinderMapTableViewController()
@@ -41,12 +41,10 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     }()
     let cellId = "CellId"
     let headerCellId = "HeaderCellId"
-    let footerCellId = "FooterCellId"
     var color = Constants.colors.orange
     
     var visit: Visit? {
         didSet {
-            print("didSet visit")
             guard let visit = visit, let place = visit.place else { return }
             headerView.placeAddress = place.address
             headerView.placeName = place.name
@@ -96,7 +94,6 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
         // Register cells types
         collectionView.register(PersonalInformationCategoryCell.self, forCellWithReuseIdentifier: cellId)
         collectionView.register(HeaderPersonalInformationCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, withReuseIdentifier: headerCellId)
-        collectionView.register(FooterMoreInformationCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionFooter, withReuseIdentifier: footerCellId)
         
         setupViews()
     }
@@ -156,7 +153,7 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: view.frame.width, height: 150)
+        return CGSize(width: view.frame.width, height: 220)
     }
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
@@ -174,14 +171,6 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
                 headerCell.setReviewAnswer(with: answer)
             }
             return headerCell
-        } else if kind == UICollectionElementKindSectionFooter {
-            let footerCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: footerCellId, for: indexPath) as! FooterMoreInformationCell
-            footerCell.delegate = self
-            footerCell.color = color
-            if let count = personalInformation?.count {
-                footerCell.hasPersonalInformation = count > 0
-            }
-            return footerCell
         } else {
             assert(false, "Unexpected element kind")
         }
@@ -211,35 +200,18 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
         return CGSize(width: collectionView.frame.width, height: height)
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForFooterInSection section: Int) -> CGSize {
-        return CGSize(width: collectionView.frame.width, height: 45)
-    }
-    
-    // MARK: - PersonalInformationCategoryCellDelegate method
-    func addPersonalInformation(cat: String) {
-        presentAddPIVC(for: cat)
-    }
-    
-    func reviewPersonalInformation(cat: String, personalInformation: PersonalInformation, answer: ReviewAnswer) {
-        if let review = personalInformation.getReview(of: .personalInformation) {
-            review.answer = answer
-            DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: answer)
+    // MARK: - PersonalInformationCategoryCellDelegate method    
+    func reviewPersonalInformation(cat: String, personalInformation: PersonalInformation, answer: FeedbackType) {
+        print("feedback from personal information \(personalInformation.name!): \(answer)")
+        
+        // TODO: save the feedback in the database
+        personalInformation.rating = answer.rawValue
+        if let piid = personalInformation.id {
+            updatedReviews[piid] = answer.rawValue
+            DataStoreService.shared.updatePersonalInformationRating(with: piid, rating: answer.rawValue) {
+                print("reviewPersonalInformation for personal information \(personalInformation.name!) and rating \(answer)")
+            }
         }
-        if let review = personalInformation.getReview(of: .explanation) {
-            review.answer = .none
-            DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: .none)
-        }
-        if let review = personalInformation.getReview(of: .privacy) {
-            review.answer = .none
-            DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: .none)
-        }
-    }
-    
-    // MARK: - FooterMoreInformationDelegate method
-    func didPressMoreInformation() {
-        let viewController = PlacePersonalInformationController()
-        viewController.visit = visit
-        navigationController?.pushViewController(viewController, animated: true)
     }
     
     // MARK: - HeaderReviewVisitDelegate methods
@@ -276,87 +248,6 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
         }
     }
 }
-
-protocol FooterMoreInformationDelegate {
-    func didPressMoreInformation()
-}
-
-class FooterMoreInformationCell: UICollectionViewCell {
-    var delegate: FooterMoreInformationDelegate?
-    var hasPersonalInformation: Bool = true { didSet {
-        if hasPersonalInformation {
-            alpha = 1
-        } else {
-            alpha = 0
-        }
-    }}
-    var color: UIColor? {
-        didSet {
-            backgroundColor = color
-            moreInformationLabel.textColor = .white
-            moreInformationIcon.tintColor = .white
-        }
-    }
-    var text: String? {
-        didSet {
-            moreInformationLabel.text = text
-        }
-    }
-    private var moreInformationView: UIView!
-    private let moreInformationLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Get more information on how we inferred the personal information"
-        label.font = UIFont.boldSystemFont(ofSize: 14.0)
-        label.textColor = Constants.colors.black
-        label.lineBreakMode = .byWordWrapping
-        label.numberOfLines = 2
-        label.textAlignment = .left
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    private let moreInformationIcon: UIImageView = {
-        let imageView = UIImageView(image: UIImage(named: "chevron-right")!.withRenderingMode(.alwaysTemplate))
-        imageView.tintColor = Constants.colors.black
-        imageView.contentMode = .scaleAspectFit
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
-    }()
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupViews()
-    }
-    
-    required init(coder aDecoder: NSCoder) {
-        fatalError("This class does not support NSCoding")
-    }
-    
-    func setupViews() {
-        backgroundColor = .red
-        addSubview(moreInformationLabel)
-        addSubview(moreInformationIcon)
-        addTapGestureRecognizer { [weak self] in
-            if let b = self?.hasPersonalInformation, b {
-                self?.delegate?.didPressMoreInformation()
-            }
-        }
-        
-        moreInformationLabel.setContentCompressionResistancePriority(UILayoutPriority(rawValue: 1000), for: .horizontal)
-        moreInformationIcon.setContentCompressionResistancePriority(UILayoutPriority(rawValue: 250), for: .horizontal)
-
-        // setup constraints
-        addVisualConstraint("H:|-14-[label]-[icon]-14-|", views: ["label": moreInformationLabel, "icon": moreInformationIcon])
-        addVisualConstraint("V:|[label]|", views: ["label": moreInformationLabel])
-        addVisualConstraint("V:|-[icon]-|", views: ["icon": moreInformationIcon])
-        
-        translatesAutoresizingMaskIntoConstraints = false
-    }
-    
-    func height() -> CGFloat {
-        return 45
-    }
-}
-
 
 protocol HeaderReviewVisitDelegate {
     func didPressReviewVisit(with answer: ReviewAnswer)
@@ -490,7 +381,7 @@ class HeaderPersonalInformationCell : UICollectionViewCell, MGLMapViewDelegate {
         addPersonalInformationLabel.addTapGestureRecognizer { [weak self] in
             self?.addPersonalInformationLabel.alpha = 0.7
             self?.delegate?.didPressAddPersonalInformation()
-            UIView.animate(withDuration: 0.5) { [weak self] in
+            UIView.animate(withDuration: 0.3) { [weak self] in
                 self?.addPersonalInformationLabel.alpha = 1
             }
         }

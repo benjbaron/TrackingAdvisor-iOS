@@ -49,7 +49,7 @@ extension Formatter {
     }()
     static let customFullDateLetter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateFormat = "cccc d MMMM yyyy"
+        formatter.dateFormat = "ccc d MMMM yyyy"
         return formatter
     }()
     static let time:DateFormatter = {
@@ -92,6 +92,11 @@ extension Date {
     }
     var monthName: String {
         return Formatter.month.string(from: self)
+    }
+    var dayOfWeek: Int {
+        let calendar = Calendar.current
+        let date = calendar.startOfDay(for: self)
+        return calendar.component(.weekday, from: date)
     }
     // the same for your local time
     var localTime: String {
@@ -318,13 +323,13 @@ extension TimeInterval {
         let hours = (ti / 3600)
         
         if hours != 0 {
-            let hour_string = hours > 1 ? "hours" : "hour"
+            let hourStr = hours > 1 ? "hours" : "hour"
             if 0 ... 10 ~= minutes {
-                return "just over \(hours) \(hour_string)"
+                return "just over \(hours) \(hourStr)"
             } else if 10 ... 50 ~= minutes {
-                return "\(hours) \(hour_string) and \(minutes) minutes"
+                return "\(hours) \(hourStr) and \(minutes) minutes"
             } else {
-                return "almost \(hours+1) \(hour_string)"
+                return "almost \(hours+1) \(hourStr)"
             }
         } else if minutes != 0 {
             if 0 ... 10 ~= minutes {

@@ -481,6 +481,8 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                 let place = searchResult.places[idx]
                 cell.placeNameLabel.text = place.name
                 cell.placeAddressLabel.text = place.city
+                cell.iconView.image = UIImage(named: "map-marker")!.withRenderingMode(.alwaysTemplate)
+                cell.iconView.tintColor = Constants.colors.primaryLight
                 cell.place = place
             }
         }
@@ -641,16 +643,28 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
             "venueid": selectedPlace?.venueid ?? "",
         ]
         
+        let visitid = visit?.id
+        
         Alamofire.request(Constants.urls.addvisitURL, method: .post, parameters: parameters, encoding: JSONEncoding.default)
-            .responseJSON { response in
+            .responseJSON { [weak self] response in
                 if response.result.isSuccess {
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()
                         decoder.dateDecodingStrategy = .secondsSince1970
                         let userUpdate = try decoder.decode(UserUpdate.self, from: data)
-                        DataStoreService.shared.updateDatabase(with: userUpdate)
-                        callback?()
+                        if self?.type == .edit, let visitid = visitid {
+                            DataStoreService.shared.deleteVisit(visitid: visitid) {
+                                DataStoreService.shared.updateDatabase(with: userUpdate) {
+                                    callback?()
+                                }
+                            }
+                        } else {
+                            DataStoreService.shared.updateDatabase(with: userUpdate) {
+                                callback?()
+                            }
+                        }
+                        
                     } catch {
                         print("Error serializing the json", error)
                     }
@@ -757,7 +771,6 @@ class VisitTimesEditRow : UIView {
     var date: Date? {
         didSet {
             dateLabel.text = DateHandler.dateToLetterAndPeriod(from: date!)
-            
             datePicker.minimumDate = date!.startOfDay
             datePicker.maximumDate = date!.endOfDay
             datePicker.date = date!

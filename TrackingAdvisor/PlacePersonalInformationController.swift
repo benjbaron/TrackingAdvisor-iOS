@@ -201,6 +201,8 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
         } else {
             assert(false, "Unexpected element kind")
         }
+        
+        return UICollectionReusableView()
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
@@ -286,9 +288,6 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
             if let review = personalInformation?.getReview(of: .explanation) {
                 questionExplanationView.question = review.question
                 questionExplanationView.selected = review.answer
-                if let commented = personalInformation?.commented, !commented {
-                    constraintsUpdateExplanation(review.answer)
-                }
             }
             
             if let review = personalInformation?.getReview(of: .privacy) {
@@ -412,9 +411,6 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
                 DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: .no)
                 print("answered no to review \(review)")
             }
-            if let commented = self?.personalInformation?.commented, !commented {
-                self?.constraintsUpdateExplanation(.no)
-            }
             self?.delegate?.wasPersonalInfromationCellChanged(at: self?.indexPath)
         })
         row.selectedColor = color
@@ -425,10 +421,7 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
     lazy var questionExplanationEditView: CommentRow = {
         let row = CommentRow(with: "It would be great if you could tell us how we can improve the explanation", icon: "chevron-right", backgroundColor: UIColor.clear, color: Constants.colors.superLightGray) {
             print("tapped on explanation edit")
-            let viewController = ExplanationFeedbackViewController()
-            viewController.personalInformation = self.personalInformation
-            viewController.visit = self.parent?.visit
-            
+            let viewController = ExplanationFeedbackViewController()            
             self.parent?.navigationController?.pushViewController(viewController, animated: true)
         }
         return row
@@ -540,7 +533,7 @@ fileprivate class LargePersonalInformationCell: UICollectionViewCell {
             questionsHeight += 0.0
         } else if questionPersonalInformationView.selected == .yes {
             questionsHeight += 40.0 + 40.0
-            if questionExplanationView.selected == .no, let commented = personalInformation?.commented, !commented {
+            if questionExplanationView.selected == .no {
                 questionsHeight += 40.0
             }
         }
@@ -688,7 +681,7 @@ class FooterDoneCell: UICollectionViewCell {
         addSubview(doneLabel)
         addTapGestureRecognizer { [weak self] in
             self?.doneLabel.alpha = 0.7
-            UIView.animate(withDuration: 0.5) { [weak self] in
+            UIView.animate(withDuration: 0.3) { [weak self] in
                 self?.doneLabel.alpha = 1
             }
             self?.delegate?.didPressDone()

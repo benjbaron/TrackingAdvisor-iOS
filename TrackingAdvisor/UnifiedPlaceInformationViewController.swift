@@ -1,5 +1,5 @@
 //
-//  OneTimelinePlaceDetailViewController.swift
+//  UnifiedPlaceInformationViewController
 //  TrackingAdvisor
 //
 //  Created by Benjamin BARON on 12/12/17.
@@ -9,7 +9,8 @@
 import UIKit
 import Mapbox
 
-class UnifiedPlaceInformationViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UnifiedPersonalInformationDelegate, DataStoreUpdateProtocol, MGLMapViewDelegate {
+
+class UnifiedPlaceInformationViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UnifiedPlaceInformationHeaderCellDelegate, DataStoreUpdateProtocol, MGLMapViewDelegate, UnifiedPlaceInformationCategoryDelegate {
     
     private func presentEditVC() {
         let viewController = PlaceFinderMapTableViewController()
@@ -31,38 +32,28 @@ class UnifiedPlaceInformationViewController: UIViewController, UICollectionViewD
     }
     
     @objc func back(_ sender: UIBarButtonItem) {
-        UserUpdateHandler.sendReviewUpdate(reviews: updatedReviews)
+        UserUpdateHandler.sendPersonalInformationReviewUpdate(reviews: updatedReviews)
         presentingViewController?.dismiss(animated: true)
     }
-    
-    var scrollView : UIScrollView!
-    var contentView : UIView!
     
     var collectionView: UICollectionView!
     lazy var headerView: HeaderPlaceDetail = {
         return HeaderPlaceDetail()
     }()
-    
     let cellId = "CellId"
     let headerCellId = "HeaderCellId"
-    var color = Constants.colors.orange { didSet {
-        mapView.tintColor = color
-        visitReviewView.textColor = color
-        visitReviewView.backgroundColor = color.withAlphaComponent(0.3)
-        addPersonalInformationLabel.textColor = color
-        addPersonalInformationLabel.backgroundColor = color.withAlphaComponent(0.3)
-    }}
+    let footerCellId = "FooterCellId"
+    var color = Constants.colors.orange
     
     var visit: Visit? {
         didSet {
             guard let visit = visit, let place = visit.place else { return }
-            headerView.placeAddress = place.address
+            headerView.placeAddress = place.formatAddressString()
             headerView.placeName = place.name
-            headerView.placeCity = place.city
+            headerView.placeCity = nil
             headerView.placeTimes = visit.getTimesPhrase()
             color = place.getPlaceColor()
             headerView.backgroundColor = color
-            coordinates = CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude)
             personalInformation = place.getPersonalInformation()
             pics = personalInformation!.keys.sorted(by: { $0 < $1 })
             if collectionView != nil {
@@ -70,6 +61,221 @@ class UnifiedPlaceInformationViewController: UIViewController, UICollectionViewD
             }
         }
     }
+    
+    var personalInformation: [String: [PersonalInformation]]?
+    var pics: [String]?
+    var updatedReviews: [String:[Int32]] = [:]  // [personalinformationid : [PersonalInformationReviewType:Rating]]
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.tabBarController?.tabBar.isHidden = false
+        
+        DataStoreService.shared.delegate = self
+        
+        setupNavBarButtons()
+        updatedReviews.removeAll()
+        collectionView.reloadData()
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.isTranslucent = true
+        self.navigationController?.view.backgroundColor = UIColor.clear
+        self.navigationController?.navigationBar.barStyle = .blackOpaque
+        
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .vertical
+        collectionView = UICollectionView(frame: view.frame, collectionViewLayout: layout)
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        collectionView.alwaysBounceVertical = true
+        
+        // Register cells types
+        collectionView.register(UnifiedPlaceInformationCategory.self, forCellWithReuseIdentifier: cellId)
+        collectionView.register(UnifiedPlaceInformationHeaderCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, withReuseIdentifier: headerCellId)
+        
+        setupViews()
+    }
+    
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
+    }
+    
+    func setupNavBarButtons() {
+        let editButton = UIBarButtonItem(barButtonSystemItem: .edit, target: self, action: #selector(edit))
+        editButton.tintColor = Constants.colors.superLightGray
+        self.navigationItem.rightBarButtonItem = editButton
+        
+        let backButton = UIButton()
+        backButton.setImage(UIImage(named: "angle-left")!.withRenderingMode(.alwaysTemplate), for: .normal)
+        backButton.tintColor = Constants.colors.superLightGray
+        backButton.frame = CGRect(x: 0, y: 0, width: 30, height: 30)
+        backButton.addTarget(self, action: #selector(back), for: .touchUpInside)
+        let leftBarButton = UIBarButtonItem(customView: backButton)
+        self.navigationItem.leftBarButtonItem = leftBarButton
+    }
+    
+    func setupViews() {
+        self.view.addSubview(headerView)
+        self.view.addVisualConstraint("H:|[header]|", views: ["header" : headerView])
+        
+        collectionView.backgroundColor = UIColor.white
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        self.view.addSubview(collectionView)
+        
+        self.view.addVisualConstraint("H:|[collection]|", views: ["collection" : collectionView])
+        self.view.addVisualConstraint("V:|[header][collection]|", views: ["header" : headerView, "collection" : collectionView])
+        
+    }
+    
+    // MARK: - UICollectionViewDataSource delegate methods
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if let count = personalInformation?.count {
+            return count
+        }
+        return 0
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell: UnifiedPlaceInformationCategory
+        cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! UnifiedPlaceInformationCategory
+        
+        guard let pi = personalInformation, let pics = pics else { return cell }
+        let picid = pics[indexPath.item]
+        cell.personalInformationCategory = PersonalInformationCategory.getPersonalInformationCategory(with: picid)
+        cell.personalInformation = pi[picid]
+        cell.color = color
+        cell.delegate = self
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: view.frame.width, height: 400)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        if kind == UICollectionElementKindSectionHeader {
+            let headerCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerCellId, for: indexPath) as! UnifiedPlaceInformationHeaderCell
+            headerCell.delegate = self
+            headerCell.color = color
+            if let count = personalInformation?.count {
+                headerCell.hasPersonalInformation = count > 0
+            }
+            if let place = visit?.place {
+                headerCell.coordinates = CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude)
+            }
+            if let answer = visit?.review?.answer {
+                headerCell.setReviewAnswer(with: answer)
+            }
+            return headerCell
+        } else {
+            assert(false, "Unexpected element kind")
+        }
+        
+        return UICollectionReusableView()
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
+        
+        // From https://stackoverflow.com/questions/33402596/how-can-i-dynamically-resize-a-header-view-in-a-uicollectionview
+        
+        // 1 - instanciate a new header
+        let headerView = UnifiedPlaceInformationHeaderCell()
+        if let answer = visit?.review?.answer {
+            headerView.setReviewAnswer(with: answer)
+        }
+        
+        // 2 - set the width through a constraint and layout the view
+        headerView.addConstraint(NSLayoutConstraint(item: headerView, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: collectionView.frame.width))
+        headerView.setNeedsLayout()
+        headerView.layoutIfNeeded()
+        
+        // 3 - get the height
+        let height = headerView.height()
+        
+        // 4 - return the correct size
+        return CGSize(width: collectionView.frame.width, height: height)
+    }
+    
+    // MARK: - UnifiedPlaceInformationCategoryDelegate method
+    func personalInformationReview(cat: String, personalInformation: PersonalInformation, type: ReviewType, rating: Int32) {
+        
+        print("personalInformationReview save in database")
+        if let piid = personalInformation.id {
+            DataStoreService.shared.updatePersonalInformationReview(with: piid, type: type, rating: rating)
+        }
+    }
+    
+    // MARK: - HeaderReviewVisitDelegate methods
+    func didPressReviewVisit(with answer: ReviewAnswer) {
+        if let review = visit?.review {
+            review.answer = answer
+            DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: answer)
+        }
+        
+        self.collectionView.collectionViewLayout.invalidateLayout()
+        self.collectionView.reloadData()
+    }
+    
+    func didPressVisitEdit() {
+        presentEditVC()
+    }
+    
+    func didPressAddPersonalInformation() {
+        presentAddPIVC(for: nil)
+    }
+    
+    // MARK: - DataStoreUpdateProtocol method
+    func dataStoreDidUpdatePersonalInformationReview(for piid: String?, type: ReviewType, with rating: Int32, allRatings: [Int32]) {
+        
+        print("dataStoreDidUpdatePersonalInformationReview - database updated \(type), \(rating)")
+        if let piid = piid {
+            updatedReviews[piid] = allRatings
+        }
+    }
+    
+    func dataStoreDidUpdate(for day: String?) {
+        print("dataStoreDidUpdate -> reload data")
+        
+        if let vid = visit?.id {
+            visit = DataStoreService.shared.getVisit(for: vid)
+        }
+    }
+}
+
+protocol UnifiedPlaceInformationHeaderCellDelegate {
+    func didPressReviewVisit(with answer: ReviewAnswer)
+    func didPressVisitEdit()
+    func didPressAddPersonalInformation()
+}
+
+fileprivate class UnifiedPlaceInformationHeaderCell : UICollectionViewCell, MGLMapViewDelegate {
+    var delegate: UnifiedPlaceInformationHeaderCellDelegate?
+    var hasPersonalInformation: Bool = true { didSet {
+        if !hasPersonalInformation {
+            instructionsLabel.text = "We do not have any personal information for this place at the moment. You can add some by tapping on the button below."
+        } else {
+            instructionsLabel.text = "Please validate the inferences about the personal information we automatically extracted using the stars on the cards presented below (1 star = not relevant, 2 star = relevant, 3 stars = highly relevant)."
+        }
+        instructionsLabel.sizeToFit()
+    }}
+    
+    var color: UIColor = Constants.colors.orange {
+        didSet {
+            mapView.tintColor = color
+            visitReviewView.textColor = color
+            visitReviewView.backgroundColor = color.withAlphaComponent(0.3)
+            instructionsLabel.textColor = color
+            addPersonalInformationLabel.textColor = color
+            addPersonalInformationLabel.backgroundColor = color.withAlphaComponent(0.3)
+        }
+    }
+    
     var coordinates: CLLocationCoordinate2D? {
         didSet {
             let annotation = MGLPointAnnotation()
@@ -79,22 +285,42 @@ class UnifiedPlaceInformationViewController: UIViewController, UICollectionViewD
         }
     }
     
-    var personalInformation: [String: [PersonalInformation]]?
-    var pics: [String]?
-    var updatedReviews: [String:Int32] = [:]  // [reviewId : Answer]
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Personal information"
+        label.font = UIFont.systemFont(ofSize: 25, weight: .heavy)
+        label.textColor = Constants.colors.black
+        label.lineBreakMode = .byWordWrapping
+        label.numberOfLines = 0
+        label.textAlignment = .left
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private lazy var instructionsLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Please validate the inferences using the marks on the cards presented below."
+        label.font = UIFont.italicSystemFont(ofSize: 14.0)
+        label.textColor = color
+        label.lineBreakMode = .byWordWrapping
+        label.numberOfLines = 0
+        label.textAlignment = .left
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
     
     private lazy var visitReviewView: ReviewCardView = {
         let review = ReviewCardView(title: "Did you visit this place?", color: Constants.colors.primaryLight)
         let yesAction: ()->() = { [weak self] in
             self?.visitReviewView.selected = .yes
-            self?.didPressReviewVisit(with: .yes)
+            self?.delegate?.didPressReviewVisit(with: .yes)
         }
         let noAction: ()->() = { [weak self] in
             self?.visitReviewView.selected = .no
-            self?.didPressReviewVisit(with: .no)
+            self?.delegate?.didPressReviewVisit(with: .no)
         }
         let commentAction: ()->() = { [weak self] in
-            self?.didPressVisitEdit()
+            self?.delegate?.didPressVisitEdit()
         }
         review.questionView.unselectedColor = .white
         review.hideEdit()
@@ -131,218 +357,47 @@ class UnifiedPlaceInformationViewController: UIViewController, UICollectionViewD
         return l
     }()
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        self.tabBarController?.tabBar.isHidden = false
-        
-        DataStoreService.shared.delegate = self
-        
-        setupNavBarButtons()
-        updatedReviews.removeAll()
-        collectionView.reloadData()
-    }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
-        self.navigationController?.navigationBar.shadowImage = UIImage()
-        self.navigationController?.navigationBar.isTranslucent = true
-        self.navigationController?.view.backgroundColor = UIColor.clear
-        self.navigationController?.navigationBar.barStyle = .blackOpaque
-        
-        self.view.addSubview(headerView)
-        
-        scrollView = UIScrollView(frame: self.view.frame)
-        scrollView.sizeToFit()
-        scrollView.alwaysBounceVertical = true
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.backgroundColor = UIColor.white
-        self.view.addSubview(scrollView)
-        
-        contentView = UIView()
-        contentView.translatesAutoresizingMaskIntoConstraints = false
-        contentView.backgroundColor = UIColor.white
-        scrollView.addSubview(contentView)
-        
-        self.view.addVisualConstraint("H:|[header]|", views: ["header" : headerView])
-        self.view.addVisualConstraint("H:|[scrollView]|", views: ["scrollView" : scrollView])
-        self.view.addVisualConstraint("V:|[header][scrollView]|",  views: ["header": headerView, "scrollView" : scrollView])
-        
-        scrollView.addVisualConstraint("H:|[contentView]|", views: ["contentView" : contentView])
-        scrollView.addVisualConstraint("V:|[contentView]|", views: ["contentView" : contentView])
-        
-        // make the width of content view to be the same as that of the containing view.
-        self.view.addVisualConstraint("H:[contentView(==mainView)]", views: ["contentView" : contentView, "mainView" : self.view])
-        
-        let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .vertical
-        collectionView = UICollectionView(frame: view.frame, collectionViewLayout: layout)
-        collectionView.dataSource = self
-        collectionView.delegate = self
-        collectionView.backgroundColor = .red
-        
-        // Register cells types
-        collectionView.register(UnifiedPersonalInformationCell.self, forCellWithReuseIdentifier: cellId)
-        collectionView.register(UnifiedHeaderPersonalInformationCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, withReuseIdentifier: headerCellId)
-        
+    override init(frame: CGRect) {
+        super.init(frame: frame)
         setupViews()
     }
     
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    
-    func setupNavBarButtons() {
-        let editButton = UIBarButtonItem(barButtonSystemItem: .edit, target: self, action: #selector(edit))
-        editButton.tintColor = Constants.colors.superLightGray
-        self.navigationItem.rightBarButtonItem = editButton
-        
-        let backButton = UIButton()
-        backButton.setImage(UIImage(named: "angle-left")!.withRenderingMode(.alwaysTemplate), for: .normal)
-        backButton.tintColor = Constants.colors.superLightGray
-        backButton.frame = CGRect(x: 0, y: 0, width: 30, height: 30)
-        backButton.addTarget(self, action: #selector(back), for: .touchUpInside)
-        let leftBarButton = UIBarButtonItem(customView: backButton)
-        self.navigationItem.leftBarButtonItem = leftBarButton
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     func setupViews() {
-        contentView.addSubview(visitReviewView)
-        contentView.addSubview(mapView)
-        contentView.addSubview(addPersonalInformationLabel)
-        contentView.addSubview(collectionView)
-        
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(titleLabel)
+        addSubview(instructionsLabel)
+        addSubview(visitReviewView)
+        addSubview(mapView)
+        addSubview(addPersonalInformationLabel)
         
         // add constraints
-        contentView.addVisualConstraint("V:|-14-[map(125)]-14-[review]-14-[addPI(64)]-14-[collection(500)]|", views: ["map": mapView, "review": visitReviewView,  "addPI": addPersonalInformationLabel, "collection": collectionView])
-        contentView.addVisualConstraint("H:|-14-[map]-14-|", views: ["map" : mapView])
-        contentView.addVisualConstraint("H:|-14-[review]-14-|", views: ["review": visitReviewView])
-        contentView.addVisualConstraint("H:|-14-[addPI]-14-|", views: ["addPI": addPersonalInformationLabel])
-        contentView.addVisualConstraint("H:|[collection]|", views: ["collection": collectionView])
+        addVisualConstraint("V:|-14-[map(125)]-14-[review]-14-[title][instructions(70)]-14-[addPI(60)]-14-|", views: ["map": mapView, "review": visitReviewView, "title": titleLabel, "instructions": instructionsLabel, "addPI": addPersonalInformationLabel])
+        addVisualConstraint("H:|-14-[map]-14-|", views: ["map": mapView])
+        addVisualConstraint("H:|-14-[review]-14-|", views: ["review": visitReviewView])
+        addVisualConstraint("H:|-14-[title]-14-|", views: ["title": titleLabel])
+        addVisualConstraint("H:|-14-[instructions]-14-|", views: ["instructions": instructionsLabel])
+        addVisualConstraint("H:|-14-[addPI]-14-|", views: ["addPI": addPersonalInformationLabel])
         
         addPersonalInformationLabel.addTapGestureRecognizer { [weak self] in
             self?.addPersonalInformationLabel.alpha = 0.7
-            self?.presentAddPIVC(for: nil)
-            UIView.animate(withDuration: 0.5) { [weak self] in
+            self?.delegate?.didPressAddPersonalInformation()
+            UIView.animate(withDuration: 0.3) { [weak self] in
                 self?.addPersonalInformationLabel.alpha = 1
             }
         }
+        translatesAutoresizingMaskIntoConstraints = false
     }
     
-    // MARK: - UICollectionViewDataSource delegate methods
-    
-    func numberOfSections(in collectionView: UICollectionView) -> Int {
-        if let count = personalInformation?.count {
-            return count
-        }
-        return 0
+    func height() -> CGFloat {
+        print("instruction height = \(instructionsLabel.bounds.height)")
+        return 14 + mapView.bounds.height + 14 + visitReviewView.height() + 14 + titleLabel.bounds.height + instructionsLabel.bounds.height + 14 + addPersonalInformationLabel.bounds.height + 14
     }
     
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        
-        if let pi = personalInformation, let pics = pics {
-            let category = pics[section]
-            if let count = pi[category]?.count {
-                return count
-            }
-        }
-        return 0
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell: UnifiedPersonalInformationCell
-        cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! UnifiedPersonalInformationCell
-        
-        guard let pi = personalInformation, let pics = pics else { return cell }
-        let picid = pics[indexPath.section]
-        if let piName = pi[picid]?[indexPath.item].name {
-            cell.title = piName
-        }
-        return cell
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: view.frame.width, height: 150)
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
-        if kind == UICollectionElementKindSectionHeader {
-            let headerCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerCellId, for: indexPath) as! UnifiedHeaderPersonalInformationCell
-            headerCell.color = color
-            guard let pics = pics else { return headerCell }
-            let picid = pics[indexPath.section]
-            if let category = PersonalInformationCategory.getPersonalInformationCategory(with: picid) {
-                headerCell.title = category.name
-                headerCell.subtitle = category.detail
-                headerCell.icon = category.icon
-            }
-            return headerCell
-        } else {
-            assert(false, "Unexpected element kind")
-        }        
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        
-        return CGSize(width: collectionView.frame.width, height: 150)
-    }
-    
-    // MARK: - PersonalInformationCategoryCellDelegate method
-    func addPersonalInformation(cat: String) {
-        presentAddPIVC(for: cat)
-    }
-    
-    func reviewPersonalInformation(cat: String, personalInformation: PersonalInformation, answer: ReviewAnswer) {
-        if let review = personalInformation.getReview(of: .personalInformation) {
-            review.answer = answer
-            DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: answer)
-        }
-        if let review = personalInformation.getReview(of: .explanation) {
-            review.answer = .none
-            DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: .none)
-        }
-        if let review = personalInformation.getReview(of: .privacy) {
-            review.answer = .none
-            DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: .none)
-        }
-    }
-    
-    
-    // MARK: - HeaderReviewVisitDelegate methods
-    func didPressReviewVisit(with answer: ReviewAnswer) {
-        if let review = visit?.review {
-            review.answer = answer
-            DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: answer)
-        }
-        
-        self.collectionView.collectionViewLayout.invalidateLayout()
-        self.collectionView.reloadData()
-    }
-    
-    func didPressVisitEdit() {
-        presentEditVC()
-    }
-    
-    func didPressAddPersonalInformation() {
-        presentAddPIVC(for: nil)
-    }
-    
-    // MARK: DataStoreUpdateProtocol method
-    func dataStoreDidUpdateReviewAnswer(for reviewId: String?, with answer: Int32) {
-        if let reviewId = reviewId {
-            updatedReviews[reviewId] = answer
-        }
-    }
-    
-    func dataStoreDidUpdate(for day: String?) {
-        print("dataStoreDidUpdate -> reload data")
-        
-        if let vid = visit?.id {
-            visit = DataStoreService.shared.getVisit(for: vid)
-        }
+    func setReviewAnswer(with answer: ReviewAnswer) {
+        visitReviewView.selected = answer
     }
     
     // MARK: - MGLMapViewDelegate delegate methods
@@ -372,152 +427,5 @@ class UnifiedPlaceInformationViewController: UIViewController, UICollectionViewD
         
         return annotationView
     }
-
 }
-
-class UnifiedHeaderPersonalInformationCell : UICollectionViewCell {
-    var title: String? {
-        didSet {
-            self.titleLabel.text = title
-        }
-    }
-    var subtitle: String? {
-        didSet {
-            self.subtitleLabel.text = subtitle
-        }
-    }
-    var color: UIColor = Constants.colors.orange {
-        didSet {
-            self.iconView.iconColor = color
-            self.instructionsLabel.textColor = color
-        }
-    }
-    var icon: String = "user-circle" {
-        didSet {
-            self.iconView.icon = icon
-        }
-    }
-    
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Personal information"
-        label.font = UIFont.systemFont(ofSize: 20, weight: .heavy)
-        label.textColor = Constants.colors.black
-        label.lineBreakMode = .byWordWrapping
-        label.numberOfLines = 0
-        label.textAlignment = .left
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    private let subtitleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Personal information"
-        label.font = UIFont.systemFont(ofSize: 14, weight: .heavy)
-        label.textColor = Constants.colors.black
-        label.lineBreakMode = .byWordWrapping
-        label.numberOfLines = 0
-        label.textAlignment = .left
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    private let instructionsLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Please give us feedback on the personal information inferences we made below."
-        label.font = UIFont.italicSystemFont(ofSize: 14.0)
-        label.textColor = Constants.colors.primaryLight
-        label.lineBreakMode = .byWordWrapping
-        label.numberOfLines = 2
-        label.textAlignment = .left
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    lazy var iconView: IconView = {
-        return IconView(icon: icon, iconColor: Constants.colors.primaryLight)
-    }()
-    
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupViews()
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    func setupViews() {
-        let stackView = UIStackView(arrangedSubviews: [titleLabel,subtitleLabel,instructionsLabel])
-        stackView.axis = .vertical
-        stackView.distribution = .equalSpacing
-        stackView.alignment = .leading
-        stackView.spacing = 0
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(stackView)
-        addSubview(iconView)
-        
-        // add constraints
-        addVisualConstraint("V:|-20-[stack]-|", views: ["stack": stackView])
-        addVisualConstraint("V:|-20-[icon(30)]", views: ["icon": iconView])
-        addVisualConstraint("H:|-14-[icon(30)]-[stack]-14-|", views: ["icon": iconView, "stack": stackView])
-        
-        translatesAutoresizingMaskIntoConstraints = false
-    }
-    
-    func height() -> CGFloat {
-        return 14 + titleLabel.bounds.height + subtitleLabel.bounds.height + instructionsLabel.bounds.height + 14
-    }
-    
-}
-
-protocol UnifiedPersonalInformationDelegate {
-    func didPressReviewVisit(with answer: ReviewAnswer)
-    func didPressVisitEdit()
-    func didPressAddPersonalInformation()
-}
-
-class UnifiedPersonalInformationCell : UICollectionViewCell {
-    var title: String = "title" { didSet {
-        titleLabel.text = title
-    }}
-    
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Personal information"
-        label.font = UIFont.systemFont(ofSize: 25, weight: .heavy)
-        label.textColor = Constants.colors.black
-        label.lineBreakMode = .byWordWrapping
-        label.numberOfLines = 0
-        label.textAlignment = .left
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupViews()
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    func setupViews() {
-        addSubview(titleLabel)
-        
-        // add constraints
-        addVisualConstraint("V:|-14-[title]-14-|", views: ["title": titleLabel])
-        addVisualConstraint("H:|-14-[title]-14-|", views: ["title": titleLabel])
-        
-        translatesAutoresizingMaskIntoConstraints = false
-    }
-    
-    func height() -> CGFloat {
-        return 14 + titleLabel.bounds.height + 14
-    }
-    
-}
-
 

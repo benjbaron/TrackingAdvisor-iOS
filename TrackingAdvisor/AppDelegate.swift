@@ -43,6 +43,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if !Settings.getOnboarding() {
             launchStoryboard(storyboard: "Onboarding")
             return true
+//        } else if Settings.getOptOut() {
+//            launchStoryboard(storyboard: "OptOut")
+//            return true
         } else {
             launchStoryboard(storyboard: "Main")
         }
@@ -242,7 +245,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             UserLocation.upload(force: true, callback: nil)
             
             // update the personal categories if needed
-            PersonalInformationCategory.updateIfNeeded()
+            PersonalInformationCategory.updateIfNeeded(force: true)
             
             // get today's update
             UserUpdateHandler.retrieveLatestUserUpdates(for: DateHandler.dateToDayString(from: Date()))

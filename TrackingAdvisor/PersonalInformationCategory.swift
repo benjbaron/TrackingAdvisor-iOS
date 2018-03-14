@@ -17,6 +17,8 @@ class PersonalInformationCategory: NSObject, NSCoding, Decodable {
     var detail: String
     var explanation: String
     var icon: String
+    var question: String
+    var scale: [String]
     
     // MARK: Archiving Paths
     static let DocumentsDirectory = FileManager().urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -29,15 +31,19 @@ class PersonalInformationCategory: NSObject, NSCoding, Decodable {
         static let detail = "detail"
         static let explanation = "explanation"
         static let icon = "icon"
+        static let question = "question"
+        static let scale = "scale"
     }
     
     // MARK: Initialization
-    init?(picid: String, name: String, detail: String, explanation: String, icon: String) {
+    init?(picid: String, name: String, detail: String, explanation: String, icon: String, question: String, scale: [String]) {
         self.picid = picid
         self.name = name
         self.detail = detail
         self.explanation = explanation
         self.icon = icon
+        self.question = question
+        self.scale = scale
     }
     
     // MARK: NSCoding
@@ -47,6 +53,8 @@ class PersonalInformationCategory: NSObject, NSCoding, Decodable {
         aCoder.encode(detail, forKey: PropertyKey.detail)
         aCoder.encode(explanation, forKey: PropertyKey.explanation)
         aCoder.encode(icon, forKey: PropertyKey.icon)
+        aCoder.encode(question, forKey: PropertyKey.question)
+        aCoder.encode(scale, forKey: PropertyKey.scale)
     }
     
     required convenience init?(coder aDecoder: NSCoder) {
@@ -59,8 +67,10 @@ class PersonalInformationCategory: NSObject, NSCoding, Decodable {
         let detail = aDecoder.decodeObject(forKey: PropertyKey.detail) as! String
         let explanation = aDecoder.decodeObject(forKey: PropertyKey.explanation) as! String
         let icon = aDecoder.decodeObject(forKey: PropertyKey.icon) as! String
+        let question = aDecoder.decodeObject(forKey: PropertyKey.question) as? String ?? ""
+        let scale = aDecoder.decodeObject(forKey: PropertyKey.scale) as? [String] ?? []
         
-        self.init(picid: picid, name: name, detail: detail, explanation: explanation, icon: icon)
+        self.init(picid: picid, name: name, detail: detail, explanation: explanation, icon: icon, question: question, scale: scale)
     }
     
     // MARK: Class functions to save and load the personal information categories
@@ -80,12 +90,11 @@ class PersonalInformationCategory: NSObject, NSCoding, Decodable {
                     return pic
                 }
             }
-
         }
         return nil
     }
     
-    // MARK: udpate the personal information categories from the server
+    // MARK: - Udpate the personal information categories from the server
     class func retrieveLatestPersonalInformationCategories() {
         let userid = Settings.getUserId() ?? ""
         let parameters: Parameters = ["userid": userid]
@@ -105,10 +114,10 @@ class PersonalInformationCategory: NSObject, NSCoding, Decodable {
         }
     }
     
-    class func updateIfNeeded() {
+    class func updateIfNeeded(force: Bool = false) {
         if let lastUpdate = Settings.getLastPersonalInformationCategoryUpdate() {
             let pics = loadPersonalInformationCategories()
-            if pics == nil || pics?.count == 0 || abs(lastUpdate.timeIntervalSinceNow) > Constants.variables.minimumDurationBetweenPersonalInformationCategoryUpdates {
+            if force || pics == nil || pics?.count == 0 || abs(lastUpdate.timeIntervalSinceNow) > Constants.variables.minimumDurationBetweenPersonalInformationCategoryUpdates {
                 FileService.shared.log("update the personal information categories in the background", classname: "PersonalInformationCategory")
                 DispatchQueue.global(qos: .background).async {
                     PersonalInformationCategory.retrieveLatestPersonalInformationCategories()

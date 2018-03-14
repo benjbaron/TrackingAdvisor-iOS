@@ -42,7 +42,7 @@ class TimelineSwipeViewController: UIViewController, EMPageViewControllerDataSou
                 fullScreenView!.icon = "walking"
                 fullScreenView!.iconColor = Constants.colors.primaryLight
                 fullScreenView!.headerTitle = "Your timeline, here"
-                fullScreenView!.subheaderTitle = "After moving to a few places, you will find your timeline with the places that you visited here"
+                fullScreenView!.subheaderTitle = "After moving to a few places, you will find your timeline with the places that you visited here."
                 view.addSubview(fullScreenView!)
             } else {
                 setupPageViewcontroller()

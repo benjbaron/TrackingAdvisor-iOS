@@ -61,6 +61,8 @@ class Place: NSManagedObject {
                 managedObject.setValue(userPlace.lon, forKey: "longitude")
                 managedObject.setValue(userPlace.name, forKey: "name")
                 managedObject.setValue(userPlace.col, forKey: "color")
+                managedObject.setValue(userPlace.icon, forKey: "icon")
+                managedObject.setValue(userPlace.emoji, forKey: "emoji")
                 
                 return managedObject
             }
@@ -77,9 +79,29 @@ class Place: NSManagedObject {
         place.longitude = userPlace.lon
         place.name = userPlace.name
         place.color = userPlace.col
+        place.icon = userPlace.icon
+        place.emoji = userPlace.emoji
+        place.added = Date()
         
         return place
     }
+    
+    class func updatePlaceReviewed(for pid: String, reviewed: Bool, in context: NSManagedObjectContext) throws {
+        let request: NSFetchRequest<Place> = Place.fetchRequest()
+        request.predicate = NSPredicate(format: "id = %@", pid)
+        
+        do {
+            let matches = try context.fetch(request)
+            if matches.count > 0 {
+                assert(matches.count == 1, "Place.updatePlaceReviewed -- database inconsistency")
+                let managedObject = matches[0]
+                managedObject.setValue(reviewed, forKey: "reviewed")
+            }
+        } catch {
+            throw error
+        }
+    }
+
     
     func formatAddressString() -> String {
         let addressString = address ?? ""
@@ -100,6 +122,20 @@ class Place: NSManagedObject {
         }
         
         return categories
+    }
+    
+    func getOrderedPersonalInformation() -> [PersonalInformation] {
+        let pis = getPersonalInformation()
+        if pis.count == 0 { return [] }
+        let pics = pis.keys.sorted(by: { $0 < $1 })
+        
+        var res: [PersonalInformation] = []
+        for pic in pics {
+            for pi in pis[pic]!.sorted(by: { $0.name! < $1.name! }) {
+                res.append(pi)
+            }
+        }
+        return res
     }
     
     func getPersonalInformationPhrase() -> String {
