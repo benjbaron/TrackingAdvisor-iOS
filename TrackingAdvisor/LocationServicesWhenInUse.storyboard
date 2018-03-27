@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13771" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="42h-Mx-wbq">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Location Services When In Use View Controller-->
+        <scene sceneID="GRN-Im-5R6">
+            <objects>
+                <viewController storyboardIdentifier="FirstScreenInitialOnboarding" id="B8Q-c0-SjO" customClass="LocationServicesWhenInUseViewController" customModule="TrackingAdvisor" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="94e-gz-nZL">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="location-arrow" translatesAutoresizingMaskIntoConstraints="NO" id="7KZ-O2-jZG">
+                                <rect key="frame" x="27" y="120" width="53" height="53"/>
+                                <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="53" id="Y8u-iP-fwN"/>
+                                    <constraint firstAttribute="width" constant="53" id="oFS-kT-p1K"/>
+                                </constraints>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="tintColor">
+                                        <color key="value" red="0.77647058820000003" green="0.69019607839999997" blue="0.73725490199999999" alpha="1" colorSpace="calibratedRGB"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="TrackingAdvisor" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2Al-SA-9Fg">
+                                <rect key="frame" x="27" y="181" width="328" height="37"/>
+                                <fontDescription key="fontDescription" type="system" weight="heavy" pointSize="36"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                                <variation key="heightClass=regular-widthClass=compact">
+                                    <fontDescription key="fontDescription" type="system" weight="heavy" pointSize="31"/>
+                                </variation>
+                            </label>
+                            <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Ivi-tm-iTg">
+                                <rect key="frame" x="20" y="553" width="335" height="52"/>
+                                <color key="backgroundColor" red="0.31372549020000001" green="0.027450980390000001" blue="0.47058823529999999" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="52" id="AB0-Le-a2O"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
+                                <state key="normal" title="Change location services">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="5"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                                <connections>
+                                    <action selector="goLocationServices:" destination="B8Q-c0-SjO" eventType="touchUpInside" id="a1K-Ya-597"/>
+                                </connections>
+                            </button>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" contentInsetAdjustmentBehavior="never" editable="NO" textAlignment="natural" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Rsg-72-bI1">
+                                <rect key="frame" x="20" y="226" width="335" height="315"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <mutableString key="text">We noticed that you are using when-in-use location services with this application. We would like to remind you that always-on location services provide an optimal setting so that we automatically collect your location data. This is really important to us, as location data is at the core of our research. To enable always-on location services, please visit the General settings of your phone.  Please let us know if you have any questions and comments about the user study, we will be happy to hear from you and answer any of the concerns you may have.</mutableString>
+                                <fontDescription key="fontDescription" type="system" pointSize="18"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0aL-7o-qyW">
+                                <rect key="frame" x="154.5" y="611" width="65" height="36"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="36" id="Y2o-v9-hch"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="20"/>
+                                <state key="normal" title="Dismiss">
+                                    <color key="titleColor" red="0.31372549020000001" green="0.027450980390000001" blue="0.47058823529999999" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                                <variation key="heightClass=regular-widthClass=compact">
+                                    <fontDescription key="fontDescription" type="system" weight="medium" pointSize="18"/>
+                                </variation>
+                                <connections>
+                                    <action selector="dismiss:" destination="B8Q-c0-SjO" eventType="touchUpInside" id="Nbh-3u-9SK"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="CdX-8G-GC9" firstAttribute="bottom" secondItem="0aL-7o-qyW" secondAttribute="bottom" constant="20" id="6hv-0a-VnD"/>
+                            <constraint firstItem="Ivi-tm-iTg" firstAttribute="centerX" secondItem="CdX-8G-GC9" secondAttribute="centerX" id="APA-kX-tOR"/>
+                            <constraint firstItem="Ivi-tm-iTg" firstAttribute="leading" secondItem="CdX-8G-GC9" secondAttribute="leading" constant="20" id="JrO-1L-Gax"/>
+                            <constraint firstItem="Ivi-tm-iTg" firstAttribute="top" secondItem="Rsg-72-bI1" secondAttribute="bottom" constant="12" id="M9V-uO-QSB"/>
+                            <constraint firstItem="7KZ-O2-jZG" firstAttribute="top" secondItem="CdX-8G-GC9" secondAttribute="top" constant="100" id="MN8-AV-O9p"/>
+                            <constraint firstItem="CdX-8G-GC9" firstAttribute="trailing" secondItem="Ivi-tm-iTg" secondAttribute="trailing" constant="20" id="OlX-sS-I7R"/>
+                            <constraint firstItem="Rsg-72-bI1" firstAttribute="top" secondItem="2Al-SA-9Fg" secondAttribute="bottom" constant="8" id="dRr-wD-tTh"/>
+                            <constraint firstItem="2Al-SA-9Fg" firstAttribute="top" secondItem="7KZ-O2-jZG" secondAttribute="bottom" constant="8" id="hXW-1h-k0L"/>
+                            <constraint firstItem="Rsg-72-bI1" firstAttribute="leading" secondItem="CdX-8G-GC9" secondAttribute="leading" constant="20" id="hvo-MW-ogz"/>
+                            <constraint firstItem="2Al-SA-9Fg" firstAttribute="leading" secondItem="CdX-8G-GC9" secondAttribute="leading" constant="27" id="jEP-tu-rsj"/>
+                            <constraint firstItem="CdX-8G-GC9" firstAttribute="trailing" secondItem="Rsg-72-bI1" secondAttribute="trailing" constant="20" id="jLm-HQ-Cu0"/>
+                            <constraint firstItem="0aL-7o-qyW" firstAttribute="centerX" secondItem="CdX-8G-GC9" secondAttribute="centerX" id="jXk-yy-osb"/>
+                            <constraint firstItem="CdX-8G-GC9" firstAttribute="trailing" secondItem="2Al-SA-9Fg" secondAttribute="trailing" constant="20" id="mDg-eS-2lS"/>
+                            <constraint firstItem="CdX-8G-GC9" firstAttribute="bottom" secondItem="Ivi-tm-iTg" secondAttribute="bottom" constant="62" id="p0u-oC-ax3"/>
+                            <constraint firstItem="7KZ-O2-jZG" firstAttribute="leading" secondItem="CdX-8G-GC9" secondAttribute="leading" constant="27" id="wcB-MG-jbh"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="CdX-8G-GC9"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="7ck-he-58G"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="6Tp-8r-Ydp" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="183.5" y="-22.5"/>
+        </scene>
+        <!--Onboarding View Controller-->
+        <scene sceneID="wR6-2A-5zP">
+            <objects>
+                <navigationController storyboardIdentifier="InitialOnboarding" automaticallyAdjustsScrollViewInsets="NO" navigationBarHidden="YES" id="42h-Mx-wbq" customClass="OnboardingViewController" customModule="TrackingAdvisor" customModuleProvider="target" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="TRV-G9-jVL">
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="B8Q-c0-SjO" kind="relationship" relationship="rootViewController" id="ki0-2m-7o2"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="xMw-Ha-GuG" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-670" y="-21"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="location-arrow" width="384" height="384"/>
+    </resources>
+</document>

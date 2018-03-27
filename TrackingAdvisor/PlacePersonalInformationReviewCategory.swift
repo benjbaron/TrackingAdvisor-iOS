@@ -54,7 +54,7 @@ class PlacePersonalInformationReviewCategory : UICollectionViewCell, UICollectio
             count = pi.count
         }
     }}
-    var color: UIColor! = Constants.colors.orange {
+    var color: UIColor! = Constants.colors.midPurple {
         didSet {
             iconView.iconColor = color
             mapView.tintColor = color

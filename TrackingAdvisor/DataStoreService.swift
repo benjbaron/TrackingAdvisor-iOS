@@ -89,7 +89,7 @@ class DataStoreService: NSObject {
             do {
                 try context.save()
             } catch {
-                print("error saving the database")
+                print("updateDatabase userUpdate -- error saving the database")
             }
             
             DispatchQueue.main.async { () -> Void in
@@ -97,8 +97,6 @@ class DataStoreService: NSObject {
                 callback?()
             }
         }
-        
-        stats()
     }
     
     func updateDatabase(with reviewChallenge: UserReviewChallenge) {
@@ -108,7 +106,7 @@ class DataStoreService: NSObject {
             do {
                 try context.save()
             } catch {
-                print("error saving the database")
+                print("updateDatabase reviewChallenge -- error saving the database")
             }
             
             DispatchQueue.main.async { () -> Void in
@@ -124,7 +122,7 @@ class DataStoreService: NSObject {
             do {
                 try context.save()
             } catch {
-                print("error saving the database")
+                print("saveReviewAnswer -- error saving the database")
             }
             
             DispatchQueue.main.async { () -> Void in
@@ -141,7 +139,7 @@ class DataStoreService: NSObject {
             do {
                 try context.save()
             } catch {
-                print("error saving the database")
+                print("saveCompletedReviewChallenge -- error saving the database")
             }
             
             DispatchQueue.main.async { () -> Void in
@@ -156,7 +154,7 @@ class DataStoreService: NSObject {
             do {
                 try context.save()
             } catch {
-                print("error saving the database")
+                print("updatePersonalInformationComment -- error saving the database")
             }
         }
     }
@@ -167,7 +165,7 @@ class DataStoreService: NSObject {
             do {
                 try context.save()
             } catch {
-                print("error saving the database")
+                print("updatePersonalInformationReview -- error saving the database")
             }
             
             DispatchQueue.main.async { () -> Void in
@@ -188,7 +186,7 @@ class DataStoreService: NSObject {
         do {
             return try PersonalInformation.findPersonalInformation(matching: piid, in: context)
         } catch {
-            print("error saving the database")
+            print("getPersonalInformation -- error saving the database")
         }
         
         return nil
@@ -204,14 +202,13 @@ class DataStoreService: NSObject {
             do {
                 try context.save()
             } catch {
-                print("error saving the database")
+                print("updateAggregatedPersonalInformation -- error saving the database")
             }
             
             DispatchQueue.main.async { () -> Void in
                 callback?()
                 self?.delegate?.dataStoreDidUpdateAggregatedPersonalInformation?()
             }
-            print("updated database with \(personalInformation.count) aggregated personal information")
         }
     }
     
@@ -221,12 +218,27 @@ class DataStoreService: NSObject {
             do {
                 try context.save()
             } catch {
-                print("error saving the database")
+                print("updateVisit vid visited -- error saving the database")
             }
             
             DispatchQueue.main.async { () -> Void in
                 callback?()
                 self?.delegate?.dataStoreDidUpdateVisit?(for: vid, with: visited)
+            }
+        }
+    }
+    
+    func updateVisit(with vid: String, departure: Date, callback: (()->Void)? = nil) {
+        container?.performBackgroundTask { [weak self] context in
+            try? Visit.updateVisit(for: vid, departure: departure, in: context)
+            do {
+                try context.save()
+            } catch {
+                print("updateVisit vid departure -- error saving the database")
+            }
+            
+            DispatchQueue.main.async { () -> Void in
+                callback?()
             }
         }
     }
@@ -237,7 +249,7 @@ class DataStoreService: NSObject {
             do {
                 try context.save()
             } catch {
-                print("error saving the database")
+                print("updatePlaceReviewed -- error saving the database")
             }
             
             DispatchQueue.main.async { () -> Void in
@@ -253,7 +265,7 @@ class DataStoreService: NSObject {
             do {
                 try context.save()
             } catch {
-                print("error saving the database")
+                print("updatePersonalInformationRating -- error saving the database")
             }
             
             DispatchQueue.main.async { () -> Void in
@@ -398,6 +410,7 @@ class DataStoreService: NSObject {
         
         do {
             let matches = try context.fetch(request)
+            print("return \(matches.count) matches")
             return matches
         } catch {
             print("Could not fetch all places to review. \(error)")
@@ -532,10 +545,10 @@ class DataStoreService: NSObject {
         }
     }
     
-    func deleteVisit(visitid: String, callback:(()->Void)? = nil) {
+    func deleteVisit(vid: String, callback:(()->Void)? = nil) {
         guard let context = container?.viewContext else { return }
         
-        if let visit = try! Visit.findVisit(matching: visitid, in: context) {
+        if let visit = try! Visit.findVisit(matching: vid, in: context) {
             
             // delete the review associated to it
             if let review = visit.review {
@@ -548,7 +561,7 @@ class DataStoreService: NSObject {
                 try context.save()
                 callback?()
             } catch {
-                print("error when deleting visit \(visitid)", error)
+                print("error when deleting visit \(vid)", error)
             }
         }
     }
@@ -587,6 +600,28 @@ class DataStoreService: NSObject {
         }
         
         return []
+    }
+    
+    func updateIfNeeded(force: Bool = false) {
+        if let lastUpdate = Settings.getLastDatabaseUpdate() {
+            let lastUpdateStr = DateHandler.dateToDayString(from: lastUpdate.startOfDay)
+            let todayStr = DateHandler.dateToDayString(from: Date())
+            print("lastUpdateStr: \(lastUpdateStr), todayStr: \(todayStr)")
+            if force || todayStr != lastUpdateStr {
+                FileService.shared.log("update the database in the background", classname: "DataStoreService")
+                let days = getUniqueVisitDays()
+                for day in days {
+                    if day == todayStr { continue }
+                    let lastVisit = getVisits(for: day).last
+                    if let vid = lastVisit?.id, let lastVisitDeparture = lastVisit?.departure {
+                        let endOfDay = lastVisitDeparture.endOfDay
+                        updateVisit(with: vid, departure: endOfDay) {
+                            print("Updated visit \(vid) with \(endOfDay)")
+                        }
+                    }
+                }
+            }
+        }
     }
     
     func stats() {

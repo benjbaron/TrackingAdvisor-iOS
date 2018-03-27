@@ -16,10 +16,12 @@ struct Constants {
         static let lastFileUpdate = "lastFileUpdate"
         static let lastUserUpdate = "lastUserUpdate"
         static let lastPersonalInformationCategoryUpdate = "lastPersonalInformationCategoryUpdate"
+        static let lastDatabaseUpdate = "lastDatabaseUpdate"
         static let pushNotificationToken = "pushNotificationToken"
         static let userid = "userid"
         static let onboarding = "onboarding"
         static let optOut = "optOut"
+        static let lastKnownLocation = "lastKnownLocation"
     }
     
     struct variables {
@@ -60,7 +62,6 @@ struct Constants {
         static let piAutcompleteURL = "https://iss-lab.geog.ucl.ac.uk/semantica/autocompletepi"
         static let rawTraceURL = "https://iss-lab.geog.ucl.ac.uk/semantica/rawtrace"
         static let personalInformationCategoriesURL = "https://iss-lab.geog.ucl.ac.uk/semantica/personalinformationcategories"
-        static let consentFormURL = "https://iss-lab.geog.ucl.ac.uk/semantica/consentform"
         static let addvisitURL = "https://iss-lab.geog.ucl.ac.uk/semantica/addvisit"
         static let reviewUpdateURL = "https://iss-lab.geog.ucl.ac.uk/semantica/reviews"
         static let reviewChallengeURL = "https://iss-lab.geog.ucl.ac.uk/semantica/userchallenge"
@@ -68,11 +69,12 @@ struct Constants {
         static let registerURL = "https://iss-lab.geog.ucl.ac.uk/semantica/register"
         static let updateUserInfoURL = "https://iss-lab.geog.ucl.ac.uk/semantica/updateuserinfo"
         static let personalInformationUpdateURL = "https://iss-lab.geog.ucl.ac.uk/semantica/personalinformationupdate"
+        static let personalInformationReviewUpdateURL = "https://iss-lab.geog.ucl.ac.uk/semantica/personalinformationreviews"
+        static let aggregatedPersonalInformationURL = "https://iss-lab.geog.ucl.ac.uk/semantica/aggregatepersonalinformation"
         static let termsURL = "https://iss-lab.geog.ucl.ac.uk/semantica/terms"
         static let privacyPolicyURL = "https://iss-lab.geog.ucl.ac.uk/semantica/privacypolicy"
-        static let personalInformationReviewUpdateURL = "https://iss-lab.geog.ucl.ac.uk/semantica/personalinformationreviews"
         static let optOutURL = "https://iss-lab.geog.ucl.ac.uk/semantica/optout"
-        static let aggregatedPersonalInformationURL = "https://iss-lab.geog.ucl.ac.uk/semantica/aggregatepersonalinformation"
+        static let consentFormURL = "https://iss-lab.geog.ucl.ac.uk/semantica/consentform"
     }
     
 }

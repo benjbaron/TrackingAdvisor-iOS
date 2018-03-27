@@ -151,7 +151,6 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
             let headerCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerCellId, for: indexPath) as! PersonalInformationReviewHeaderCell
             headerCell.delegate = self
             headerCell.placesToReview = self.placesToReview
-            headerCell.color = self.color
             return headerCell
         } else {
             assert(false, "Unexpected element kind")
@@ -184,6 +183,26 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
         self.navigationController?.pushViewController(viewController, animated: true)
     }
     
+    func showPlaces(cat: String, personalInformation: AggregatedPersonalInformation) {
+        print("show places")
+        let overlayView = UIView()
+        let frame = OverlayView.frame()
+        overlayView.frame = CGRect(x: 0, y: 0, width: frame.width - 60, height: frame.height - 100)
+        overlayView.center = CGPoint(x: frame.width / 2.0,
+                                     y: frame.height / 2.0)
+        overlayView.backgroundColor = .white
+        overlayView.clipsToBounds = true
+        overlayView.layer.cornerRadius = 10
+//        overlayView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let placeListView = ArggregatedParsonalInformationPlaceListView()
+        overlayView.addSubview(placeListView)
+        overlayView.addVisualConstraint("H:|[v0]|", views: ["v0": placeListView])
+        overlayView.addVisualConstraint("V:|[v0]|", views: ["v0": placeListView])
+        
+        OverlayView.shared.showOverlay(with: overlayView)
+    }
+    
     // MARK: - PersonalInformationReviewHeaderCellDelegate method {
     func didPressReviewLatestPersonalInformation() {
         let viewController = PlacePersonalInformationReviewViewController()
@@ -199,18 +218,25 @@ class PersonalInformationReviewHeaderCell : UICollectionViewCell {
     var delegate: PersonalInformationReviewHeaderCellDelegate?
     var placesToReview: Bool = false {
         didSet {
-            if placesToReview {
-                placesToReviewButton.setTitle("You have places to review", for: .normal)
-            } else {
-                placesToReviewButton.setTitle("There are no places to review", for: .normal)
-            }
+            setColor()
         }
     }
     
-    var color: UIColor = Constants.colors.orange {
+    var color: UIColor = Constants.colors.midPurple {
         didSet {
-            placesToReviewButton.backgroundColor = color.withAlphaComponent(0.3)
+            setColor()
+        }
+    }
+    
+    func setColor() {
+        if placesToReview {
+            placesToReviewButton.setTitle("You have places to review", for: .normal)
+            placesToReviewButton.setTitleColor(.white, for: .normal)
+            placesToReviewButton.backgroundColor = color
+        } else {
+            placesToReviewButton.setTitle("There are no places to review", for: .normal)
             placesToReviewButton.setTitleColor(color, for: .normal)
+            placesToReviewButton.backgroundColor = color.withAlphaComponent(0.3)
         }
     }
     
@@ -227,8 +253,8 @@ class PersonalInformationReviewHeaderCell : UICollectionViewCell {
         l.setTitle("You have places to review", for: .normal)
         l.titleLabel?.textAlignment = .center
         l.titleLabel?.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
-        l.titleLabel?.textColor = color
-        l.backgroundColor = color.withAlphaComponent(0.3)
+        l.titleLabel?.textColor = .white
+        l.backgroundColor = color
         l.translatesAutoresizingMaskIntoConstraints = false
         l.addTarget(self, action: #selector(tappedPlacesToReview), for: .touchUpInside)
         return l
@@ -265,5 +291,43 @@ class PersonalInformationReviewHeaderCell : UICollectionViewCell {
         
         translatesAutoresizingMaskIntoConstraints = false
     }
-
 }
+
+class ArggregatedParsonalInformationPlaceListView : UIView {
+    lazy var headerView: HeaderPlace = {
+        let header = HeaderPlace()
+        header.backgroundColor = color
+        return header
+    }()
+    
+    var color: UIColor = Constants.colors.orange {
+        didSet {
+            headerView.backgroundColor = color
+        }
+    }
+    
+    
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+    
+    convenience init() {
+        self.init(frame: CGRect.zero)
+        setupViews()
+    }
+    
+    required init(coder aDecoder: NSCoder) {
+        fatalError("This class does not support NSCoding")
+    }
+    
+    func setupViews() {
+        addSubview(headerView)
+        
+        addVisualConstraint("H:|[v0]|", views: ["v0": headerView])
+        addVisualConstraint("V:|[v0]", views: ["v0": headerView])
+        
+        translatesAutoresizingMaskIntoConstraints = false
+    }
+}
+

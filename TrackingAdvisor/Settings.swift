@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import CoreLocation
 
 open class Settings {
     open class func registerDefaults() {
@@ -20,9 +21,11 @@ open class Settings {
             defaults.set(Date(), forKey: Constants.defaultsKeys.lastLocationUpdate)
             defaults.set(Date(), forKey: Constants.defaultsKeys.lastUserUpdate)
             defaults.set(Date(), forKey: Constants.defaultsKeys.lastPersonalInformationCategoryUpdate)
+            defaults.set(Date(), forKey: Constants.defaultsKeys.lastDatabaseUpdate)
             defaults.set(String(), forKey: Constants.defaultsKeys.pushNotificationToken)
             defaults.set(false, forKey: Constants.defaultsKeys.onboarding)
             defaults.set(false, forKey: Constants.defaultsKeys.optOut)
+            defaults.set(nil, forKey: Constants.defaultsKeys.lastKnownLocation)
         }
     }
     
@@ -60,6 +63,11 @@ open class Settings {
         return defaults.object(forKey: Constants.defaultsKeys.lastFileUpdate) as? Date
     }
     
+    open class func getLastDatabaseUpdate() -> Date? {
+        let defaults = UserDefaults.standard
+        return defaults.object(forKey: Constants.defaultsKeys.lastDatabaseUpdate) as? Date
+    }
+    
     open class func getOnboarding() -> Bool {
         let defaults = UserDefaults.standard
         return defaults.bool(forKey: Constants.defaultsKeys.onboarding)
@@ -68,6 +76,14 @@ open class Settings {
     open class func getOptOut() -> Bool {
         let defaults = UserDefaults.standard
         return defaults.bool(forKey: Constants.defaultsKeys.optOut)
+    }
+    
+    open class func getLastKnownLocation() -> CLLocation? {
+        let defaults = UserDefaults.standard
+        if let archived = defaults.data(forKey: Constants.defaultsKeys.lastKnownLocation) {
+            return NSKeyedUnarchiver.unarchiveObject(with: archived) as? CLLocation
+        }
+        return nil
     }
     
     open class func savePushNotificationId(with pnid: String) {
@@ -100,6 +116,11 @@ open class Settings {
         defaults.set(value, forKey: Constants.defaultsKeys.lastUserUpdate)
     }
     
+    open class func saveLastDatabaseUpdate(with value: Date) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: Constants.defaultsKeys.lastDatabaseUpdate)
+    }
+    
     open class func saveLastLocationUpdate(with value: Date) {
         let defaults = UserDefaults.standard
         defaults.set(value, forKey: Constants.defaultsKeys.lastLocationUpdate)
@@ -108,5 +129,11 @@ open class Settings {
     open class func saveLastFileUpdate(with value: Date) {
         let defaults = UserDefaults.standard
         defaults.set(value, forKey: Constants.defaultsKeys.lastFileUpdate)
+    }
+    
+    open class func saveLastKnownLocation(with location: CLLocation) {
+        let defaults = UserDefaults.standard
+        let archived = NSKeyedArchiver.archivedData(withRootObject: location)
+        defaults.set(archived, forKey: Constants.defaultsKeys.lastKnownLocation)
     }
 }

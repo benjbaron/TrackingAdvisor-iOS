@@ -46,7 +46,7 @@ class ProfileViewController: UIViewController, UIScrollViewDelegate, MGLMapViewD
     }}
     
     var numberOfPlacesToReviewTotal: Int? { didSet {
-        studyStats.statsTwo.bigText = String(numberOfPlacesToReviewTotal!)
+        studyStats.statsThree.bigText = String(numberOfPlacesToReviewTotal!)
         if numberOfPlacesToReviewTotal! < 2 {
             studyStats.statsThree.smallBottomText = "PLACE TO\nREVIEW"
         } else {
@@ -274,6 +274,7 @@ class ProfileViewController: UIViewController, UIScrollViewDelegate, MGLMapViewD
         numberofPlacesVisited = uniquePlaceIds.count
         
         let placesToReview = DataStoreService.shared.getAllPlacesToReview(sameContext: true)
+        print("numberOfPlacesToReviewTotal: \(numberOfPlacesToReviewTotal)")
         numberOfPlacesToReviewTotal = placesToReview.count
         
         let aggregatedPersonalInformation = DataStoreService.shared.getAllAggregatedPersonalInformation(sameContext: true)

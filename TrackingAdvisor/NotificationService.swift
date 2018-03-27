@@ -14,11 +14,14 @@ class NotificationService {
     
     func sendLocalNotificationNow(title: String, body: String) {
         
+        print("sendLocalNotificationNow with \(body)")
         let localNotification = UNMutableNotificationContent()
         localNotification.title = title
         localNotification.body = body
         localNotification.badge = 1
         localNotification.categoryIdentifier = "trackAdvisor"
+        
+        localNotification.categoryIdentifier = "PLACE_CHECKIN"
         
         let notificationTrigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
         

@@ -32,6 +32,8 @@
 		B54C36B1200EBAFC0085BFEA /* OneTimelinePlaceDetailPersonalInformationCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54C36B0200EBAFC0085BFEA /* OneTimelinePlaceDetailPersonalInformationCollectionView.swift */; };
 		B54D98EC2048161F00CBECA4 /* ExplanationFeedbackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54D98EB2048161F00CBECA4 /* ExplanationFeedbackViewController.swift */; };
 		B54D98EE2049AFF700CBECA4 /* LocationServicesDenied.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B54D98ED2049AFF700CBECA4 /* LocationServicesDenied.storyboard */; };
+		B55B59DA206A2F460068BCA0 /* LocationServicesWhenInUse.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B55B59D9206A2F460068BCA0 /* LocationServicesWhenInUse.storyboard */; };
+		B55B59DC206A37120068BCA0 /* OverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55B59DB206A37120068BCA0 /* OverlayView.swift */; };
 		B55C10101FED736B001EE08D /* PlaceReviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55C100F1FED736B001EE08D /* PlaceReviewViewController.swift */; };
 		B55DE5D41FAB582B00CACB47 /* DataStoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55DE5D31FAB582B00CACB47 /* DataStoreService.swift */; };
 		B568B3B2202B037F00425A20 /* OnboardingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568B3B1202B037F00425A20 /* OnboardingViewController.swift */; };
@@ -138,6 +140,8 @@
 		B54C36B0200EBAFC0085BFEA /* OneTimelinePlaceDetailPersonalInformationCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OneTimelinePlaceDetailPersonalInformationCollectionView.swift; sourceTree = "<group>"; };
 		B54D98EB2048161F00CBECA4 /* ExplanationFeedbackViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplanationFeedbackViewController.swift; sourceTree = "<group>"; };
 		B54D98ED2049AFF700CBECA4 /* LocationServicesDenied.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LocationServicesDenied.storyboard; sourceTree = "<group>"; };
+		B55B59D9206A2F460068BCA0 /* LocationServicesWhenInUse.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LocationServicesWhenInUse.storyboard; sourceTree = "<group>"; };
+		B55B59DB206A37120068BCA0 /* OverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayView.swift; sourceTree = "<group>"; };
 		B55C100F1FED736B001EE08D /* PlaceReviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceReviewViewController.swift; sourceTree = "<group>"; };
 		B55DE5D31FAB582B00CACB47 /* DataStoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataStoreService.swift; sourceTree = "<group>"; };
 		B568B3B1202B037F00425A20 /* OnboardingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewController.swift; sourceTree = "<group>"; };
@@ -257,6 +261,7 @@
 				B51C75691FB4C643008C4BBF /* TaskService.swift */,
 				B57F514D1FD55A5B0018B416 /* NetworkService.swift */,
 				B530432C1FDEDBD400DBC7C0 /* Networking.swift */,
+				B55B59DB206A37120068BCA0 /* OverlayView.swift */,
 			);
 			name = Services;
 			sourceTree = "<group>";
@@ -313,6 +318,7 @@
 				B599B3AF1FA0B57F006D70B4 /* LaunchScreen.storyboard */,
 				B568B3BB202B05EC00425A20 /* Onboarding.storyboard */,
 				B54D98ED2049AFF700CBECA4 /* LocationServicesDenied.storyboard */,
+				B55B59D9206A2F460068BCA0 /* LocationServicesWhenInUse.storyboard */,
 				B528F10D2056AAC500C0F059 /* OptOut.storyboard */,
 				B584C21E1FA0F16B002582D1 /* Assets.xcassets */,
 				B599B3A31FA0B57F006D70B4 /* AppDelegate.swift */,
@@ -537,6 +543,7 @@
 				B599B3B11FA0B57F006D70B4 /* LaunchScreen.storyboard in Resources */,
 				B584C21F1FA0F16B002582D1 /* Assets.xcassets in Resources */,
 				B54D98EE2049AFF700CBECA4 /* LocationServicesDenied.storyboard in Resources */,
+				B55B59DA206A2F460068BCA0 /* LocationServicesWhenInUse.storyboard in Resources */,
 				B528F10E2056AAC500C0F059 /* OptOut.storyboard in Resources */,
 				B599B3A91FA0B57F006D70B4 /* Main.storyboard in Resources */,
 				B568B3BC202B05EC00425A20 /* Onboarding.storyboard in Resources */,
@@ -757,6 +764,7 @@
 				B577690420164C2B00A0FD1B /* HeaderPlace.swift in Sources */,
 				B59ABF681FDAADA300A60066 /* PositionMapModalViewController.swift in Sources */,
 				B5C28A89202E092A00B48017 /* HelperFunctions.swift in Sources */,
+				B55B59DC206A37120068BCA0 /* OverlayView.swift in Sources */,
 				B52AF1D01FA8C89F00FDDF2A /* ISTimeline.swift in Sources */,
 				B5A22B882019F33D00B68BD8 /* Review.swift in Sources */,
 				B511C4FF1FD5C039006A312C /* GetInTouchFormViewController.swift in Sources */,

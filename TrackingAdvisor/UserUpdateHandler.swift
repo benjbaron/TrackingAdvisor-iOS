@@ -15,8 +15,8 @@ struct UserPlace: Codable {
     let t: String        // type
     let lon: Double      // longitude
     let lat: Double      // latitude
-    let c: String        // city
-    let a: String        // address
+    let c: String?       // city
+    let a: String?       // address
     let col: String      // color
     let icon: String?    // icon
     let emoji: String?   // emoji
@@ -28,6 +28,7 @@ struct UserVisit: Codable {
     let a: Date          // arrival
     let d: Date          // departure
     let c: Double        // confidence
+    let visited: Bool?   // visited
 }
 
 struct UserMove: Codable {
@@ -336,6 +337,62 @@ class UserUpdateHandler {
                         let decoder = JSONDecoder()
                         _ = try decoder.decode(UserUpdate.self, from: data)
                         DataStoreService.shared.updatePersonalInformationComment(with: piid, comment: comment)
+                        callback?()
+                    } catch {
+                        print("Error serializing the json", error)
+                    }
+                } else {
+                    print("Error in response \(response.result)")
+                }
+            }
+        }
+    }
+    
+    class func deleteVisit(for vid: String, callback: (()->Void)?) {
+        DispatchQueue.global(qos: .background).async {
+            let userid = Settings.getUserId() ?? ""
+            let parameters: Parameters = [
+                "type": VisitActionType.delete.rawValue,
+                "userid": userid,
+                "visitid": vid
+            ]
+            
+            Alamofire.request(Constants.urls.addvisitURL, method: .post, parameters: parameters, encoding: JSONEncoding.default).responseJSON { response in
+                if response.result.isSuccess {
+                    FileService.shared.log("Sent visit delete update to server", classname: "UserUpdateHandler")
+                    guard let data = response.data else { return }
+                    do {
+                        let decoder = JSONDecoder()
+                        decoder.dateDecodingStrategy = .secondsSince1970
+                        _ = try decoder.decode(UserUpdate.self, from: data)
+                        callback?()
+                    } catch {
+                        print("Error serializing the json", error)
+                    }
+                } else {
+                    print("Error in response \(response.result)")
+                }
+            }
+        }
+    }
+    
+    class func visitedVisit(for vid: String, callback: (()->Void)?) {
+        DispatchQueue.global(qos: .background).async {
+            let userid = Settings.getUserId() ?? ""
+            let parameters: Parameters = [
+                "type": VisitActionType.visited.rawValue,
+                "userid": userid,
+                "visitid": vid
+            ]
+            
+            Alamofire.request(Constants.urls.addvisitURL, method: .post, parameters: parameters, encoding: JSONEncoding.default).responseJSON { response in
+                if response.result.isSuccess {
+                    FileService.shared.log("Sent visit visited update to server", classname: "UserUpdateHandler")
+                    guard let data = response.data else { return }
+                    do {
+                        let decoder = JSONDecoder()
+                        decoder.dateDecodingStrategy = .secondsSince1970
+                        _ = try decoder.decode(UserUpdate.self, from: data)
                         callback?()
                     } catch {
                         print("Error serializing the json", error)

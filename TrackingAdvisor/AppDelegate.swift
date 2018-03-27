@@ -18,6 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         
         Settings.registerDefaults()
+        registerNotificationCustomActions()
         
         // Override point for customization after application launch.
         if launchOptions?[.location] != nil {
@@ -36,6 +37,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let locationStatus = LocationRegionService.getLocationServiceStatus()
         if locationStatus == .denied || locationStatus == .restricted {
             launchStoryboard(storyboard: "LocationServicesDenied")
+            return true
+        } else if locationStatus == .authorizedWhenInUse {
+            launchStoryboard(storyboard: "LocationServicesWhenInUse")
             return true
         }
         
@@ -73,6 +77,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         FileService.shared.log("call -- applicationDidEnterBackground", classname: "AppDelegate")
         LocationRegionService.shared.restartUpdatingLocation()
+        
+        let places = DataStoreService.shared.getAllPlaces().filter { $0.emoji != nil }
+        let randomIndex = Int(arc4random_uniform(UInt32(places.count)))
+        let place = places[randomIndex]
+        
+        print("getting all places \(places.count) with index \(randomIndex), place: \(place)")
+        
+        if let emoji = place.emoji, let name = place.name {
+            NotificationService.shared.sendLocalNotificationNow(title: "Place checkin", body: "\(emoji) Are you at \(name)?")
+        }
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
@@ -175,9 +189,35 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
     
+    func registerNotificationCustomActions() {
+        let generalCategory = UNNotificationCategory(identifier: "GENERAL",
+                                                     actions: [],
+                                                     intentIdentifiers: [],
+                                                     options: .customDismissAction)
+        
+        // Create the custom actions for the PLACE_CHECKIN category.
+        let checkinYesAction = UNNotificationAction(identifier: "CHECKIN_YES_ACTION",
+                                                title: "Yes!",
+                                                options: UNNotificationActionOptions(rawValue: 0))
+        let checkinNotAPlaceAction = UNNotificationAction(identifier: "CHECKIN_NOT_A_PLACE_ACTION",
+                                              title: "Not at a place",
+                                              options: UNNotificationActionOptions(rawValue: 0))
+        let checkinOtherPlaceAction = UNNotificationAction(identifier: "CHECKIN_OTHER_PLACE_ACTION",
+                                                          title: "Pick another place",
+                                                          options: UNNotificationActionOptions(rawValue: 0))
+        
+        let expiredCategory = UNNotificationCategory(identifier: "PLACE_CHECKIN",
+                                                     actions: [checkinYesAction, checkinNotAPlaceAction, checkinOtherPlaceAction],
+                                                     intentIdentifiers: [],
+                                                     options: UNNotificationCategoryOptions(rawValue: 0))
+        
+        // Register the notification categories.
+        let center = UNUserNotificationCenter.current()
+        center.setNotificationCategories([generalCategory, expiredCategory])
+    }
+    
     func getNotificationSettings() {
         UNUserNotificationCenter.current().getNotificationSettings { (settings) in
-            print("Notification settings: \(settings)")
             guard settings.authorizationStatus == .authorized else { return }
             DispatchQueue.main.async {
                 UIApplication.shared.registerForRemoteNotifications()
@@ -245,7 +285,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             UserLocation.upload(force: true, callback: nil)
             
             // update the personal categories if needed
-            PersonalInformationCategory.updateIfNeeded(force: true)
+            PersonalInformationCategory.updateIfNeeded()
+            
+            // update the dates from the database
+            DataStoreService.shared.updateIfNeeded()
             
             // get today's update
             UserUpdateHandler.retrieveLatestUserUpdates(for: DateHandler.dateToDayString(from: Date()))

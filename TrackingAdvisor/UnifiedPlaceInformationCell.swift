@@ -257,7 +257,6 @@ class UnifiedPlaceInformationCell: UICollectionViewCell {
     
     lazy var personalInformationRatingView: QuestionRatingRow = {
         let row = QuestionRatingRow(with: "How relevant is the personal information?") { [weak self] value in
-            print("personalInformationRating changed \(value)")
             if let pi = self?.personalInformation {
                 self?.delegate?.didReviewPersonalInformation(personalInformation: pi, type: .personalInformation, rating: Int32(value))
             }

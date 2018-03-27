@@ -110,7 +110,7 @@ class ReviewCardView: UIView {
         return row
     }()
     lazy var questionEditView: CommentRow = {
-        let row = CommentRow(with: "It would be great if you could tell us how we can improve the explanation", icon: "chevron-right", backgroundColor: UIColor.clear, color: textColor) { [weak self] in
+        let row = CommentRow(with: commentText, icon: "chevron-right", backgroundColor: UIColor.clear, color: textColor) { [weak self] in
             if let action = self?.commentAction { action() }
         }
         return row

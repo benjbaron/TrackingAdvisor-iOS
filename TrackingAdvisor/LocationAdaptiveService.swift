@@ -122,6 +122,9 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
             
             guard let newLocation = bestLocation else { return }
             
+            print("previous location: \(Settings.getLastKnownLocation())")
+            Settings.saveLastKnownLocation(with: newLocation)
+            
             if let cur = self.currentLocation {
                 let previousLocation = CLLocation(latitude: cur.latitude, longitude: cur.longitude)
                 let distanceMoved = previousLocation.distance(from: newLocation)

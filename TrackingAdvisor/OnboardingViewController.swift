@@ -663,4 +663,22 @@ class LocationServicesDeniedViewController: UIViewController {
     }
 }
 
+class LocationServicesWhenInUseViewController: UIViewController {
+    
+    @IBAction func goLocationServices(_ sender: UIButton) {
+        if let url = URL(string: "App-Prefs:root=Privacy&path=LOCATION") {
+            // If general location settings are disabled then open general location settings
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
+    }
+    
+    @IBAction func dismiss(_ sender: UIButton) {
+        DispatchQueue.main.async {
+            let appDelegate = UIApplication.shared.delegate as! AppDelegate
+            appDelegate.launchStoryboard(storyboard: "Main")
+        }
+    }
+}
+
+
 

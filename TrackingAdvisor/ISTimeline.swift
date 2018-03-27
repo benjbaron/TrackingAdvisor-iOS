@@ -8,11 +8,70 @@
 
 import UIKit
 
+struct TimelineBlock {
+    var iconView: MoveableView? = nil
+    var lineLayer:MovableLineLayer? = nil
+    var pointLayer: MoveableLayer? = nil
+    var bubbleView: MoveableView? = nil
+    var descriptionView: MoveableView? = nil
+    var descriptionSuppView: MoveableView? = nil
+    var feedbackView: MoveableView? = nil
+    
+    func getLayers() -> [Moveable] {
+        var res: [Moveable] = []
+        if let layer = iconView { res.append(layer) }
+        if let layer = lineLayer { res.append(layer) }
+        if let layer = pointLayer { res.append(layer) }
+        if let layer = bubbleView { res.append(layer) }
+        if let layer = descriptionView { res.append(layer) }
+        if let layer = descriptionSuppView { res.append(layer) }
+        if let layer = feedbackView { res.append(layer) }
+        return res
+    }
+    
+    func hideAllLayers() {
+        iconView?.hide();lineLayer?.hide();pointLayer?.hide();bubbleView?.hide()
+        descriptionView?.hide();descriptionSuppView?.hide();feedbackView?.hide()
+    }
+    
+    func decrementPosition() {
+        iconView?.position -= 1
+        lineLayer?.position -= 1
+        pointLayer?.position -= 1
+        bubbleView?.position -= 1
+        descriptionView?.position -= 1
+        descriptionSuppView?.position -= 1
+        feedbackView?.position -= 1
+    }
+    
+    func decrementMaxPosition() {
+        iconView?.maxPosition -= 1
+        lineLayer?.maxPosition -= 1
+        pointLayer?.maxPosition -= 1
+        bubbleView?.maxPosition -= 1
+        descriptionView?.maxPosition -= 1
+        descriptionSuppView?.maxPosition -= 1
+        feedbackView?.maxPosition -= 1
+    }
+    
+    func height() -> CGFloat {
+        var height: CGFloat = 35.0
+        if let h = bubbleView?.view?.frame.height { height += h }
+        if let h = descriptionView?.view?.frame.height { height += h }
+        if let h = descriptionSuppView?.view?.frame.height { height += h }
+        if let h = feedbackView?.view?.frame.height { height += h }
+        return height
+    }
+}
+
 protocol Moveable {
     func hide()
     func show()
     func move(to: CGPoint, with delay: CFTimeInterval, force: Bool)
     func moveDown(by value: CGFloat, with delay:CFTimeInterval)
+    func isLast() -> Bool
+    func isLine() -> Bool
+    func getPosition() -> Int
 }
 
 class MoveableLayer : Moveable {
@@ -44,7 +103,7 @@ class MoveableLayer : Moveable {
             animation.toValue = to
             animation.duration = delay
             layer.position = to
-            layer.add(animation, forKey: nil)
+            layer.add(animation, forKey: "animatePosition")
         }
     }
     
@@ -55,6 +114,19 @@ class MoveableLayer : Moveable {
         position.y = layer.position.y + value
         move(to: position, with: delay, force: true)
     }
+    
+    func isLast() -> Bool {
+        return self.position == self.maxPosition
+    }
+    
+    func isLine() -> Bool {
+        return false
+    }
+    
+    func getPosition() -> Int {
+        return position
+    }
+    
 }
 
 class MovableLineLayer: MoveableLayer {
@@ -75,21 +147,18 @@ class MovableLineLayer: MoveableLayer {
     
     override func moveDown(by value: CGFloat, with delay: CFTimeInterval) {
         guard let line = line else { return }
-        var position = CGPoint()
-        position.x = line.position.x
-        position.y = line.position.y + value
+        var newPosition = CGPoint()
+        newPosition.x = line.position.x
+        newPosition.y = line.position.y + value
         
-        if self.position == self.maxPosition {
-            let increment = self.position == 0 ? value : value / CGFloat(self.position)
-            position.y += increment
-            print("position: \(position.y)")
+        if isLast() {
             line.strokeStart = value < 0 ? lineOffset : 0.0
             if let topCap = topCap {
                 topCap.position.y += value < 0 ? intermediateOffset : -1*intermediateOffset
             }
         }
         
-        move(to: position, with: delay, force: true)
+        move(to: newPosition, with: delay, force: true)
     }
     
     func moveBottomDown(by value: CGFloat, with delay: CFTimeInterval) {
@@ -98,7 +167,7 @@ class MovableLineLayer: MoveableLayer {
         position.x = line.position.x
         position.y = line.position.y + value
         
-        if self.position == self.maxPosition {
+        if isLast() {
             let increment = self.position == 0 ? 0.0 : value / CGFloat(self.position)
             position.y += increment
             line.strokeStart = value < 0 ? lineOffset : 0.0
@@ -108,6 +177,47 @@ class MovableLineLayer: MoveableLayer {
         }
         
         move(to: position, with: delay, force: true)
+    }
+    
+    func moveUp(by value: CGFloat, with delay: CFTimeInterval) {
+        guard let line = line else { return }
+        
+        var position = CGPoint()
+        position.x = line.position.x
+        position.y = line.position.y + value
+        
+        move(to: position, with: delay, force: true)
+    }
+    
+    func movePath(by value: CGFloat, with delay: CFTimeInterval) {
+        guard let line = line, let path = line.path else { return }
+        
+        let boundingBox = path.boundingBox
+        let offset:CGFloat = value / boundingBox.height
+        
+        let from = line.strokeEnd
+        let to = from + offset
+        
+        line.strokeEnd += offset
+        
+        let animation = CABasicAnimation(keyPath: "strokeEnd")
+        animation.fromValue = from
+        animation.toValue = to
+        animation.duration = delay
+        line.add(animation, forKey: "animateStrokeEnd")
+        
+        if let cap = bottomCap {
+            let animation = CABasicAnimation(keyPath: "position")
+            animation.fromValue = cap.position.y
+            animation.toValue = cap.position.y + value
+            animation.duration = delay
+            cap.add(animation, forKey: "animateCapPosition")
+            cap.position.y += value
+        }
+    }
+    
+    override func isLine() -> Bool {
+        return true
     }
 }
 
@@ -147,6 +257,18 @@ class MoveableView : Moveable {
         position.x = view.center.x
         position.y = view.center.y + value
         move(to: position, with: delay, force: true)
+    }
+    
+    func isLast() -> Bool {
+        return self.position == self.maxPosition
+    }
+    
+    func isLine() -> Bool {
+        return false
+    }
+    
+    func getPosition() -> Int {
+        return position
     }
 }
 
@@ -192,34 +314,18 @@ open class ISTimeline: UIScrollView {
         }
     }
     
-    var layers:[Int:[Moveable]] = [:]
+    var layers:[TimelineBlock] = []
     var addButtons:[Moveable] = []
     var addButtonViews:[UIView] = []
     
+    private var _points:[ISPoint] = [] // emulate a stored property
+    
     open var points:[ISPoint] = [] {
-        didSet {            
-            self.layer.sublayers?.forEach({ (layer:CALayer) in
-                if layer.isKind(of: CAShapeLayer.self) {
-                    layer.removeFromSuperlayer()
-                }
-            })
-            self.subviews.forEach { (view:UIView) in
-                view.removeFromSuperview()
-            }
+        didSet {
+            _points.removeAll()
+            _points = points
             
-            self.contentSize = CGSize.zero
-            
-            sections.removeAll()
-            addButtonViews.removeAll()
-            addButtons.removeAll()
-            layers.removeAll()
-            isEditing = false
-            isAnimating = false
-            
-            buildSections()
-            
-            layer.setNeedsDisplay()
-            layer.displayIfNeeded()
+            reloadTimeline()
         }
     }
     
@@ -235,6 +341,8 @@ open class ISTimeline: UIScrollView {
     open var timelineUpdateTouchAction: (()->Void)?
     open var timelimeAddPlaceFirstTouchAction: ((_ pt1:ISPoint?, _ pt2:ISPoint?)->Void)?
     open var timelimeAddPlaceLastTouchAction: ((_ pt1:ISPoint?, _ pt2:ISPoint?)->Void)?
+    open var timelineValidatedPlaceTouchAction: ((_ pt:ISPoint?)->Void)?
+    open var timelineRemovedPlaceTouchAction: ((_ pt:ISPoint?)->Void)?
     
     fileprivate let timelineTitleOffset:CGFloat = 160.0
     fileprivate var timelineTitleLabel: UILabel!
@@ -248,7 +356,7 @@ open class ISTimeline: UIScrollView {
                 timelineEditButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
             } else {
                 if timelineEditButton != nil {
-                  timelineEditButton.setTitle("Edit", for: .normal)
+                  timelineEditButton.setTitle("Add places", for: .normal)
                   timelineEditButton.titleLabel?.font = UIFont.systemFont(ofSize: 16)
                 }
             }
@@ -282,8 +390,8 @@ open class ISTimeline: UIScrollView {
     
     @objc fileprivate func editTimeline() {
         if isAnimating { return }
-        
         isAnimating = true
+        
         if isEditing {
             let duration = 0.5
             
@@ -297,15 +405,17 @@ open class ISTimeline: UIScrollView {
             CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut))
             
             CATransaction.setCompletionBlock { [weak self] in
-                
                 self?.isAnimating = false
                 self?.isEditing = false
             }
             
             for i in 0..<self.layers.count {
-                for j in 0..<self.layers[i]!.count {
-                    let layer = self.layers[i]![j]
-                    layer.moveDown(by: -1.0 * CGFloat(i+1) * 50.0, with: duration)
+                for layer in self.layers[i].getLayers() {
+                    if layer.isLast(), let lineLayer = layer as? MovableLineLayer {
+                        lineLayer.moveDown(by: -1.0 * CGFloat(i+2) * 50, with: duration)
+                    } else {
+                        layer.moveDown(by: -1.0 *  CGFloat(i+1) * 50, with: duration)
+                    }
                 }
             }
             
@@ -314,6 +424,8 @@ open class ISTimeline: UIScrollView {
             self.contentSize = CGSize(width: self.contentSize.width, height: self.contentSize.height - CGFloat(self.layers.count+1)*50)
             
         } else {
+            reloadTimeline() // reset the view
+            
             let duration = 0.5
             CATransaction.begin()
             CATransaction.setAnimationDuration(duration)
@@ -331,9 +443,12 @@ open class ISTimeline: UIScrollView {
             }
             
             for i in 0..<self.layers.count {
-                for j in 0..<self.layers[i]!.count {
-                    let layer = self.layers[i]![j]
-                    layer.moveDown(by: CGFloat(i+1) * 50, with: duration)
+                for layer in self.layers[i].getLayers() {
+                    if layer.isLast() && layer.isLine() {
+                        layer.moveDown(by: CGFloat(i+2) * 50, with: duration)
+                    } else {
+                        layer.moveDown(by: CGFloat(i+1) * 50, with: duration)
+                    }
                 }
             }
             
@@ -343,6 +458,30 @@ open class ISTimeline: UIScrollView {
         }
     }
     
+    func reloadTimeline() {
+        self.layer.sublayers?.forEach({ (layer:CALayer) in
+            if layer.isKind(of: CAShapeLayer.self) {
+                layer.removeFromSuperlayer()
+            }
+        })
+        self.subviews.forEach { (view:UIView) in
+            view.removeFromSuperview()
+        }
+        
+        self.contentSize = CGSize.zero
+        
+        sections.removeAll()
+        addButtonViews.removeAll()
+        addButtons.removeAll()
+        layers.removeAll()
+        isEditing = false
+        isAnimating = false
+        
+        buildSections()
+        
+        layer.setNeedsDisplay()
+        layer.displayIfNeeded()
+    }
     
     override open func draw(_ rect: CGRect) {
         let ctx:CGContext = UIGraphicsGetCurrentContext()!
@@ -364,12 +503,14 @@ open class ISTimeline: UIScrollView {
         
         // Place the timeline edit button
         timelineEditButton = UIButton(type: UIButtonType.system)
-        timelineEditButton.frame.size = CGSize(width: 75, height: 50)
+        timelineEditButton.frame.size = CGSize(width: 100, height: 50)
         timelineEditButton.contentHorizontalAlignment = .right
         timelineEditButton.frame.origin = CGPoint(x: screenSize.width - (timelineEditButton.frame.width + 40), y: -10)
-        timelineEditButton.setTitle("Edit", for: .normal)
+        timelineEditButton.setTitle("Add places", for: .normal)
         timelineEditButton.addTarget(self, action: #selector(ISTimeline.editTimeline), for: .touchUpInside)
         self.addSubview(timelineEditButton)
+        
+        if sections.count == 0 { return }
         
         // add the first add button
         let addIconPosition = CGPoint(x: sections[0].point.x - lineWidth/2,
@@ -395,7 +536,7 @@ open class ISTimeline: UIScrollView {
         self.addSubview(addTextLayer)
         
         for i in 0 ..< sections.count {
-            layers[i] = []
+            layers.append(TimelineBlock())
             if (i < sections.count - 1) {
                 var start = sections[i].point
                 start.x += pointDiameter / 2
@@ -413,7 +554,7 @@ open class ISTimeline: UIScrollView {
                                          cap: cap, offset: offset, layer: moveableLineLayer)
                 
                 self.layer.addSublayer(lineLayer)
-                layers[i]!.append(moveableLineLayer)
+                layers[i].lineLayer = moveableLineLayer
                 
                 // Add button (with opacity = 0)
                 let addIconPosition = CGPoint(x: sections[i].point.x - lineWidth/2,
@@ -448,6 +589,9 @@ open class ISTimeline: UIScrollView {
                 if let rect = sections[i].descriptionSuppRect, positionY < rect.maxY {
                     positionY = rect.maxY
                 }
+                if let rect = sections[i].feedbackRect, positionY < rect.maxY {
+                    positionY = rect.maxY
+                }
                 let addIconPosition = CGPoint(x: sections[i].point.x - lineWidth/2,
                                               y: 50.0 + positionY + CGFloat(i) * 50.0 + 30.0)
                 
@@ -471,37 +615,37 @@ open class ISTimeline: UIScrollView {
                 self.addSubview(addTextLayer)
             }
             
-            let iconView = drawIcon(sections[i].iconCenter, fill: sections[i].iconBg, image: sections[i].icon)
+            let iconView = drawIcon(sections[i].iconCenter, fill: sections[i].iconBg, image: sections[i].icon, scale: 0.65)
             self.addSubview(iconView)
-            layers[i]!.append(MoveableView(view: iconView, position: i, maxPosition: sections.count - 1))
+            layers[i].iconView = MoveableView(view: iconView, position: i, maxPosition: sections.count - 1)
             
             let pointLayer = drawPoint(sections[i].point, color: sections[i].pointColor, fill: sections[i].fill)
             self.layer.addSublayer(pointLayer)
-            layers[i]!.append(MoveableLayer(layer: pointLayer, position: i, maxPosition: sections.count - 1))
+            layers[i].pointLayer = MoveableLayer(layer: pointLayer, position: i, maxPosition: sections.count - 1)
             
             let bubbleLayer = drawBubble(sections[i].bubbleRect, backgroundColor: Constants.colors.primaryLight, textColor: Constants.colors.titleColor, titleLabel: sections[i].titleLabel)
             self.addSubview(bubbleLayer)
-            layers[i]!.append(MoveableView(view: bubbleLayer, position: i, maxPosition: sections.count - 1))
+            layers[i].bubbleView = MoveableView(view: bubbleLayer, position: i, maxPosition: sections.count - 1)
             
             let descriptionLabel = sections[i].descriptionLabel
             if (descriptionLabel != nil) {
                 let descriptionLayer = drawDescription(sections[i].descriptionRect!, textColor: Constants.colors.descriptionColor, descriptionLabel: sections[i].descriptionLabel!)
                 self.addSubview(descriptionLayer)
-                layers[i]!.append(MoveableView(view: descriptionLayer, position: i, maxPosition: sections.count - 1))
+                layers[i].descriptionView = MoveableView(view: descriptionLayer, position: i, maxPosition: sections.count - 1)
             }
             
             let descriptionSuppView = sections[i].descriptionSuppView
             if (descriptionSuppView != nil) {
                 let descriptionSuppLayer = drawDescriptionSupp(sections[i].descriptionSuppRect!, descriptionSupp: sections[i].descriptionSuppView!)
                 self.addSubview(descriptionSuppLayer)
-                layers[i]!.append(MoveableView(view: descriptionSuppLayer, position: i, maxPosition: sections.count - 1))
+                layers[i].descriptionSuppView = MoveableView(view: descriptionSuppLayer, position: i, maxPosition: sections.count - 1)
             }
             
             let feedbackRect = sections[i].feedbackRect
             if feedbackRect != nil {
-                let feedbackView = buildFeedbackView(feedbackRect!)
+                let feedbackView = buildFeedbackButtons(feedbackRect!, i)
                 self.addSubview(feedbackView)
-                layers[i]?.append(MoveableView(view: feedbackView, position: i, maxPosition: sections.count - 1))
+                layers[i].feedbackView = MoveableView(view: feedbackView, position: i, maxPosition: sections.count - 1)
             }
         }
         
@@ -513,10 +657,10 @@ open class ISTimeline: UIScrollView {
         self.layoutIfNeeded()
         
         var y:CGFloat = self.bounds.origin.y + self.contentInset.top + timelineTitleOffset
-        for i in 0 ..< points.count {
+        for i in 0 ..< _points.count {
             let titleLabel = buildTitleLabel(i)
             let descriptionLabel = buildDescriptionLabel(i)
-            let descriptionSuppView = points[i].descriptionSupp
+            let descriptionSuppView = _points[i].descriptionSupp
             
             let titleHeight = titleLabel.intrinsicContentSize.height
             var height:CGFloat = titleHeight
@@ -526,7 +670,10 @@ open class ISTimeline: UIScrollView {
             if descriptionSuppView != nil {
                 height += descriptionSuppView!.frame.height
             }
-            height += 1.2 * iconDiameter // feedbackRect
+            if _points[i].showFeedback {
+                height += 60.0 // feedbackRect
+            }
+            height += 10.0 // margin
             
             let iconCenter = CGPoint(
                 x: self.bounds.origin.x + self.contentInset.left,
@@ -574,7 +721,7 @@ open class ISTimeline: UIScrollView {
             var feebackRect:CGRect?
             if points[i].showFeedback {
                 feebackRect = CGRect(x: rect.origin.x, y: rect.origin.y + rect.height,
-                                     width: calcWidth(), height: 1.2*iconDiameter)
+                                     width: calcWidth(), height: 70.0)
             }
 
             sections.append((point, bubbleRect, descriptionRect, descriptionSuppRect, titleLabel, descriptionLabel, descriptionSuppView, points[i].pointColor.cgColor, points[i].lineColor.cgColor, points[i].fill, points[i].icon, points[i].iconBg.cgColor, iconCenter, feebackRect))
@@ -655,6 +802,232 @@ open class ISTimeline: UIScrollView {
         return feedbackView
     }
     
+    fileprivate func buildFeedbackButtons(_ rect: CGRect, _ index: Int) -> UIView {
+        let feedbackView = UIView()
+        feedbackView.frame = rect
+        
+        let btn1 = feedbackButton(text: "Yes ✓", tag: index, type: 0)
+        let btn2 = feedbackButton(text: "Delete ✕", tag: index, type: 1)
+        let btn3 = feedbackButton(text: "Correct ‣", tag: index, type: 2)
+        
+        let buttonWidth: CGFloat = (rect.width - 14.0 - 20.0) / 3.0 // margin right and interspaces
+        
+        var x: CGFloat = 0.0
+        btn1.frame = CGRect(x: x, y: 10, width: buttonWidth, height: 40)
+        x += buttonWidth + 10.0
+        btn2.frame = CGRect(x: x, y: 10, width: buttonWidth, height: 40)
+        x += buttonWidth + 10.0
+        btn3.frame = CGRect(x: x, y: 10, width: buttonWidth, height: 40)
+        
+        feedbackView.addSubview(btn1)
+        feedbackView.addSubview(btn2)
+        feedbackView.addSubview(btn3)
+        
+        return feedbackView
+    }
+    
+    fileprivate func feedbackButton(text: String, tag: Int, type: Int) -> UIButton {
+        let btn = UIButton(type: .system)
+        btn.layer.cornerRadius = 5.0
+        btn.layer.masksToBounds = true
+        btn.tag = tag
+        btn.setTitle(text, for: .normal)
+        btn.setTitleColor(Constants.colors.primaryDark, for: .normal)
+        btn.setTitleColor(.white, for: .highlighted)
+        btn.titleLabel?.textAlignment = .center
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: 14.0, weight: .bold)
+        if type == 0 { // Yes
+            btn.addTarget(self, action: #selector(feedbackButtonTappedYes), for: .touchUpInside)
+        } else if type == 1 { // No, not at a place
+            btn.addTarget(self, action: #selector(feedbackButtonTappedNo), for: .touchUpInside)
+        } else if type == 2 { // No, other place
+            btn.addTarget(self, action: #selector(feedbackButtonTappedOther), for: .touchUpInside)
+        }
+        
+        btn.backgroundColor = Constants.colors.primaryLight.withAlphaComponent(0.3)
+        return btn
+    }
+    
+    func removeFeebackLine(at index: Int, callback: (()->Void)? = nil) {
+        if isAnimating { return }
+        
+        let duration = 0.25
+        let feedbackHeight:CGFloat = 60.0
+        isAnimating = true
+        
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(duration)
+        CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut))
+        
+        // hide the feedback view buttons
+        self.layers[index].feedbackView?.hide()
+        
+        CATransaction.setCompletionBlock { [weak self] in
+            guard let strongSelf = self else { return }
+            strongSelf.isAnimating = false
+            callback?()
+        }
+        
+        for i in index+1..<self.layers.count {
+            for layer in self.layers[i].getLayers() {
+                if let lineLayer = layer as? MovableLineLayer {
+                    lineLayer.moveUp(by: -1.0 * feedbackHeight, with: duration)
+                } else {
+                    layer.moveDown(by: -1.0 * feedbackHeight, with: duration)
+                }
+            }
+        }
+        
+        // Deal with the bottom of the timeline
+        if index+1 != self.layers.count {
+            for i in 0..<index+1 {
+                if let lineLayer = self.layers[i].lineLayer {
+                    lineLayer.movePath(by: -1.0 * feedbackHeight, with: duration)
+                }
+            }
+        }
+        
+        // Deal with the add place buttons
+        for btn in self.addButtons {
+            if btn.getPosition() >= index {
+                btn.moveDown(by: -1.0 * feedbackHeight, with: duration)
+            }
+        }
+        
+        // Remove feedbackView from the visit block
+        self.layers[index].feedbackView = nil
+        
+        CATransaction.commit()
+        
+        self.contentSize = CGSize(width: self.contentSize.width, height: self.contentSize.height - feedbackHeight)
+    }
+    
+    func removeVisitFromTimeline(at index: Int, callback: (()->Void)? = nil) {
+        if isAnimating { return }
+        
+        let duration = 0.5
+        let visitBlockHeight = self.layers[index].height()
+        
+        isAnimating = true
+        
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(duration)
+        CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut))
+        
+        // hide the visit block
+        self.layers[index].hideAllLayers()
+        
+        CATransaction.setCompletionBlock { [weak self] in
+            guard let strongSelf = self else { return }
+            
+            strongSelf.isAnimating = false
+            
+            // Adjust the indexes for all the visit blocks
+            for i in 0..<strongSelf.layers.count {
+                if i > index {
+                    if let subviews = strongSelf.layers[i].feedbackView?.view?.subviews {
+                        for case let btn as UIButton in subviews {
+                            btn.tag -= 1
+                        }
+                    }
+                    strongSelf.layers[i].decrementPosition()
+                }
+                strongSelf.layers[i].decrementMaxPosition()
+            }
+            strongSelf._points.remove(at: index)
+            strongSelf.layers.remove(at: index)
+            strongSelf.sections.remove(at: index)
+            
+            strongSelf.contentSize = CGSize(width: strongSelf.contentSize.width, height: strongSelf.contentSize.height - visitBlockHeight)
+            
+            callback?()
+        }
+        
+        for i in index+1..<self.layers.count {
+            for layer in self.layers[i].getLayers() {
+                if let lineLayer = layer as? MovableLineLayer {
+                    lineLayer.moveUp(by: -1.0 * visitBlockHeight, with: duration)
+                } else {
+                    layer.moveDown(by: -1.0 * visitBlockHeight, with: duration)
+                }
+            }
+        }
+        
+        // Deal with the bottom of the timeline
+        if index < self.layers.count-2 {
+            for i in 0..<index+1 {
+                if let lineLayer = self.layers[i].lineLayer {
+                    lineLayer.movePath(by: -1.0 * visitBlockHeight, with: duration)
+                }
+            }
+        } else if index == self.layers.count-1 { // last visit block
+            // add a bottom cap if the index is last
+            if index > 1 {
+                if let lineLayer = self.layers[index-1].lineLayer {
+                    lineLayer.hide()
+                }
+                if let lineLayer = self.layers[index-2].lineLayer {
+                    lineLayer.bottomCap?.isHidden = false
+                }
+            }
+            if index > 0 {
+                for i in 0..<index {
+                    if let lineLayer = self.layers[i].lineLayer {
+                        let previousVisitBlockHeight = self.layers[index-1].height()
+                        lineLayer.movePath(by: -1.0 * previousVisitBlockHeight, with: duration)
+                    }
+                }
+            }
+        } else if index == self.layers.count-2 { // before to last visit block
+            // add a bottom cap to the previous line
+            if index > 0 {
+                if let lineLayer = self.layers[index-1].lineLayer {
+                    lineLayer.bottomCap?.isHidden = false
+                }
+                
+                for i in 0..<index {
+                    if let lineLayer = self.layers[i].lineLayer {
+                        lineLayer.movePath(by: -1.0 * visitBlockHeight, with: duration)
+                    }
+                }
+            }
+        }
+        
+        CATransaction.commit()
+    }
+    
+    @objc func feedbackButtonTappedYes(sender: UIButton) {
+        print("At a place (\(sender.tag))")
+        if !isEditing {
+            let pt = self._points[sender.tag]
+            removeFeebackLine(at: sender.tag) { [weak self] in
+                guard let strongSelf = self else { return }
+                print("feedbackButtonTappedYes")
+                strongSelf.timelineValidatedPlaceTouchAction?(pt)
+            }
+        }
+    }
+    
+    @objc func feedbackButtonTappedNo(sender: UIButton) {
+        print("Not at a place (\(sender.tag))")
+        print("number of layers: \(self.layers.count), number of points: \(_points.count)")
+        if !isEditing {
+            let pt = self._points[sender.tag]
+            removeVisitFromTimeline(at: sender.tag) { [weak self] in
+                guard let strongSelf = self else { return }
+                print("feedbackButtonTappedNo")
+                strongSelf.timelineRemovedPlaceTouchAction?(pt)
+            }
+        }
+    }
+    
+    @objc func feedbackButtonTappedOther(sender: UIButton) {
+        print("At an other place (\(sender.tag))")
+        if !isEditing {
+            points[sender.tag].feedbackTouchUpInside?(points[sender.tag])
+        }
+    }
+    
     fileprivate func buildDescriptionLabel(text: String?) -> UILabel? {
         if (text != nil) {
             let descriptionLabel = UILabel()
@@ -707,17 +1080,21 @@ open class ISTimeline: UIScrollView {
             shapeLayer.addSublayer(topRoundedCapLayer)
             layer.topCap = topRoundedCapLayer
             
+            let lineOffset = 1.0 - ((end.y - start.y) / (end.y - startPoint.y))
+            shapeLayer.strokeStart = lineOffset
+            let bottomRoundedCap = UIBezierPath(ovalIn: CGRect(x: end.x - lineWidth/2.0, y: end.y - lineWidth/2.0, width: lineWidth, height: lineWidth))
+            let bottomRoundedCapLayer = CAShapeLayer()
+            bottomRoundedCapLayer.path = bottomRoundedCap.cgPath
+            bottomRoundedCapLayer.fillColor = color
+            bottomRoundedCapLayer.lineWidth = 0
+            shapeLayer.addSublayer(bottomRoundedCapLayer)
+            layer.bottomCap = bottomRoundedCapLayer
+            
             if cap == 2 {
-                let lineOffset = 1.0 - ((end.y - start.y) / (end.y - startPoint.y))
-                shapeLayer.strokeStart = lineOffset
-                let bottomRoundedCap = UIBezierPath(ovalIn: CGRect(x: end.x - lineWidth/2.0, y: end.y - lineWidth/2.0, width: lineWidth, height: lineWidth))
-                let bottomRoundedCapLayer = CAShapeLayer()
-                bottomRoundedCapLayer.path = bottomRoundedCap.cgPath
-                bottomRoundedCapLayer.fillColor = color
-                bottomRoundedCapLayer.lineWidth = 0
-                shapeLayer.addSublayer(bottomRoundedCapLayer)
-                layer.bottomCap = bottomRoundedCapLayer
+                layer.bottomCap?.isHidden = false
                 layer.lineOffset = lineOffset
+            } else {
+                layer.bottomCap?.isHidden = true
             }
         }
         
@@ -785,25 +1162,21 @@ open class ISTimeline: UIScrollView {
                 if addButton.frame.contains(point) {
                     isEditing = false
                     if index == 0 {
-                        timelimeAddPlaceFirstTouchAction?(points.first, nil)
+                        timelimeAddPlaceFirstTouchAction?(_points.first, nil)
                     } else if index == addButtonViews.count - 1 {
-                        timelimeAddPlaceLastTouchAction?(nil, points.last)
+                        timelimeAddPlaceLastTouchAction?(nil, _points.last)
                     } else {
-                        points[index-1].addPlaceTouchUpInside?(points[index-1], points[index])
+                        _points[index-1].addPlaceTouchUpInside?(points[index-1], points[index])
                     }
                     return
                 }
             }
         } else {
-            for (index, section) in sections.enumerated() {
-                if (section.bubbleRect.contains(point) ||
-                    (section.descriptionRect != nil && section.descriptionRect!.contains(point)) ||
-                    (section.descriptionSuppRect != nil && section.descriptionSuppRect!.contains(point))) {
-                    points[index].touchUpInside?(points[index])
-                    return
-                }
-                if (section.feedbackRect != nil && section.feedbackRect!.contains(point)) {
-                    points[index].feedbackTouchUpInside?(points[index])
+            for (index, layer) in layers.enumerated() {
+                if (layer.bubbleView != nil && layer.bubbleView!.view!.frame.contains(point) ||
+                    (layer.descriptionView != nil && layer.descriptionView!.view!.frame.contains(point)) ||
+                    (layer.descriptionSuppView != nil && layer.descriptionSuppView!.view!.frame.contains(point))) {
+                    _points[index].touchUpInside?(_points[index])
                     return
                 }
             }

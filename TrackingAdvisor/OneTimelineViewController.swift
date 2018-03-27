@@ -47,7 +47,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         mapView?.delegate = self
         
         timeline.contentInset = UIEdgeInsetsMake(20.0, 20.0, 20.0, 20.0)
-        mapView?.zoomLevel = 13
+        mapView?.zoomLevel = 15
         mapView?.centerCoordinate = CLLocationCoordinate2D(latitude: 51.524543, longitude: -0.132176)
     }
     
@@ -62,6 +62,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         guard let timeline = self.timeline else { return }
         
         let visits = DataStoreService.shared.getVisits(for: timelineDay)
+        annotations.removeAll()
         
         let touchAction = { [weak self] (point:ISPoint) in
             guard let strongSelf = self else { return }
@@ -86,6 +87,26 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             controllerNavigation.modalTransitionStyle = .crossDissolve
             controllerNavigation.modalPresentationStyle = .fullScreen
             strongSelf.present(controllerNavigation, animated: true, completion: nil)
+        }
+        
+        let visitValidatedTouchAction = { (_ point: ISPoint?) in
+            print("visitValidatedTouchAction -- validated point \(point?.title)") 
+            if let vid = point?.visit?.id {
+                UserUpdateHandler.visitedVisit(for: vid) {
+                    DataStoreService.shared.updateVisit(with: vid, visited: 1)
+                }
+                
+            }
+        }
+        
+        let visitRemovedTouchAction = { (_ point: ISPoint?) in
+            print("visitRemovedTouchAction -- removed point \(point?.title)")
+            if let vid = point?.visit?.id {
+                UserUpdateHandler.deleteVisit(for: vid) {
+                    DataStoreService.shared.deleteVisit(vid: vid)
+                }
+                
+            }
         }
         
         let addPlaceTouchAction = { [weak self] (pt1: ISPoint?, pt2: ISPoint?) in
@@ -148,22 +169,33 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             let arrivalTime = dateFormatter.string(from: visit.arrival!)
             let departureTime = dateFormatter.string(from: visit.departure!)
             var icon = UIImage(named: "location")!
-            let placeName = visit.place!.name!
+            if let placeIcon = visit.place?.icon {
+                icon = UIImage(named: placeIcon)!.withRenderingMode(.alwaysTemplate)
+            }
+            guard let placeName = visit.place?.name else { continue }
             let placePersonalInformationIcons = visit.place?.getPersonalInformationIcons()
             let times = "Visited from \(arrivalTime) to \(departureTime)"
-            
-            if placeName == "Home" {
-                icon = UIImage(named: "home")!.withRenderingMode(.alwaysTemplate)
-            }
-            
+                        
             let lineColor = Constants.colors.primaryDark
             
             var showFeedback = true
-            if visit.review?.answer == .yes {
+            if visit.visited != 0 {
                 showFeedback = false
             }
             
-            let point = ISPoint(title: placeName, description: times, descriptionSupp: placePersonalInformationIcons, pointColor: Constants.colors.primaryLight, lineColor: lineColor, touchUpInside: touchAction, feedbackTouchUpInside: feebackTouchAction, addPlaceTouchUpInside: addPlaceTouchAction, icon: icon, iconBg: Constants.colors.primaryLight, fill: true, showFeedback: showFeedback)
+            let point = ISPoint(
+                title: placeName,
+                description: times,
+                descriptionSupp: placePersonalInformationIcons,
+                pointColor: Constants.colors.primaryLight,
+                lineColor: lineColor,
+                touchUpInside: touchAction,
+                feedbackTouchUpInside: feebackTouchAction,
+                addPlaceTouchUpInside: addPlaceTouchAction,
+                icon: icon,
+                iconBg: Constants.colors.primaryLight,
+                fill: true,
+                showFeedback: true)
             
             point.visit = visit
             timelinePoints.append(point)
@@ -184,11 +216,16 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         timeline.timelineUpdateTouchAction = updateTimelineTouchAction
         timeline.timelimeAddPlaceFirstTouchAction = addPlaceTouchAction
         timeline.timelimeAddPlaceLastTouchAction = addPlaceTouchAction
+        timeline.timelineValidatedPlaceTouchAction = visitValidatedTouchAction
+        timeline.timelineRemovedPlaceTouchAction = visitRemovedTouchAction
     }
     
     private func showAnnotations() {
         mapView?.addAnnotations(annotations)
         mapView?.showAnnotations(annotations, animated: true)
+        if let zoomLevel = mapView?.zoomLevel {
+            mapView?.zoomLevel = min(zoomLevel, 13)
+        }
     }
     
     private func hideAnnotations() {

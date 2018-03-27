@@ -144,7 +144,7 @@ class AggregatedPersonalInformation : PersonalInformation {
         var resSet = Set<String>()
         if let personalInformation = personalInformation {
             for case let pi as PersonalInformation in personalInformation {
-                if let pid = pi.place?.id {
+                if let pid = pi.place?.id, let visits = pi.place?.visits, visits.count > 0 {
                     resSet.insert(pid)
                 }
             }
@@ -155,7 +155,6 @@ class AggregatedPersonalInformation : PersonalInformation {
     
     func getNumberOfVisits() -> Int {
         var resSet = Set<String>()
-        
         if let personalInformation = personalInformation {
             for case let pi as PersonalInformation in personalInformation {
                 if let visits = pi.place?.visits {
@@ -167,7 +166,6 @@ class AggregatedPersonalInformation : PersonalInformation {
                 }
             }
         }
-        
         return resSet.count
     }
     

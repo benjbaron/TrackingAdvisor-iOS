@@ -12,6 +12,7 @@ import FloatRatingView
 protocol PersonalInformationReviewCategoryDelegate {
     func personalInformationReview(cat: String, personalInformation: AggregatedPersonalInformation, type: ReviewType, rating: Int32)
     func explanationFeedback(cat: String, personalInformation: AggregatedPersonalInformation)
+    func showPlaces(cat: String, personalInformation: AggregatedPersonalInformation)
 }
 
 class PersonalInformationReviewCategory: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, PersonalInformationReviewCellDelegate {
@@ -29,7 +30,7 @@ class PersonalInformationReviewCategory: UICollectionViewCell, UICollectionViewD
     }
     var personalInformation: [AggregatedPersonalInformation]? = [] { didSet {
         if let pi = personalInformation {
-            personalInformation = pi.sorted(by: {
+            personalInformation = pi.filter({ $0.getNumberOfVisits() > 0 }).sorted(by: {
                 $0.name ?? "" < $1.name ?? ""
             })
             infoCollectionView.reloadData()
@@ -185,12 +186,18 @@ class PersonalInformationReviewCategory: UICollectionViewCell, UICollectionViewD
         guard let cat = personalInformation.category else { return }
         delegate?.explanationFeedback(cat: cat, personalInformation: personalInformation)
     }
+    
+    func didTapHeader(for personalInformation: AggregatedPersonalInformation) {
+        guard let cat = personalInformation.category else { return }
+        delegate?.showPlaces(cat: cat, personalInformation: personalInformation)
+    }
 }
 
 
 protocol PersonalInformationReviewCellDelegate {
     func didReviewPersonalInformation(personalInformation: AggregatedPersonalInformation?, type: ReviewType, rating: Int32)
     func didTapFeedbackExplanation(for personalInformation: AggregatedPersonalInformation)
+    func didTapHeader(for personalInformation: AggregatedPersonalInformation)
 }
 
 class PersonalInformationReviewCell: UICollectionViewCell {
@@ -280,7 +287,6 @@ class PersonalInformationReviewCell: UICollectionViewCell {
     
     lazy var personalInformationRatingView: QuestionRatingRow = {
         let row = QuestionRatingRow(with: "How relevant is the personal information?") { [weak self] value in
-            print("personalInformationRating changed \(value)")
             if let pi = self?.personalInformation {
                 pi.reviewPersonalInformation = Int32(value)
                 self?.delegate?.didReviewPersonalInformation(personalInformation: pi, type: .personalInformation, rating: Int32(value))
@@ -330,27 +336,41 @@ class PersonalInformationReviewCell: UICollectionViewCell {
         layer.rasterizationScale = UIScreen.main.scale
         
         addSubview(bgView)
-        bgView.addSubview(nameLabel)
-        bgView.addSubview(explanationLabel)
+        
+        let headerView = UIView()
+        headerView.addSubview(nameLabel)
+        headerView.addSubview(explanationLabel)
+        headerView.translatesAutoresizingMaskIntoConstraints = false
+        
+        headerView.addVisualConstraint("H:|-[v0]-|", views: ["v0": nameLabel])
+        headerView.addVisualConstraint("H:|-[v0]-|", views: ["v0": explanationLabel])
+        headerView.addVisualConstraint("V:|[v0]-[v1]|", views: ["v0": nameLabel, "v1": explanationLabel])
+        
+        bgView.addSubview(headerView)
         bgView.addSubview(dividerLineView)
         bgView.addSubview(personalInformationRatingView)
         bgView.addSubview(explanationRatingView)
         bgView.addSubview(privacyRatingView)
         bgView.addSubview(privacyFeedbackRow)
         
-        addVisualConstraint("H:|-[v0]-|", views: ["v0": nameLabel])
-        addVisualConstraint("H:|-[v0]-|", views: ["v0": explanationLabel])
-        addVisualConstraint("H:|-14-[v0]-14-|", views: ["v0": dividerLineView])
-        addVisualConstraint("H:|[v0]|", views: ["v0": personalInformationRatingView])
-        addVisualConstraint("H:|[v0]|", views: ["v0": explanationRatingView])
-        addVisualConstraint("H:|[v0]|", views: ["v0": privacyRatingView])
-        addVisualConstraint("H:|[v0]|", views: ["v0": privacyFeedbackRow])
+        bgView.addVisualConstraint("H:|[v0]|", views: ["v0": headerView])
+        bgView.addVisualConstraint("H:|-14-[v0]-14-|", views: ["v0": dividerLineView])
+        bgView.addVisualConstraint("H:|[v0]|", views: ["v0": personalInformationRatingView])
+        bgView.addVisualConstraint("H:|[v0]|", views: ["v0": explanationRatingView])
+        bgView.addVisualConstraint("H:|[v0]|", views: ["v0": privacyRatingView])
+        bgView.addVisualConstraint("H:|[v0]|", views: ["v0": privacyFeedbackRow])
         
-        addVisualConstraint("V:|-10-[v0]-[v1]-10-[v2(0.5)]-15-[v3(40)]-[v4(40)]-[v5(40)]", views: ["v0": nameLabel, "v1": explanationLabel, "v2": dividerLineView, "v3": personalInformationRatingView, "v4": explanationRatingView, "v5": privacyRatingView])
+        addVisualConstraint("V:|-10-[header]-10-[v2(0.5)]-15-[v3(40)]-[v4(40)]-[v5(40)]", views: ["header": headerView, "v1": explanationLabel, "v2": dividerLineView, "v3": personalInformationRatingView, "v4": explanationRatingView, "v5": privacyRatingView])
         addVisualConstraint("V:[v3(40)]-10-|", views: ["v3": privacyFeedbackRow])
         
         addVisualConstraint("H:|[v0]|", views: ["v0": bgView])
         addVisualConstraint("V:|[v0]|", views: ["v0": bgView])
+        
+        headerView.addTapGestureRecognizer { [weak self] in
+            if let pi = self?.personalInformation {
+                self?.delegate?.didTapHeader(for: pi)
+            }
+        }
     }
     
     func height() -> CGFloat {

@@ -27,7 +27,7 @@ class PersonalInformationCategoryCell: UICollectionViewCell, UICollectionViewDat
         }
     }
     var personalInformation: [PersonalInformation]? = [] { didSet {
-        personalInformation = personalInformation?.sorted(by: { $0.name! < $1.name! })
+        personalInformation = personalInformation?.sorted(by: { $0.name ?? "" < $1.name ?? "" })
         infoCollectionView.reloadData()
     }}
     var color: UIColor? {
@@ -164,7 +164,6 @@ class PersonalInformationCell: UICollectionViewCell {
                 }
             }
             if let rating = personalInformation?.rating {
-                print("rating for \(personalInformation?.name): \(rating)")
                 if let feedback = FeedbackType(rawValue: rating) {
                     self.feedback = feedback
                 }
@@ -172,13 +171,13 @@ class PersonalInformationCell: UICollectionViewCell {
         }
     }
     var feedback: FeedbackType = .none { didSet {
-        print("feedback: \(feedback)")
         feedbackView.selectedFeedback = feedback
     }}
     var color: UIColor = Constants.colors.orange {
         didSet {
             bgView.backgroundColor = color.withAlphaComponent(0.3)
             nameLabel.textColor = color
+            categoryLabel.textColor = color
             feedbackView.color = color
             iconView.iconColor = color
         }

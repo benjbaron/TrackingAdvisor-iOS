@@ -167,8 +167,8 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
             if let place = visit?.place {
                 headerCell.coordinates = CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude)
             }
-            if let answer = visit?.review?.answer {
-                headerCell.setReviewAnswer(with: answer)
+            if let visited = visit?.visited {
+                headerCell.setVisited(with: visited)
             }
             return headerCell
         } else {
@@ -184,8 +184,8 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
         
         // 1 - instanciate a new header
         let headerView = HeaderPersonalInformationCell()
-        if let answer = visit?.review?.answer {
-            headerView.setReviewAnswer(with: answer)
+        if let visited = visit?.visited {
+            headerView.setVisited(with: visited)
         }
         
         // 2 - set the width through a constraint and layout the view
@@ -216,9 +216,9 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     
     // MARK: - HeaderReviewVisitDelegate methods
     func didPressReviewVisit(with answer: ReviewAnswer) {
-        if let review = visit?.review {
-            review.answer = answer
-            DataStoreService.shared.saveReviewAnswer(with: review.id!, answer: answer)
+        if let vid = visit?.id {
+            DataStoreService.shared.updateVisit(with: vid, visited: answer.rawValue)
+            visit?.visited = answer.rawValue
         }
         
         self.collectionView.collectionViewLayout.invalidateLayout()
@@ -324,6 +324,8 @@ class HeaderPersonalInformationCell : UICollectionViewCell, MGLMapViewDelegate {
         review.noAction = noAction
         review.yesAction = yesAction
         review.commentAction = commentAction
+        review.commentText = "It would be great if you could correct the place you visited"
+
         return review
     }()
     
@@ -393,8 +395,8 @@ class HeaderPersonalInformationCell : UICollectionViewCell, MGLMapViewDelegate {
         return 14 + mapView.bounds.height + 14 + visitReviewView.height() + 14 + titleLabel.bounds.height + instructionsLabel.bounds.height + 14 + addPersonalInformationLabel.bounds.height + 14
     }
     
-    func setReviewAnswer(with answer: ReviewAnswer) {
-        visitReviewView.selected = answer
+    func setVisited(with visited: Int32) {
+        visitReviewView.selected = ReviewAnswer(rawValue: visited)!
     }
     
     // MARK: - MGLMapViewDelegate delegate methods

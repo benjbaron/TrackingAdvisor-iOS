@@ -838,7 +838,6 @@ class QuestionRatingRow : UIView, FloatRatingViewDelegate {
     // MARK: - FloatRatingViewDelegate methods
     
     func floatRatingView(_ ratingView: FloatRatingView, didUpdate rating: Double) {
-        print("didUpdate rating to \(rating)")
         ratingChanged?(rating)
     }
 }
@@ -860,7 +859,6 @@ class FeedbackRow : UIView {
     }
     var selectedFeedback: FeedbackType = .meh {
         didSet {
-            print("didSet selectedFeedback \(selectedFeedback)")
             resetColors()
             switch selectedFeedback {
             case .yes:
@@ -882,7 +880,6 @@ class FeedbackRow : UIView {
     }
     
     private func resetColors() {
-        print("resetColors")
         yesView.color = color.withAlphaComponent(0.3)
         yesView.imageColor = color.withAlphaComponent(0.3)
         yesLabel.textColor = color.withAlphaComponent(0.3)
@@ -1000,7 +997,11 @@ class FeedbackRow : UIView {
 
 class CommentRow : UIView {
     var action: (() -> ())?
-    var text: String?
+    var text: String? {
+        didSet {
+            textLabel.text = text
+        }
+    }
     var icon: String?
     var color: UIColor? = Constants.colors.primaryLight {
         didSet {

@@ -24,7 +24,7 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
     var collectionView: UICollectionView!
     let cellId = "CellId"
     let headerCellId = "HeaderCellId"
-    var color = Constants.colors.orange
+    var color = Constants.colors.midPurple
     
     func goBack() {
         guard let controllers = navigationController?.viewControllers else { return }
@@ -183,15 +183,9 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
         // 1: visited
         // 2: not visited
         
-        if let place = place, let pid = place.id, let idx = indexPath, let visits = place.visits {
+        if let place = place, let pid = place.id, let idx = indexPath {
             DataStoreService.shared.updatePlaceReviewed(with: pid, reviewed: true)
-            for case let visit as Visit in visits {
-                if let vid = visit.id {
-                    DataStoreService.shared.updateVisit(with: vid, visited: visited)
-                }
-            }
-            
-            self.updateVisited[pid] = visited
+
             self.places.remove(at: idx.item)
             self.placesStatus.remove(at: idx.item)
             

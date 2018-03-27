@@ -51,6 +51,10 @@ class Visit: NSManagedObject {
                 managedObject.setValue(userVisit.pid, forKey: "placeid")
                 managedObject.setValue(DateHandler.dateToDayString(from: userVisit.a), forKey: "day")
                 
+                if let visited = userVisit.visited, visited { // 1: visited
+                    managedObject.setValue(1, forKey: "visited")
+                }
+                
                 if let newPlace = try! Place.findPlace(matching: userVisit.pid, in: context) {
                     managedObject.setValue(newPlace, forKey: "place")
                     newPlace.addToVisits(managedObject)
@@ -84,9 +88,25 @@ class Visit: NSManagedObject {
         do {
             let matches = try context.fetch(request)
             if matches.count > 0 {
-                assert(matches.count == 1, "Visit.updateVisit -- database inconsistency")
+                assert(matches.count == 1, "Visit.updateVisit visited -- database inconsistency")
                 let managedObject = matches[0]
                 managedObject.setValue(visited, forKey: "visited")
+            }
+        } catch {
+            throw error
+        }
+    }
+    
+    class func updateVisit(for vid: String, departure: Date, in context: NSManagedObjectContext) throws {
+        let request: NSFetchRequest<Visit> = Visit.fetchRequest()
+        request.predicate = NSPredicate(format: "id = %@", vid)
+        
+        do {
+            let matches = try context.fetch(request)
+            if matches.count > 0 {
+                assert(matches.count == 1, "Visit.updateVisit departure -- database inconsistency")
+                let managedObject = matches[0]
+                managedObject.setValue(departure, forKey: "departure")
             }
         } catch {
             throw error

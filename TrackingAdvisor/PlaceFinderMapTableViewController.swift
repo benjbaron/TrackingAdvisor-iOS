@@ -36,6 +36,8 @@ struct PlaceSearchResultDetail: Codable {
     let origin: String
     let longitude: Double
     let latitude: Double
+    let icon: String?
+    let emoji: String?
 }
 
 enum VisitTimesEditType {
@@ -47,6 +49,7 @@ enum VisitActionType: Int {
     case add  = 0
     case edit = 1
     case delete = 2
+    case visited = 3
 }
 
 protocol VisitTimesEditDelegate {
@@ -104,27 +107,10 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         let deletePlaceAction = UIAlertAction(title: "Delete this place",
                                             style: UIAlertActionStyle.destructive) {
             [weak self] result in
-            if let visitid = self?.visit?.id {
-                let actionType: VisitActionType = .delete
-                let parameters: Parameters = [
-                    "userid": Settings.getUserId() ?? "",
-                    "visitid": visitid,
-                    "type": actionType.rawValue
-                ]
-                Alamofire.request(Constants.urls.addvisitURL, method: .post, parameters: parameters, encoding: JSONEncoding.default)
-                    .responseJSON { [weak self] response in
-                        if response.result.isSuccess {
-                            guard let data = response.data else { return }
-                            do {
-                                let decoder = JSONDecoder()
-                                decoder.dateDecodingStrategy = .secondsSince1970
-                                _ = try decoder.decode(UserUpdate.self, from: data)
-                                DataStoreService.shared.deleteVisit(visitid: visitid)
-                                self?.presentingViewController?.dismiss(animated: true)
-                            } catch {
-                                print("Error serializing the json", error)
-                            }
-                        }
+            if let vid = self?.visit?.id {
+                UserUpdateHandler.deleteVisit(for: vid) { [weak self] in
+                    DataStoreService.shared.deleteVisit(vid: vid)
+                    self?.presentingViewController?.dismiss(animated: true)
                 }
             }
                                                 
@@ -137,6 +123,13 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         alertController.addAction(deletePlaceAction)
         alertController.addAction(cancelAction)
         self.present(alertController, animated: true, completion: nil)
+    }
+    
+    @objc func editPlace(_ sender: Any) {
+        foldMapView() { [weak self] in
+                self?.searchbarView.becomeFirstResponder()
+
+        }
     }
     
     var searchbarView: UISearchBar!
@@ -164,6 +157,17 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         button.setTitle("Delete this place", for: .normal)
         button.setTitleColor(Constants.colors.darkRed, for: .normal)
         button.setTitleColor(Constants.colors.darkRed.withAlphaComponent(0.5), for: .highlighted)
+        button.setBackgroundColor(Constants.colors.darkRed.withAlphaComponent(0.1), for: .highlighted)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
+    lazy var editPlaceButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Search for another place", for: .normal)
+        button.setTitleColor(Constants.colors.primaryDark, for: .normal)
+        button.setTitleColor(Constants.colors.primaryDark.withAlphaComponent(0.5), for: .highlighted)
+        button.setBackgroundColor(Constants.colors.primaryDark.withAlphaComponent(0.1), for: .highlighted)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -174,6 +178,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     var mapHeightContraint: NSLayoutConstraint!
     var headerHeightConstraint: NSLayoutConstraint!
     var deleteButtonHeightConstraint: NSLayoutConstraint!
+    var editPlaceButtonHeightConstraint: NSLayoutConstraint!
     
     var name: String? {
         didSet { headerView.placeName = name }
@@ -190,10 +195,16 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     var longitude: Double?
     var latitude: Double?
     var startDate: Date? {
-        didSet { startVisitTimesEditView.date = startDate }
+        didSet {
+            startVisitTimesEditView.date = startDate
+            getRawTrace()
+        }
     }
     var endDate: Date? {
-        didSet { endVisitTimesEditView.date = endDate }
+        didSet {
+            endVisitTimesEditView.date = endDate
+            getRawTrace()
+        }
     }
     var type: VisitActionType = .edit
     
@@ -213,15 +224,27 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         }
     }
     
-    var showDeleteButton: Bool = true {
-        didSet { if let constraint = deleteButtonHeightConstraint {
+    var showDeleteButton: Bool = true { didSet {
+        if let constraint = deleteButtonHeightConstraint {
             constraint.isActive = !showDeleteButton
             deleteButton.isHidden = true
-        } }
-    }
+        }
+    }}
+    
+    var showEditPlaceButton: Bool = true { didSet {
+        if let constraint = editPlaceButtonHeightConstraint {
+            constraint.isActive = !showEditPlaceButton
+            editPlaceButton.isHidden = true
+        }
+    }}
     
     var rawTrace: [VisitRawTrace]? {
         didSet {
+            guard rawTrace != nil else { return }
+            if mapView != nil, let annotations = mapView.annotations, annotations.count > 0 {
+                mapView.removeAnnotations(annotations)
+            }
+            
             var annotations: [CustomPointAnnotation] = []
             for point in rawTrace! {
                 let count = annotations.count + 1
@@ -256,6 +279,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        print("viewDidLoad")
         self.view.backgroundColor = .white
         
         // set up the navigation controller bar
@@ -285,6 +309,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         
         // set up the delete button
         deleteButton.addTarget(self, action: #selector(deletePlace), for: .touchUpInside)
+        editPlaceButton.addTarget(self, action: #selector(editPlace), for: .touchUpInside)
         
         // set up the map view
         mapView = MGLMapView(frame: view.bounds, styleURL: MGLStyle.streetsStyleURL())
@@ -294,8 +319,10 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         mapView.translatesAutoresizingMaskIntoConstraints = false
         
         // Center the map on the visit coordinates
-        let coordinates = CLLocationCoordinate2D(latitude: latitude!, longitude: longitude!)
-        mapView.centerCoordinate = coordinates
+        if longitude != nil && latitude != nil {
+            let coordinates = CLLocationCoordinate2D(latitude: latitude!, longitude: longitude!)
+            mapView.centerCoordinate = coordinates
+        }
         
         // getting the raw trace from the server
         getRawTrace()
@@ -323,6 +350,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         self.view.addSubview(startVisitTimesEditView)
         self.view.addSubview(endVisitTimesEditView)
         self.view.addSubview(deleteButton)
+        self.view.addSubview(editPlaceButton)
         self.view.addSubview(headerView)
         self.view.addSubview(mapView)
         self.view.addSubview(searchbarView)
@@ -332,10 +360,11 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         self.view.addVisualConstraint("H:|[v0]|", views: ["v0": startVisitTimesEditView])
         self.view.addVisualConstraint("H:|[v0]|", views: ["v0": endVisitTimesEditView])
         self.view.addVisualConstraint("H:|[v0]|", views: ["v0": deleteButton])
+        self.view.addVisualConstraint("H:|[v0]|", views: ["v0": editPlaceButton])
         self.view.addVisualConstraint("H:|[v0]|", views: ["v0": mapView])
         self.view.addVisualConstraint("H:|[v0]|", views: ["v0": searchbarView])
         self.view.addVisualConstraint("H:|[v0]|", views: ["v0": tableView])
-        self.view.addVisualConstraint("V:|[header][start][end][delete(40@750)][map][search][table]|", views: ["header": headerView, "start": startVisitTimesEditView, "end": endVisitTimesEditView, "delete": deleteButton, "map": mapView, "search": searchbarView, "table": tableView])
+        self.view.addVisualConstraint("V:|[header][start][end][delete(40@750)][edit(40@750)][map][search][table]|", views: ["header": headerView, "start": startVisitTimesEditView, "end": endVisitTimesEditView, "delete": deleteButton, "edit": editPlaceButton, "map": mapView, "search": searchbarView, "table": tableView])
         
         // set up the overlaying map marker
         marker = UIImageView(image: UIImage(named: "map-marker")!.withRenderingMode(.alwaysTemplate))
@@ -365,6 +394,13 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         deleteButtonHeightConstraint.isActive = !showDeleteButton
         if !showDeleteButton {
             deleteButton.isHidden = true
+        }
+        
+        editPlaceButtonHeightConstraint = NSLayoutConstraint(item: editPlaceButton, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 0)
+        view.addConstraint(editPlaceButtonHeightConstraint)
+        editPlaceButtonHeightConstraint.isActive = !showEditPlaceButton
+        if !showEditPlaceButton {
+            editPlaceButton.isHidden = true
         }
     }
 
@@ -598,7 +634,8 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     
     // MARK: - Fetch the raw trace from the server
     private func getRawTrace() {
-        guard let start = startDate, let end = endDate else { return }
+        guard let start = startDate, let end = endDate, start < end else { return }
+        self.rawTrace?.removeAll()
         
         let parameters: Parameters = [
             "userid": Settings.getUserId() ?? "",
@@ -645,41 +682,44 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         
         let visitid = visit?.id
         
-        Alamofire.request(Constants.urls.addvisitURL, method: .post, parameters: parameters, encoding: JSONEncoding.default)
-            .responseJSON { [weak self] response in
-                if response.result.isSuccess {
-                    guard let data = response.data else { return }
-                    do {
-                        let decoder = JSONDecoder()
-                        decoder.dateDecodingStrategy = .secondsSince1970
-                        let userUpdate = try decoder.decode(UserUpdate.self, from: data)
-                        if self?.type == .edit, let visitid = visitid {
-                            DataStoreService.shared.deleteVisit(visitid: visitid) {
+        DispatchQueue.global(qos: .background).async {
+            Alamofire.request(Constants.urls.addvisitURL, method: .post, parameters: parameters, encoding: JSONEncoding.default)
+                .responseJSON { [weak self] response in
+                    if response.result.isSuccess {
+                        guard let data = response.data else { return }
+                        do {
+                            let decoder = JSONDecoder()
+                            decoder.dateDecodingStrategy = .secondsSince1970
+                            let userUpdate = try decoder.decode(UserUpdate.self, from: data)
+                            if self?.type == .edit, let vid = visitid {
+                                DataStoreService.shared.deleteVisit(vid: vid) {
+                                    DataStoreService.shared.updateDatabase(with: userUpdate) {
+                                        callback?()
+                                    }
+                                }
+                            } else {
                                 DataStoreService.shared.updateDatabase(with: userUpdate) {
                                     callback?()
                                 }
                             }
-                        } else {
-                            DataStoreService.shared.updateDatabase(with: userUpdate) {
-                                callback?()
-                            }
+                            
+                        } catch {
+                            print("Error serializing the json", error)
                         }
-                        
-                    } catch {
-                        print("Error serializing the json", error)
                     }
-                }
+            }
         }
         
     }
     
     // MARK: - Map view interactions
-    private func foldMapView() {
+    private func foldMapView(callback: (()->())? = nil) {
         isAnimating = true
         UIView.animate(withDuration: 0.5, animations: { [weak self] in
             guard let strongSelf = self else { return }
             strongSelf.mapHeightContraint.isActive = true
             strongSelf.deleteButtonHeightConstraint.isActive = true
+            strongSelf.editPlaceButtonHeightConstraint.isActive = true
             strongSelf.startVisitTimesEditView.hide()
             strongSelf.endVisitTimesEditView.hide()
             strongSelf.view.layoutIfNeeded()
@@ -688,11 +728,12 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                     guard let strongSelf = self else { return }
                     strongSelf.isAnimating = false
                     strongSelf.isFolded = true
+                    callback?()
                 }
         })
     }
     
-    private func unfoldMapView() {
+    private func unfoldMapView(callback: (()->())? = nil) {
         view.endEditing(true)
         isAnimating = true
         searchbarView.text = nil
@@ -700,6 +741,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
             guard let strongSelf = self else { return }
             strongSelf.mapHeightContraint.isActive = false
             strongSelf.deleteButtonHeightConstraint.isActive = !strongSelf.showDeleteButton
+            strongSelf.editPlaceButtonHeightConstraint.isActive = !strongSelf.showEditPlaceButton
             strongSelf.startVisitTimesEditView.show()
             strongSelf.endVisitTimesEditView.show()
             strongSelf.view.layoutIfNeeded()
@@ -708,6 +750,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                     guard let strongSelf = self else { return }
                     strongSelf.isAnimating = false
                     strongSelf.isFolded = false
+                    callback?()
                 }
         })
     }
