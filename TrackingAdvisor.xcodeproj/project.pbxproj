@@ -16,6 +16,8 @@
 		B511C4FF1FD5C039006A312C /* GetInTouchFormViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B511C4FE1FD5C039006A312C /* GetInTouchFormViewController.swift */; };
 		B512ED441FBC8EB60062B9E1 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B512ED431FBC8EB60062B9E1 /* Constants.swift */; };
 		B5174B69205723EC0018FB3F /* AggregatedPersonalInformation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5174B68205723EC0018FB3F /* AggregatedPersonalInformation.swift */; };
+		B517F5B820742A1A00507DA5 /* ReviewsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B517F5B720742A1A00507DA5 /* ReviewsViewController.swift */; };
+		B517F5BA2074D61800507DA5 /* AggregatedPersonalInformationExplanationOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B517F5B92074D61800507DA5 /* AggregatedPersonalInformationExplanationOverlayView.swift */; };
 		B51BAFB01FD961E200BE9CAA /* UserLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51BAFAF1FD961E200BE9CAA /* UserLocation.swift */; };
 		B51BAFBA1FD9621A00BE9CAA /* DateHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51BAFB91FD9621A00BE9CAA /* DateHandler.swift */; };
 		B51BAFBC1FD98D2900BE9CAA /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51BAFBB1FD98D2900BE9CAA /* Settings.swift */; };
@@ -124,6 +126,8 @@
 		B511C4FE1FD5C039006A312C /* GetInTouchFormViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetInTouchFormViewController.swift; sourceTree = "<group>"; };
 		B512ED431FBC8EB60062B9E1 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = SOURCE_ROOT; };
 		B5174B68205723EC0018FB3F /* AggregatedPersonalInformation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AggregatedPersonalInformation.swift; sourceTree = "<group>"; };
+		B517F5B720742A1A00507DA5 /* ReviewsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewsViewController.swift; sourceTree = "<group>"; };
+		B517F5B92074D61800507DA5 /* AggregatedPersonalInformationExplanationOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AggregatedPersonalInformationExplanationOverlayView.swift; sourceTree = "<group>"; };
 		B51BAFAF1FD961E200BE9CAA /* UserLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLocation.swift; sourceTree = "<group>"; };
 		B51BAFB91FD9621A00BE9CAA /* DateHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateHandler.swift; sourceTree = "<group>"; };
 		B51BAFBB1FD98D2900BE9CAA /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
@@ -345,6 +349,8 @@
 				B5DA0A742052076500EDA570 /* PersonalInformationReviewCategory.swift */,
 				B5DA0A762052DEB300EDA570 /* PlacePersonalInformationReviewViewController.swift */,
 				B5DA0A782052E2FD00EDA570 /* PlacePersonalInformationReviewCategory.swift */,
+				B517F5B720742A1A00507DA5 /* ReviewsViewController.swift */,
+				B517F5B92074D61800507DA5 /* AggregatedPersonalInformationExplanationOverlayView.swift */,
 			);
 			path = TrackingAdvisor;
 			sourceTree = "<group>";
@@ -756,6 +762,7 @@
 				B59F64001FE819220025BE06 /* PlaceFinderMapTableViewController.swift in Sources */,
 				B51BAFBA1FD9621A00BE9CAA /* DateHandler.swift in Sources */,
 				B5C3C9521FB20F750037DD22 /* LocationRegionService.swift in Sources */,
+				B517F5BA2074D61800507DA5 /* AggregatedPersonalInformationExplanationOverlayView.swift in Sources */,
 				B5DA0A71205061D400EDA570 /* UnifiedPlaceInformationCell.swift in Sources */,
 				B58612751FB0D9C700480DD4 /* NotificationService.swift in Sources */,
 				B51BAFBC1FD98D2900BE9CAA /* Settings.swift in Sources */,
@@ -790,6 +797,7 @@
 				B53043231FDED92A00DBC7C0 /* UserUpdateHandler.swift in Sources */,
 				B5C3474C1FB0B4760078C12E /* RawCollectedDataTextViewController.swift in Sources */,
 				B568D8801FB45D0700E051B1 /* LocationAdaptiveService.swift in Sources */,
+				B517F5B820742A1A00507DA5 /* ReviewsViewController.swift in Sources */,
 				B5FE77F31FA9F2F6002B5F0C /* MapCalendarContainerViewController.swift in Sources */,
 				B58B79241FC742F9007BA1BC /* Move.swift in Sources */,
 				B53FB6FD1FAB9A870000112E /* FileService.swift in Sources */,

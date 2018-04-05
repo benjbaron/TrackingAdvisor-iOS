@@ -9,7 +9,7 @@
 import Foundation
 import UIKit
 
-class PlacePersonalInformationReviewViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, DataStoreUpdateProtocol, PlacePersonalInformationReviewCategoryDelegate {
+class PlacePersonalInformationReviewViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, DataStoreUpdateProtocol, PlacePersonalInformationReviewCategoryDelegate, PersonalInformationReviewHeaderCellDelegate {
     var places: [Place]! = [] {
         didSet {
             for _ in places {
@@ -28,7 +28,7 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
     
     func goBack() {
         guard let controllers = navigationController?.viewControllers else { return }
-        let vc = controllers[0]
+        let vc = controllers[controllers.count - 2]
         navigationController?.popToViewController(vc, animated: true)
     }
     
@@ -115,6 +115,8 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         if kind == UICollectionElementKindSectionHeader {
             let headerCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerCellId, for: indexPath) as! PlacePersonalInformationReviewHeaderCell
+            headerCell.delegate = self
+            headerCell.color = color
             return headerCell
         } else {
             assert(false, "Unexpected element kind")
@@ -151,7 +153,7 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
         fullScreenView.iconColor = Constants.colors.primaryLight
         fullScreenView.headerTitle = "You're all set!"
         fullScreenView.subheaderTitle = "Thank you for reviewing the places"
-        fullScreenView.buttonText = "Go back to the personal information"
+        fullScreenView.buttonText = "Go back to your reviews"
         fullScreenView.buttonAction = { [weak self] in
             self?.goBack()
         }
@@ -191,19 +193,35 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
             
             self.collectionView.performBatchUpdates({
                 self.collectionView.deleteItems(at: [idx])
-            }, completion: { completed in
-                self.collectionView.reloadData()
+            }, completion: { [weak self] completed in
+                self?.collectionView.reloadData()
                 callback?()
             })
         }
+    }
+    
+    // MARK: - PersonalInformationReviewHeaderCellDelegate method {
+    func didPressBackButton() {
+        goBack()
     }
 }
 
 class PlacePersonalInformationReviewHeaderCell : UICollectionViewCell {
     
+    var delegate: PersonalInformationReviewHeaderCellDelegate?
+    
+    @objc fileprivate func tappedBackButton() {
+        delegate?.didPressBackButton?()
+    }
+    
+    var color: UIColor = Constants.colors.midPurple { didSet {
+        backButton.tintColor = color
+        backButton.setTitleColor(color, for: .normal)
+    }}
+    
     private let mainTitle: UILabel = {
         let label = UILabel()
-        label.text = "Personal information to review"
+        label.text = "Place reviews"
         label.font = UIFont.systemFont(ofSize: 34, weight: .heavy)
         label.textColor = Constants.colors.black
         label.lineBreakMode = .byWordWrapping
@@ -211,6 +229,22 @@ class PlacePersonalInformationReviewHeaderCell : UICollectionViewCell {
         label.textAlignment = .left
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }()
+    
+    private lazy var backButton: UIButton = {
+        let l = UIButton(type: .system)
+        l.setTitle("Back", for: .normal)
+        l.contentHorizontalAlignment = .left
+        l.setImage(UIImage(named: "angle-left")!.withRenderingMode(.alwaysTemplate), for: .normal)
+        l.tintColor = color
+        l.titleLabel?.font = UIFont.systemFont(ofSize: 16.0)
+        l.setTitleColor(color, for: .normal)
+        l.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: -8)
+        l.titleEdgeInsets = UIEdgeInsets(top: 0, left: -8, bottom: 0, right: 0)
+        l.backgroundColor = .clear
+        l.translatesAutoresizingMaskIntoConstraints = false
+        l.addTarget(self, action: #selector(tappedBackButton), for: .touchUpInside)
+        return l
     }()
     
     override init(frame: CGRect) {
@@ -224,9 +258,11 @@ class PlacePersonalInformationReviewHeaderCell : UICollectionViewCell {
     
     func setupViews() {
         addSubview(mainTitle)
+        addSubview(backButton)
         
         addVisualConstraint("H:|-16-[v0]-|", views: ["v0": mainTitle])
-        addVisualConstraint("V:|-48-[v0]", views: ["v0": mainTitle])
+        addVisualConstraint("H:|-14-[v0(75)]", views: ["v0": backButton])
+        addVisualConstraint("V:|-20-[v1(40)][v0]", views: ["v0": mainTitle, "v1": backButton])
         
         translatesAutoresizingMaskIntoConstraints = false
     }

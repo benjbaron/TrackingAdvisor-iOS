@@ -59,9 +59,12 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
     }
     
     func reload() {
+        print("reload")
         guard let timeline = self.timeline else { return }
         
-        let visits = DataStoreService.shared.getVisits(for: timelineDay)
+        let visits = DataStoreService.shared.getVisits(for: timelineDay, sameContext: true)
+        updateLastVisit(from: visits)
+        
         annotations.removeAll()
         
         let touchAction = { [weak self] (point:ISPoint) in
@@ -78,7 +81,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             // TODO: Implement a push-style animation
         }
         
-        let feebackTouchAction = { [weak self] (point: ISPoint) in
+        let feedbackTouchAction = { [weak self] (point: ISPoint) in
             guard let strongSelf = self else { return }
             let controller = PlaceFinderMapTableViewController()
             controller.visit = point.visit
@@ -90,7 +93,6 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         }
         
         let visitValidatedTouchAction = { (_ point: ISPoint?) in
-            print("visitValidatedTouchAction -- validated point \(point?.title)") 
             if let vid = point?.visit?.id {
                 UserUpdateHandler.visitedVisit(for: vid) {
                     DataStoreService.shared.updateVisit(with: vid, visited: 1)
@@ -100,7 +102,6 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         }
         
         let visitRemovedTouchAction = { (_ point: ISPoint?) in
-            print("visitRemovedTouchAction -- removed point \(point?.title)")
             if let vid = point?.visit?.id {
                 UserUpdateHandler.deleteVisit(for: vid) {
                     DataStoreService.shared.deleteVisit(vid: vid)
@@ -166,13 +167,15 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         var timelinePoints: [ISPoint] = []
         var count = 0
         for visit in visits {
-            let arrivalTime = dateFormatter.string(from: visit.arrival!)
-            let departureTime = dateFormatter.string(from: visit.departure!)
+            guard let arrival = visit.arrival, let departure = visit.departure,
+                  let placeName = visit.place?.name else { continue }
+            
+            let arrivalTime = dateFormatter.string(from: arrival)
+            let departureTime = dateFormatter.string(from: departure)
             var icon = UIImage(named: "location")!
             if let placeIcon = visit.place?.icon {
                 icon = UIImage(named: placeIcon)!.withRenderingMode(.alwaysTemplate)
             }
-            guard let placeName = visit.place?.name else { continue }
             let placePersonalInformationIcons = visit.place?.getPersonalInformationIcons()
             let times = "Visited from \(arrivalTime) to \(departureTime)"
                         
@@ -190,18 +193,18 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
                 pointColor: Constants.colors.primaryLight,
                 lineColor: lineColor,
                 touchUpInside: touchAction,
-                feedbackTouchUpInside: feebackTouchAction,
+                feedbackTouchUpInside: feedbackTouchAction,
                 addPlaceTouchUpInside: addPlaceTouchAction,
                 icon: icon,
                 iconBg: Constants.colors.primaryLight,
                 fill: true,
-                showFeedback: true)
+                showFeedback: showFeedback)
             
             point.visit = visit
             timelinePoints.append(point)
             
             let matchedAnnotation = PointAnnotation()
-            matchedAnnotation.coordinate = CLLocationCoordinate2D(latitude: (visit.place?.latitude)!, longitude: (visit.place?.longitude)!)
+            matchedAnnotation.coordinate = CLLocationCoordinate2D(latitude: (visit.place?.latitude) ?? 0.0, longitude: (visit.place?.longitude) ?? 0.0)
             matchedAnnotation.title = title
             matchedAnnotation.annotationType = .matched
             annotations.append(matchedAnnotation)
@@ -218,13 +221,34 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         timeline.timelimeAddPlaceLastTouchAction = addPlaceTouchAction
         timeline.timelineValidatedPlaceTouchAction = visitValidatedTouchAction
         timeline.timelineRemovedPlaceTouchAction = visitRemovedTouchAction
+        
+        print("done reload with \(timelinePoints.count) timeline points")
+    }
+    
+    private func updateLastVisit(from visits: [Visit]) {
+        if  let lastVisit = visits.last, let vid = lastVisit.id,
+            let lon = lastVisit.place?.longitude, let lat = lastVisit.place?.latitude,
+            let lastKnownLocation = Settings.getLastKnownLocation() {
+            
+            let now = Date()
+            let todayStr = DateHandler.dateToDayString(from: now)
+            // if distance within the last known location
+            let visitLocation = CLLocation(latitude: lat, longitude: lon)
+            let distance = visitLocation.distance(from: lastKnownLocation)
+            
+            if todayStr == timelineDay && distance <= 50 {
+                print("updateLastVisit for \(lastVisit.place?.name) with \(distance)")
+                DataStoreService.shared.updateVisit(with: vid, departure: now)
+            }
+            
+        }
     }
     
     private func showAnnotations() {
         mapView?.addAnnotations(annotations)
-        mapView?.showAnnotations(annotations, animated: true)
+        mapView?.showAnnotations(annotations, animated: false)
         if let zoomLevel = mapView?.zoomLevel {
-            mapView?.zoomLevel = min(zoomLevel, 13)
+            mapView?.setZoomLevel(min(zoomLevel, 15), animated: true)
         }
     }
     

@@ -204,7 +204,7 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     func reviewPersonalInformation(cat: String, personalInformation: PersonalInformation, answer: FeedbackType) {
         print("feedback from personal information \(personalInformation.name!): \(answer)")
         
-        // TODO: save the feedback in the database
+        // save the feedback in the database
         personalInformation.rating = answer.rawValue
         if let piid = personalInformation.id {
             updatedReviews[piid] = answer.rawValue

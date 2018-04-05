@@ -11,8 +11,18 @@ import Alamofire
 
 class PersonalInformationReviewViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, DataStoreUpdateProtocol, PersonalInformationReviewCategoryDelegate, PersonalInformationReviewHeaderCellDelegate {
     
+    func goBack() {
+        guard let controllers = navigationController?.viewControllers else { return }
+        let vc = controllers[controllers.count - 2]
+        navigationController?.popToViewController(vc, animated: true)
+    }
+    
     var fullScreenView: FullScreenView?
-    var pics: [String]! = []
+    var pics: [String]! = [] { didSet {
+        for _ in pics {
+            picStatus.append(-1)
+        }
+    }}
     var personalInformation: [String: Set<AggregatedPersonalInformation>]! = [:]
     var aggregatedPersonalInformation: [AggregatedPersonalInformation]! = [] {
         didSet {
@@ -27,6 +37,7 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
                     }
                 }
                 
+                
                 pics = personalInformation!.keys.sorted(by: { $0 < $1 })
                 self.fullScreenView?.removeFromSuperview()
                 if collectionView == nil {
@@ -37,7 +48,7 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
         }
     }
     var updatedReviews: [String:[Int32]] = [:]  // [personalinformationid : [PersonalInformationReviewType:Rating]]
-    var placesToReview: Bool = false
+    var picStatus: [Int] = [] // PIC index
     
     var collectionView: UICollectionView!
     let cellId = "CellId"
@@ -51,12 +62,13 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
         self.navigationController?.isNavigationBarHidden = true
         self.tabBarController?.tabBar.isHidden = false
         
-        aggregatedPersonalInformation = DataStoreService.shared.getAllAggregatedPersonalInformation()
+        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationToReview(sameContext: true)
         
+        // update with the latest
         UserUpdateHandler.retrieveLatestAggregatedPersonalInformation { [weak self] in
             // show if view is visible
             if self?.viewIfLoaded?.window != nil {
-                self?.aggregatedPersonalInformation = DataStoreService.shared.getAllAggregatedPersonalInformation(sameContext: true)
+                self?.aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationToReview(sameContext: true)
             }
         }
         
@@ -66,9 +78,6 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
         if collectionView != nil {
             collectionView.reloadData()
         }
-                
-        let places = DataStoreService.shared.getAllPlacesToReview(sameContext: true)
-        self.placesToReview = places.count > 0 ? true : false
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -122,35 +131,35 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
     // MARK: - UICollectionViewDataSource delegate methods
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if let count = personalInformation?.count {
-            return count
-        }
-        return 0
+        return pics.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell: PersonalInformationReviewCategory
         cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! PersonalInformationReviewCategory
         
-        guard let pi = personalInformation, let pics = pics else { return cell }
+        guard let pi = personalInformation else { return cell }
         let picid = pics[indexPath.item]
         cell.personalInformationCategory = PersonalInformationCategory.getPersonalInformationCategory(with: picid)
         
         cell.personalInformation = Array(pi[picid]!)
         cell.color = color
         cell.delegate = self
+        cell.indexPath = indexPath
+        cell.lastPI = indexPath.item+1 == pics.count
+        cell.status = picStatus[indexPath.item]
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: view.frame.width, height: 400)
+        return CGSize(width: view.frame.width, height: 350)
     }
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         if kind == UICollectionElementKindSectionHeader {
             let headerCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerCellId, for: indexPath) as! PersonalInformationReviewHeaderCell
             headerCell.delegate = self
-            headerCell.placesToReview = self.placesToReview
+            headerCell.color = color
             return headerCell
         } else {
             assert(false, "Unexpected element kind")
@@ -162,14 +171,16 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
         
         // 4 - return the correct size
-        return CGSize(width: collectionView.frame.width, height: 250)
+        return CGSize(width: collectionView.frame.width, height: 175)
     }
 
     
     // MARK: - PersonalInformationReviewCategoryDelegate method
-    func personalInformationReview(cat: String, personalInformation: AggregatedPersonalInformation, type: ReviewType, rating: Int32) {
+    func personalInformationReview(cat: String, personalInformation: AggregatedPersonalInformation, type: ReviewType, rating: Int32, picIndexPath: IndexPath, personalInformationIndexPath: IndexPath) {
         
         if let piid = personalInformation.id {
+            picStatus[picIndexPath.item] = personalInformationIndexPath.item
+            
             DataStoreService.shared.updatePersonalInformationReview(with: piid, type: type, rating: rating) { [weak self] allRatings in
                 self?.updatedReviews[piid] = allRatings
             }
@@ -177,92 +188,103 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
     }
     
     func explanationFeedback(cat: String, personalInformation: AggregatedPersonalInformation) {
+        
+        OverlayView.shared.hideOverlayView()
         let viewController = ExplanationFeedbackViewController()
         viewController.personalInformation = personalInformation
         
         self.navigationController?.pushViewController(viewController, animated: true)
     }
     
-    func showPlaces(cat: String, personalInformation: AggregatedPersonalInformation) {
-        print("show places")
-        let overlayView = UIView()
-        let frame = OverlayView.frame()
-        overlayView.frame = CGRect(x: 0, y: 0, width: frame.width - 60, height: frame.height - 100)
-        overlayView.center = CGPoint(x: frame.width / 2.0,
-                                     y: frame.height / 2.0)
-        overlayView.backgroundColor = .white
-        overlayView.clipsToBounds = true
-        overlayView.layer.cornerRadius = 10
-//        overlayView.translatesAutoresizingMaskIntoConstraints = false
-        
-        let placeListView = ArggregatedParsonalInformationPlaceListView()
-        overlayView.addSubview(placeListView)
-        overlayView.addVisualConstraint("H:|[v0]|", views: ["v0": placeListView])
-        overlayView.addVisualConstraint("V:|[v0]|", views: ["v0": placeListView])
-        
+    func showPlaces(cat: String, personalInformation: AggregatedPersonalInformation, picIndexPath: IndexPath, personalInformationIndexPath: IndexPath) {
+        let overlayView = AggregatedPersonalInformationExplanationOverlayView()
+        overlayView.color = color
+        overlayView.picIndexPath = picIndexPath
+        overlayView.indexPath = personalInformationIndexPath
+        overlayView.delegate = self
+        overlayView.picid = cat
+        overlayView.aggregatedPersonalInformation = personalInformation
         OverlayView.shared.showOverlay(with: overlayView)
     }
     
+    func goToNextPersonalInformation(currentPersonalInformation: AggregatedPersonalInformation?, picIndexPath: IndexPath?, personalInformationIndexPath: IndexPath?) {
+        if let picIdx = picIndexPath, let piIdx = personalInformationIndexPath {
+            picStatus[picIdx.item] = piIdx.item
+        }
+    }
+    
+    func goToNextPersonalInformationCategory(picIndexPath: IndexPath?) {
+        if let idx = picIndexPath {
+            self.picStatus.remove(at: idx.item)
+            self.pics.remove(at: idx.item)
+            
+            self.collectionView.performBatchUpdates({
+                self.collectionView.deleteItems(at: [idx])
+            }, completion: { [weak self] completed in
+                self?.collectionView.reloadData()
+                
+                if let count = self?.pics.count, idx.item == count {
+                    self?.showEndScreen()
+                }
+            })
+        }
+        
+    }
+    
     // MARK: - PersonalInformationReviewHeaderCellDelegate method {
-    func didPressReviewLatestPersonalInformation() {
-        let viewController = PlacePersonalInformationReviewViewController()
-        navigationController?.pushViewController(viewController, animated: true)
+    func didPressBackButton() {
+        goBack()
+    }
+    
+    func showEndScreen() {
+        let fullScreenView = FullScreenView(frame: view.frame)
+        fullScreenView.icon = "galaxy"
+        fullScreenView.iconColor = Constants.colors.primaryLight
+        fullScreenView.headerTitle = "You're all set!"
+        fullScreenView.subheaderTitle = "Thank you for reviewing the personal information"
+        fullScreenView.buttonText = "Go back to your reviews"
+        fullScreenView.buttonAction = { [weak self] in
+            self?.goBack()
+        }
+        view.addSubview(fullScreenView)
     }
 }
 
 @objc protocol PersonalInformationReviewHeaderCellDelegate {
-    @objc optional func didPressReviewLatestPersonalInformation()
+    @objc optional func didPressBackButton()
 }
 
 class PersonalInformationReviewHeaderCell : UICollectionViewCell {
     var delegate: PersonalInformationReviewHeaderCellDelegate?
-    var placesToReview: Bool = false {
-        didSet {
-            setColor()
-        }
+    
+    @objc fileprivate func tappedBackButton() {
+        delegate?.didPressBackButton?()
     }
     
-    var color: UIColor = Constants.colors.midPurple {
-        didSet {
-            setColor()
-        }
-    }
+    var color: UIColor = Constants.colors.orange { didSet {
+        backButton.tintColor = color
+        backButton.setTitleColor(color, for: .normal)
+    }}
     
-    func setColor() {
-        if placesToReview {
-            placesToReviewButton.setTitle("You have places to review", for: .normal)
-            placesToReviewButton.setTitleColor(.white, for: .normal)
-            placesToReviewButton.backgroundColor = color
-        } else {
-            placesToReviewButton.setTitle("There are no places to review", for: .normal)
-            placesToReviewButton.setTitleColor(color, for: .normal)
-            placesToReviewButton.backgroundColor = color.withAlphaComponent(0.3)
-        }
-    }
-    
-    @objc fileprivate func tappedPlacesToReview() {
-        if placesToReview {
-            delegate?.didPressReviewLatestPersonalInformation?()
-        }
-    }
-    
-    private lazy var placesToReviewButton: UIButton = {
+    private lazy var backButton: UIButton = {
         let l = UIButton(type: .system)
-        l.layer.cornerRadius = 5.0
-        l.layer.masksToBounds = true
-        l.setTitle("You have places to review", for: .normal)
-        l.titleLabel?.textAlignment = .center
-        l.titleLabel?.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
-        l.titleLabel?.textColor = .white
-        l.backgroundColor = color
+        l.setTitle("Back", for: .normal)
+        l.contentHorizontalAlignment = .left
+        l.setImage(UIImage(named: "angle-left")!.withRenderingMode(.alwaysTemplate), for: .normal)
+        l.tintColor = color
+        l.titleLabel?.font = UIFont.systemFont(ofSize: 16.0)
+        l.setTitleColor(color, for: .normal)
+        l.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: -8)
+        l.titleEdgeInsets = UIEdgeInsets(top: 0, left: -8, bottom: 0, right: 0)
+        l.backgroundColor = .clear
         l.translatesAutoresizingMaskIntoConstraints = false
-        l.addTarget(self, action: #selector(tappedPlacesToReview), for: .touchUpInside)
+        l.addTarget(self, action: #selector(tappedBackButton), for: .touchUpInside)
         return l
     }()
     
     private let mainTitle: UILabel = {
         let label = UILabel()
-        label.text = "Summary of your personal information"
+        label.text = "Personal information review"
         label.font = UIFont.systemFont(ofSize: 34, weight: .heavy)
         label.textColor = Constants.colors.black
         label.lineBreakMode = .byWordWrapping
@@ -283,51 +305,12 @@ class PersonalInformationReviewHeaderCell : UICollectionViewCell {
     
     func setupViews() {
         addSubview(mainTitle)
-        addSubview(placesToReviewButton)
+        addSubview(backButton)
         
         addVisualConstraint("H:|-16-[v0]-|", views: ["v0": mainTitle])
-        addVisualConstraint("H:|-14-[v0]-14-|", views: ["v0": placesToReviewButton])
-        addVisualConstraint("V:|-48-[v0]-14-[v1(64)]", views: ["v0": mainTitle, "v1": placesToReviewButton])
+        addVisualConstraint("H:|-14-[v0(75)]", views: ["v0": backButton])
+        addVisualConstraint("V:|-20-[v1(40)][v0]", views: ["v0": mainTitle, "v1": backButton])
         
         translatesAutoresizingMaskIntoConstraints = false
     }
 }
-
-class ArggregatedParsonalInformationPlaceListView : UIView {
-    lazy var headerView: HeaderPlace = {
-        let header = HeaderPlace()
-        header.backgroundColor = color
-        return header
-    }()
-    
-    var color: UIColor = Constants.colors.orange {
-        didSet {
-            headerView.backgroundColor = color
-        }
-    }
-    
-    
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-    }
-    
-    convenience init() {
-        self.init(frame: CGRect.zero)
-        setupViews()
-    }
-    
-    required init(coder aDecoder: NSCoder) {
-        fatalError("This class does not support NSCoding")
-    }
-    
-    func setupViews() {
-        addSubview(headerView)
-        
-        addVisualConstraint("H:|[v0]|", views: ["v0": headerView])
-        addVisualConstraint("V:|[v0]", views: ["v0": headerView])
-        
-        translatesAutoresizingMaskIntoConstraints = false
-    }
-}
-

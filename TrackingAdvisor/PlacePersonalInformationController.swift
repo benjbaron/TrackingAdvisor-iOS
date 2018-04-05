@@ -9,6 +9,7 @@
 import Foundation
 import UIKit
 
+
 class PlacePersonalInformationController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, LargePersonalInformationCellDelegate, DataStoreUpdateProtocol, FooterDoneDelegate {
     
     func goBack() {

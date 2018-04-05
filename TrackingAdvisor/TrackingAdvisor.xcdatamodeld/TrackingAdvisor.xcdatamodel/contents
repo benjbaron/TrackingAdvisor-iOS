@@ -2,6 +2,7 @@
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="13772" systemVersion="16G1114" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="AggregatedPersonalInformation" representedClassName="AggregatedPersonalInformation" parentEntity="PersonalInformation" syncable="YES" codeGenerationType="category">
         <attribute name="comment" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="reviewed" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="reviewExplanation" optional="YES" attributeType="Integer 32" minValueString="0" maxValueString="3" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="reviewPersonalInformation" optional="YES" attributeType="Integer 32" minValueString="0" maxValueString="3" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="reviewPrivacy" optional="YES" attributeType="Integer 32" minValueString="0" maxValueString="3" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
@@ -80,6 +81,7 @@
         <relationship name="review" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ReviewVisit" inverseName="visit" inverseEntity="ReviewVisit" syncable="YES"/>
     </entity>
     <elements>
+        <element name="AggregatedPersonalInformation" positionX="-297" positionY="-180" width="128" height="135"/>
         <element name="Move" positionX="-504" positionY="48" width="128" height="150"/>
         <element name="PersonalInformation" positionX="-297" positionY="-211" width="128" height="210"/>
         <element name="Place" positionX="-324" positionY="20" width="128" height="270"/>
@@ -88,6 +90,5 @@
         <element name="ReviewPersonalInformation" positionX="-288" positionY="-171" width="128" height="75"/>
         <element name="ReviewVisit" positionX="-396" positionY="-258" width="128" height="60"/>
         <element name="Visit" positionX="-137" positionY="-9" width="128" height="180"/>
-        <element name="AggregatedPersonalInformation" positionX="-297" positionY="-180" width="128" height="120"/>
     </elements>
 </model>

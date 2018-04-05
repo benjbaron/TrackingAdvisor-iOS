@@ -126,14 +126,17 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
         var radius: CLLocationDistance = 100.0
         if let prev = previousLocation {
             let s = location.speed(with: prev)
+            print("distance: \(location.distance(from: prev)), duration: \(location.timestamp.timeIntervalSince1970 - prev.timestamp.timeIntervalSince1970)")
             if s > 5.0 {
-                radius = min(100.0, max(100.0 * sqrt(s), 500.0))
+                radius = max(100.0, min(100.0 * sqrt(s), 1000.0))
             }
-            FileService.shared.log("Speed: \(s)", classname: "LocationRegionService")
+            FileService.shared.log("Speed: \(s), radius: \(radius)", classname: "LocationRegionService")
         }
         
         let region = CLCircularRegion(center: location.coordinate, radius: radius, identifier: "currentRegion")
+        let regionDefault = CLCircularRegion(center: location.coordinate, radius: 500, identifier: "currentRegionDefault")
         currentRegions.append(region)
+        currentRegions.append(regionDefault)
         locationManager.startMonitoring(for: region)
         previousLocation = location
     }
@@ -204,6 +207,12 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
 //        FileService.shared.log("didVisit \(visit)", classname: "LocationRegionService")
         restartUpdatingLocation()
         locationUpdateType = .visit
+        
+//        UserUpdateHandler.getClosestPlace(coordinate: visit.coordinate) { place in
+//            if let emoji = place?.emoji, let name = place?.name {
+//                NotificationService.shared.sendLocalNotificationNow(body: "\(emoji) Are you at \(name)?")
+//            }
+//        }
     }
     
     func locationManager(_ manager: CLLocationManager, didStartMonitoringFor region: CLRegion) {

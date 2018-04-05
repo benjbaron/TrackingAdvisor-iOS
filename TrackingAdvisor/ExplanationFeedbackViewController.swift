@@ -24,10 +24,9 @@ class ExplanationFeedbackViewController: UIViewController {
     func goBack(_ notificationView: NotificationView?) {
         view.endEditing(true)
         guard let controllers = navigationController?.viewControllers else { return }
-        if controllers.count == 2 {
-            // get the previous view controller
-            navigationController?.popToViewController(controllers[0], animated: true)
-        }
+        
+        let vc = controllers[controllers.count - 2]
+        navigationController?.popToViewController(vc, animated: true)
     }
     
     func sendToServerAndSaveLocally() {

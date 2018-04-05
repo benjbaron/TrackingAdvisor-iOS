@@ -12,11 +12,13 @@ import UserNotifications
 class NotificationService {
     static let shared = NotificationService()
     
-    func sendLocalNotificationNow(title: String, body: String) {
+    func sendLocalNotificationNow(title: String? = nil, body: String) {
         
         print("sendLocalNotificationNow with \(body)")
         let localNotification = UNMutableNotificationContent()
-        localNotification.title = title
+        if let title = title {
+            localNotification.title = title
+        }
         localNotification.body = body
         localNotification.badge = 1
         localNotification.categoryIdentifier = "trackAdvisor"

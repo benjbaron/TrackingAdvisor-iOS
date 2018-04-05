@@ -122,11 +122,7 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
             
             guard let newLocation = bestLocation else { return }
             
-            print("previous location: \(Settings.getLastKnownLocation())")
-            Settings.saveLastKnownLocation(with: newLocation)
-            
-            if let cur = self.currentLocation {
-                let previousLocation = CLLocation(latitude: cur.latitude, longitude: cur.longitude)
+            if let previousLocation = Settings.getLastKnownLocation() {
                 let distanceMoved = previousLocation.distance(from: newLocation)
                 if distanceMoved > 25 {
                     self.isStationary = false
@@ -135,6 +131,7 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
                 }
             }
             
+            Settings.saveLastKnownLocation(with: newLocation)
             let loc = UserLocation(id: self.id, location: newLocation, targetAccuracy: self.locationManager.desiredAccuracy)
             self.currentLocation = loc
             
@@ -145,7 +142,17 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
                     FileService.shared.log("added location to \(filename)", classname: "LocationAdaptiveService")
                     
                     // upload to server
-                    UserLocation.upload(callback: nil)
+                    UserLocation.upload {
+                        print("user location upload")
+                        // stop forcing location file upload
+                        if Settings.getForceUploadLocation() {
+                            Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { _ in
+                                print("timer after 10 seconds")
+                                UserUpdateHandler.retrieveLatestUserUpdates(for: DateHandler.dateToDayString(from: Date()))
+                            }
+                            Settings.saveForceUploadLocation(with: false)
+                        }
+                    }
                     
                     DispatchQueue.main.async { () -> Void in
                         if strongSelf.delegate != nil {

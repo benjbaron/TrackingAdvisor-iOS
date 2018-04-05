@@ -210,6 +210,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     
     var visit: Visit? {
         didSet {
+            print("PlaceFinderMapTableViewController -- visit didSet")
             if let visit = visit, let place = visit.place {
                 color = place.getPlaceColor()
                 name = place.name
@@ -220,6 +221,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                 latitude = place.latitude
                 startDate = visit.arrival
                 endDate = visit.departure
+                print("\tname: \(name)")
             }
         }
     }
@@ -279,7 +281,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        print("viewDidLoad")
+        print("PlaceFinderMapTableViewController -- viewDidLoad")
         self.view.backgroundColor = .white
         
         // set up the navigation controller bar
@@ -615,7 +617,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
             "query": searchText
         ]
         
-        Alamofire.request(Constants.urls.placeAutcompleteURL, method: .get, parameters: parameters)
+        Alamofire.request(Constants.urls.placeAutocompleteURL, method: .get, parameters: parameters)
             .responseJSON { [weak self] response in
                 guard let strongSelf = self else { return }
                 if response.result.isSuccess {

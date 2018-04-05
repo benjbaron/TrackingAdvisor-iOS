@@ -95,8 +95,10 @@ class UserLocation {
         }
     }
     
-    class func upload(force: Bool = false, callback: ((DataResponse<Any>) -> Void)?) {
+    class func upload(force: Bool = false, callback: (() -> Void)?) {
         // See if the data needs to be uploaded to the server
+        
+        let force = Settings.getForceUploadLocation() || force
         if let lastFileUpdate = Settings.getLastFileUpdate() {
             if force || (!force && abs(lastFileUpdate.timeIntervalSinceNow) > Constants.variables.minimumDurationBetweenLocationFileUploads) {
                 FileService.shared.log("upload file \(Constants.filenames.locationFile) in the background", classname: "UserLocation")
@@ -122,13 +124,11 @@ class UserLocation {
                         case .success(let upload, _, _):
                             upload.responseJSON { response in
                                 FileService.shared.log("response received from server: \(response.result.isSuccess)", classname: "UserLocation")
-                                // update the last file update
-                                
-                                Settings.saveLastFileUpdate(with: date)
-                                
                                 // delete the file if success
                                 if response.result.isSuccess {
+                                    Settings.saveLastFileUpdate(with: date)
                                     FileService.shared.delete(file: path)
+                                    callback?()
                                 }
                             }
                         case .failure(let encodingError):

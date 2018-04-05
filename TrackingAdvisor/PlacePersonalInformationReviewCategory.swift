@@ -243,7 +243,7 @@ class PlacePersonalInformationReviewCategory : UICollectionViewCell, UICollectio
         // register cell type
         infoCollectionView.register(PersonalInformationCell.self, forCellWithReuseIdentifier: cellId)
         
-        // add the collectionview to the containerview
+        // add the collectionview to the container view
         containerView.addSubview(infoCollectionView)
         containerView.addSubview(cardCountLabel)
         containerView.addVisualConstraint("H:|[v0]|", views: ["v0": cardCountLabel])
@@ -388,8 +388,8 @@ class PlacePersonalInformationReviewCategory : UICollectionViewCell, UICollectio
                 setupEndContainerView()
             }
 
-            if let catIdx = self.indexPath {
-                delegate?.placePersonalInformationReview(place: place, personalInformation: pi, answer: answer, placeIndexPath: catIdx, personalInformationIndexPath: indexPath)
+            if let placeIdx = self.indexPath {
+                delegate?.placePersonalInformationReview(place: place, personalInformation: pi, answer: answer, placeIndexPath: placeIdx, personalInformationIndexPath: indexPath)
             }
         }
     }

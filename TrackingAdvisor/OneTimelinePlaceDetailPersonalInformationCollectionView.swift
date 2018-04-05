@@ -201,7 +201,7 @@ class PersonalInformationCell: UICollectionViewCell {
     
     lazy var bgView: UIView = {
         let v = UIView()
-        v.layer.cornerRadius = 16
+        v.layer.cornerRadius = 10
         v.translatesAutoresizingMaskIntoConstraints = false
         v.backgroundColor = color.withAlphaComponent(0.3)
         return v

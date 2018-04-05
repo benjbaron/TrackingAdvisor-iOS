@@ -72,6 +72,11 @@ class Visit: NSManagedObject {
         visit.departure = userVisit.d
         visit.arrival = userVisit.a
         visit.placeid = userVisit.pid
+        if let visited = userVisit.visited, visited { // 1: visited
+            visit.visited = 1
+        } else {
+            visit.visited = 0
+        }
         visit.day = DateHandler.dateToDayString(from: userVisit.a)
         if let place = try! Place.findPlace(matching: userVisit.pid, in: context) {
             visit.place = place

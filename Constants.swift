@@ -22,6 +22,7 @@ struct Constants {
         static let onboarding = "onboarding"
         static let optOut = "optOut"
         static let lastKnownLocation = "lastKnownLocation"
+        static let forceUploadLocation = "forceUploadLocation"
     }
     
     struct variables {
@@ -32,7 +33,8 @@ struct Constants {
     
     struct colors {
         static let defaultColor = UIColor.init(red: 0.75, green: 0.75, blue: 0.75, alpha: 1.0);
-        static let primaryDark = UIColor.init(red: 48.0/255.0, green: 63.0/255.0, blue: 159.0/255.0, alpha: 1)
+        static let primaryDark = UIColor.init(red: 48.0/255.0, green: 63.0/255.0, blue: 159.0/255.0, alpha: 1.0)
+        static let primaryMidDark = UIColor.init(red: 61.0/255.0, green: 80.0/255.0, blue: 204.0/255.0, alpha: 1.0)
         static let primaryLight = UIColor.init(red: 167.0/255.0, green: 175.0/255.0, blue: 217.0/255.0, alpha: 1.0)
         static let descriptionColor = UIColor.gray
         static let titleColor = UIColor.white
@@ -56,9 +58,10 @@ struct Constants {
     
     struct urls {
         static let locationUploadURL = "https://iss-lab.geog.ucl.ac.uk/semantica/uploader"
+        static let closestPlaceURL = "https://iss-lab.geog.ucl.ac.uk/semantica/getclosestplace"
         static let sendMailURL = "https://iss-lab.geog.ucl.ac.uk/semantica/mail"
         static let userUpdateURL = "https://iss-lab.geog.ucl.ac.uk/semantica/userupdate"
-        static let placeAutcompleteURL = "https://iss-lab.geog.ucl.ac.uk/semantica/autocomplete"
+        static let placeAutocompleteURL = "https://iss-lab.geog.ucl.ac.uk/semantica/autocomplete"
         static let piAutcompleteURL = "https://iss-lab.geog.ucl.ac.uk/semantica/autocompletepi"
         static let rawTraceURL = "https://iss-lab.geog.ucl.ac.uk/semantica/rawtrace"
         static let personalInformationCategoriesURL = "https://iss-lab.geog.ucl.ac.uk/semantica/personalinformationcategories"

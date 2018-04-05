@@ -9,10 +9,267 @@
 import UIKit
 import Mapbox
 
-class ProfileViewController: UIViewController, UIScrollViewDelegate, MGLMapViewDelegate {
-    // set a content view inside the scroll view
-    // From https://developer.apple.com/library/content/technotes/tn2154/_index.html
+class ProfileViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, PersonalInformationReviewCategoryDelegate {
     
+    var updatedReviews: [String:[Int32]] = [:]
+    var pics: [String]! = []
+    var personalInformation: [String: [AggregatedPersonalInformation]]! = [:]
+    var aggregatedPersonalInformation: [AggregatedPersonalInformation]! = [] {
+        didSet {
+            if aggregatedPersonalInformation.count > 0 {
+                updatedReviews.removeAll()
+                personalInformation.removeAll()
+                var s: [String: Set<AggregatedPersonalInformation>] = [:]
+                for pi in aggregatedPersonalInformation {
+                    if let picid = pi.category {
+                        if s[picid] == nil {
+                            s[picid] = Set()
+                        }
+                        s[picid]!.insert(pi)
+                    }
+                }
+                pics = s.keys.sorted(by: { $0 < $1 })
+                
+                for picid in pics {
+                    personalInformation[picid] = s[picid]!.sorted(by: { $0.numberOfVisits > $1.numberOfVisits })
+                }
+                
+                if collectionView == nil {
+                    self.setupViews()
+                }
+                collectionView.reloadData()
+            }
+        }
+    }
+    
+    var collectionView: UICollectionView!
+    let cellId = "CellId"
+    let headerCellId = "HeaderCellId"
+    let sectionHeaderCellId = "SectionHeaderCellId"
+    var color = Constants.colors.primaryDark
+    
+    var numberOfDaysStudy: Int?
+    var numberofPlacesVisited: Int?
+    var numberOfAggregatedPersonalInformation: Int?
+    var numberOfPlacesToReviewTotal: Int?
+    var mapAnnotations: [CustomPointAnnotation] = []
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupViews()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        view.backgroundColor = .white
+        self.navigationController?.isNavigationBarHidden = true
+        self.tabBarController?.tabBar.isHidden = false
+        
+        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationReviewed(sameContext: true)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        if updatedReviews.count > 0 {
+            UserUpdateHandler.sendPersonalInformationReviewUpdate(reviews: updatedReviews)
+        }
+    }
+    
+    func setupViews() {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .vertical
+        collectionView = UICollectionView(frame: view.frame, collectionViewLayout: layout)
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        collectionView.alwaysBounceVertical = true
+        collectionView.contentInset =  UIEdgeInsets(top: 0, left: 14.0, bottom: 14.0, right: 14.0)
+        
+        // Register cells types
+        collectionView.register(ProfilePersonalInformatonCell.self, forCellWithReuseIdentifier: cellId)
+        collectionView.register(ProfileHeaderCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, withReuseIdentifier: headerCellId)
+        collectionView.register(ProfileSectionHeaderCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, withReuseIdentifier: sectionHeaderCellId)
+        
+        collectionView.backgroundColor = .white
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        self.view.addSubview(collectionView)
+        
+        let margins = self.view.layoutMarginsGuide
+        NSLayoutConstraint.activate([
+            collectionView.topAnchor.constraint(equalTo: margins.topAnchor)
+            ])
+        self.view.addVisualConstraint("H:|[collection]|", views: ["collection" : collectionView])
+        self.view.addVisualConstraint("V:[collection]|", views: ["collection" : collectionView])
+        
+        computeData()
+    }
+    
+    // MARK: - UICollectionViewDataSource delegate methods
+    
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return pics.count + 1 // including the header
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if section == 0 {
+            return 0
+        }
+        
+        let pic = pics[section-1]
+        return personalInformation[pic]!.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell: ProfilePersonalInformatonCell
+        cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! ProfilePersonalInformatonCell
+        
+        let picid = pics[indexPath.section-1]
+        cell.personalInformation = self.personalInformation[picid]![indexPath.item]
+        cell.numberOfDaysStudy = numberOfDaysStudy
+        cell.color = color
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let width = (collectionView.frame.width - 38.0) / 2.0
+        return CGSize(width: width, height: 75.0)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        if kind == UICollectionElementKindSectionHeader {
+            let section = indexPath.section
+            if section == 0 {
+                let headerCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerCellId, for: indexPath) as! ProfileHeaderCell
+                headerCell.color = color
+                headerCell.parent = self
+                headerCell.numberOfDaysStudy = numberOfDaysStudy
+                headerCell.numberofPlacesVisited = numberofPlacesVisited
+                headerCell.numberOfPlacesToReviewTotal = numberOfPlacesToReviewTotal
+                headerCell.numberOfAggregatedPersonalInformation = numberOfAggregatedPersonalInformation
+                headerCell.mapAnnotations = mapAnnotations
+                return headerCell
+            } else {
+                let sectionHeaderCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: sectionHeaderCellId, for: indexPath) as! ProfileSectionHeaderCell
+                let picid = pics[section-1]
+                let pic = PersonalInformationCategory.getPersonalInformationCategory(with: picid)
+                sectionHeaderCell.personalInformationCategory = pic
+                sectionHeaderCell.color = color
+                return sectionHeaderCell
+            }
+        } else {
+            assert(false, "Unexpected element kind")
+        }
+        
+        return UICollectionReusableView()
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
+        
+        // 4 - return the correct size
+        if section == 0 {
+            return CGSize(width: collectionView.frame.width, height: 700)
+        } else {
+            return CGSize(width: collectionView.frame.width, height: 75)
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        
+        let picid = pics[indexPath.section-1]
+        if let pi = personalInformation[picid]?[indexPath.item] {
+            let overlayView = AggregatedPersonalInformationExplanationOverlayView()
+            overlayView.color = color
+            overlayView.picIndexPath = indexPath
+            overlayView.indexPath = indexPath
+            overlayView.delegate = self
+            overlayView.picid = picid
+            overlayView.aggregatedPersonalInformation = pi
+            overlayView.showAllQuestions = true
+            OverlayView.shared.showOverlay(with: overlayView)
+        }
+    }
+    
+    // MARK: PersonalInformationReviewCategoryDelegate methods
+    
+    func personalInformationReview(cat: String, personalInformation: AggregatedPersonalInformation, type: ReviewType, rating: Int32, picIndexPath: IndexPath, personalInformationIndexPath: IndexPath) {
+        
+        if let piid = personalInformation.id {
+            DataStoreService.shared.updatePersonalInformationReview(with: piid, type: type, rating: rating) { [weak self] allRatings in
+                self?.updatedReviews[piid] = allRatings
+            }
+        }
+    }
+    
+    func explanationFeedback(cat: String, personalInformation: AggregatedPersonalInformation) {
+        OverlayView.shared.hideOverlayView()
+        let viewController = ExplanationFeedbackViewController()
+        viewController.personalInformation = personalInformation
+        viewController.color = color
+        
+        self.navigationController?.pushViewController(viewController, animated: true)
+    }
+    
+    func computeData() {
+        // get all visits
+        let allVisits = DataStoreService.shared.getAllVisits(sameContext: true)
+        let today = Date()
+        
+        // compute the number of days since the start of the study
+        if let firstVisit = allVisits.first {
+            numberOfDaysStudy = today.numberOfDays(to: firstVisit.arrival)! + 1
+        }
+        
+        if allVisits.count == 0 {
+            numberOfDaysStudy = 0
+            return
+        }
+        
+        // compute the number of places visited
+        let placeIds = allVisits.map { $0.placeid! }
+        let uniquePlaceIds = Array(Set(placeIds))
+        numberofPlacesVisited = uniquePlaceIds.count
+        
+        let placesToReview = DataStoreService.shared.getAllPlacesToReview(sameContext: true)
+        numberOfPlacesToReviewTotal = placesToReview.count
+        
+        let aggregatedPersonalInformation = DataStoreService.shared.getAllAggregatedPersonalInformation(sameContext: true)
+        numberOfAggregatedPersonalInformation = aggregatedPersonalInformation.count
+        
+        // put all the places in the map
+        mapAnnotations.removeAll()
+        for v in allVisits {
+            guard let p = v.place else { return }
+            
+            var color = Constants.colors.midPurple
+            let dayOfWeek = v.arrival?.dayOfWeek
+            if dayOfWeek == 1 || dayOfWeek == 7 {
+                color = Constants.colors.orange
+            }
+            
+            let count = mapAnnotations.count + 1
+            let pointAnnotation = CustomPointAnnotation(coordinate: CLLocationCoordinate2D(latitude: p.latitude, longitude: p.longitude), title: p.name, subtitle: nil)
+            pointAnnotation.reuseIdentifier = "customAnnotation\(count)"
+            // This dot image grows in size as more annotations are added to the array.
+            pointAnnotation.image = dot(size: 20, color: color)
+            
+            mapAnnotations.append(pointAnnotation)
+        }
+    }
+}
+
+
+class ProfileHeaderCell: UICollectionViewCell, MGLMapViewDelegate {
+    var parent: ProfileViewController?
+    
+    var color: UIColor = Constants.colors.orange { didSet {
+        studySummary.bigTextColor = color
+        studySummary.descriptionTextColor = color
+        studyStats.statsOneColor = color
+        studyStats.statsTwoColor = color
+        studyStats.statsThreeColor = color
+        iconExitMapView.color = color
+    }}
     
     var numberOfDaysStudy: Int? { didSet {
         studySummary.bigText.bigText = String(numberOfDaysStudy!)
@@ -54,15 +311,25 @@ class ProfileViewController: UIViewController, UIScrollViewDelegate, MGLMapViewD
         }
     }}
     
-    var mapAnnotations: [CustomPointAnnotation] = []
-
-    var scrollView : UIScrollView!
-    var contentView : UIView!
+    var mapAnnotations: [CustomPointAnnotation] = [] { didSet {
+        mapView.addAnnotations(mapAnnotations)
+        mapView.showAnnotations(mapAnnotations, animated: false)
+    }}
     
     var mainTitle: UILabel = {
         let label = UILabel()
         label.text = "About you"
         label.textAlignment = .left
+        label.font = UIFont.systemFont(ofSize: 36, weight: .heavy)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    var mainTitlePI: UILabel = {
+        let label = UILabel()
+        label.text = "Your personal information"
+        label.textAlignment = .left
+        label.numberOfLines = 0
         label.font = UIFont.systemFont(ofSize: 36, weight: .heavy)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -118,83 +385,51 @@ class ProfileViewController: UIViewController, UIScrollViewDelegate, MGLMapViewD
         return map
     }()
     
-    var iconExitMapView: RoundIconView = {
-        return RoundIconView(image: UIImage(named: "times")!, color: Constants.colors.primaryDark, imageColor: .white)
+    lazy var iconExitMapView: RoundIconView = {
+        return RoundIconView(image: UIImage(named: "times")!, color: color, imageColor: .white)
     }()
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        
-        computeData()
-    }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        scrollView = UIScrollView(frame: self.view.frame)
-        scrollView.sizeToFit()
-        scrollView.alwaysBounceVertical = true
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.backgroundColor = UIColor.white
-        self.view.addSubview(scrollView)
-        
-        contentView = UIView()
-        contentView.translatesAutoresizingMaskIntoConstraints = false
-        contentView.backgroundColor = UIColor.white
-        scrollView.addSubview(contentView)
-        
-        let margins = self.view.layoutMarginsGuide
-        NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: margins.topAnchor)
-        ])
-        self.view.addVisualConstraint("H:|[scrollView]|", views: ["scrollView" : scrollView])
-        self.view.addVisualConstraint("V:[scrollView]|",  views: ["scrollView" : scrollView])
-        
-        scrollView.addVisualConstraint("H:|[contentView]|", views: ["contentView" : contentView])
-        scrollView.addVisualConstraint("V:|[contentView]|", views: ["contentView" : contentView])
-        
-        // make the width of content view to be the same as that of the containing view.
-        self.view.addVisualConstraint("H:[contentView(==mainView)]", views: ["contentView" : contentView, "mainView" : self.view])
-
-        scrollView.delegate = self
-        mapView.delegate = self
-        
+    override init(frame: CGRect) {
+        super.init(frame: frame)
         setupViews()
-        computeData()
     }
     
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     func setupViews() {
-        contentView.addSubview(mainTitle)
-        contentView.addVisualConstraint("H:|-16-[v0]-|", views: ["v0": mainTitle])
-        contentView.addVisualConstraint("V:|-48-[v0(40)]", views: ["v0": mainTitle])
+        mapView.delegate = self
+        
+        addSubview(mainTitle)
+        addVisualConstraint("H:|[v0]|", views: ["v0": mainTitle])
+        addVisualConstraint("V:|-48-[v0(40)]", views: ["v0": mainTitle])
 
-        contentView.addSubview(studySummary)
-        contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0":studySummary])
-        contentView.addVisualConstraint("V:[v0]-16-[v1]", views: ["v0": mainTitle, "v1":studySummary])
+        addSubview(studySummary)
+        addVisualConstraint("H:|[v0]|", views: ["v0": studySummary])
+        addVisualConstraint("V:[v0]-16-[v1]", views: ["v0": mainTitle, "v1": studySummary])
         
         
-        contentView.addSubview(studyStats)
-        contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0":studyStats])
-        contentView.addVisualConstraint("V:[v0]-16-[v1]", views: ["v0": studySummary, "v1":studyStats])
+        addSubview(studyStats)
+        addVisualConstraint("H:|[v0]|", views: ["v0": studyStats])
+        addVisualConstraint("V:[v0]-16-[v1]", views: ["v0": studySummary, "v1": studyStats])
         
-        contentView.addSubview(mapView)
+        addSubview(mapView)
         mapView.addTapGestureRecognizer {
             self.animateMapViewIn()
         }
-        contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0":mapView])
-        contentView.addVisualConstraint("V:[v0]-16-[v1(250)]-32-|", views: ["v0": studyStats, "v1":mapView])
+        addVisualConstraint("H:|[v0]|", views: ["v0": mapView])
+        addVisualConstraint("V:[v0]-16-[v1(250)]", views: ["v0": studyStats, "v1": mapView])
+        
+        addSubview(mainTitlePI)
+        addVisualConstraint("H:|[v0]|", views: ["v0": mainTitlePI])
+        addVisualConstraint("V:[v0]|", views: ["v0": mainTitlePI])
     }
     
     // MARK: - MGLMapViewDelegate protocol
     
     func mapView(_ mapView: MGLMapView, imageFor annotation: MGLAnnotation) -> MGLAnnotationImage? {
         if let point = annotation as? CustomPointAnnotation,
-            
             let image = point.image,
             let reuseIdentifier = point.reuseIdentifier {
             
@@ -216,22 +451,22 @@ class ProfileViewController: UIViewController, UIScrollViewDelegate, MGLMapViewD
     }
     
     func animateMapViewIn() {
-        if let startingFrame = mapView.superview?.convert(mapView.frame, to: nil) {
+        if let startingFrame = mapView.superview?.convert(mapView.frame, to: nil), let parent = parent {
             mapView.alpha = 0
             zoomMapView.frame = startingFrame
             zoomMapView.delegate = self
             
-            self.view.addSubview(zoomMapView)
+            parent.view.addSubview(zoomMapView)
             
             UIView.animate(withDuration: 0.75, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 0.5, options: .curveEaseOut, animations: {
-                self.zoomMapView.frame = CGRect(x: 0, y: -1 * UIApplication.shared.statusBarFrame.height, width: self.view.frame.width, height: self.view.frame.height)
+                self.zoomMapView.frame = CGRect(x: 0, y: -1 * UIApplication.shared.statusBarFrame.height, width: parent.view.frame.width, height: parent.view.frame.height)
             }, completion: { didComplete in
                 if didComplete {
                     self.iconExitMapView.frame = CGRect(x: 20, y: UIApplication.shared.statusBarFrame.height + 10, width: 30, height: 30)
                     self.iconExitMapView.addTapGestureRecognizer {
                         self.animateMapViewOut()
                     }
-                    self.view.addSubview(self.iconExitMapView)
+                    parent.view.addSubview(self.iconExitMapView)
                     self.zoomMapView.addAnnotations(self.mapAnnotations)
                     self.zoomMapView.showAnnotations(self.mapAnnotations, animated: true)
                 }
@@ -252,68 +487,121 @@ class ProfileViewController: UIViewController, UIScrollViewDelegate, MGLMapViewD
             })
         }
     }
-    
-    func computeData() {
-        // get all visits
-        let allVisits = DataStoreService.shared.getAllVisits()
-        let today = Date()
-        
-        // compute the number of days since the start of the study
-        if let firstVisit = allVisits.first {
-            numberOfDaysStudy = today.numberOfDays(to: firstVisit.arrival)! + 1
-        }
-        
-        if allVisits.count == 0 {
-            numberOfDaysStudy = 0
-            return
-        }
-        
-        // compute the number of places visited
-        let placeIds = allVisits.map { $0.placeid! }
-        let uniquePlaceIds = Array(Set(placeIds))
-        numberofPlacesVisited = uniquePlaceIds.count
-        
-        let placesToReview = DataStoreService.shared.getAllPlacesToReview(sameContext: true)
-        print("numberOfPlacesToReviewTotal: \(numberOfPlacesToReviewTotal)")
-        numberOfPlacesToReviewTotal = placesToReview.count
-        
-        let aggregatedPersonalInformation = DataStoreService.shared.getAllAggregatedPersonalInformation(sameContext: true)
-        numberOfAggregatedPersonalInformation = aggregatedPersonalInformation.count
-        
-        // put all the places in the map
-        mapAnnotations.removeAll()
-        for v in allVisits {
-            guard let p = v.place else { return }
-            
-            var color = Constants.colors.midPurple
-            let dayOfWeek = v.arrival?.dayOfWeek
-            if dayOfWeek == 1 || dayOfWeek == 7 {
-                color = Constants.colors.orange
-            }
-            
-            let count = mapAnnotations.count + 1
-            let pointAnnotation = CustomPointAnnotation(coordinate: CLLocationCoordinate2D(latitude: p.latitude, longitude: p.longitude), title: p.name, subtitle: nil)
-            pointAnnotation.reuseIdentifier = "customAnnotation\(count)"
-            // This dot image grows in size as more annotations are added to the array.
-            pointAnnotation.image = dot(size:20, color: color)
-            
-            mapAnnotations.append(pointAnnotation)
-        }
-        
-        mapView.addAnnotations(mapAnnotations)
-        mapView.showAnnotations(mapAnnotations, animated: false)
-    }
-    
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }
 
+class ProfileSectionHeaderCell: UICollectionViewCell {
+    var color: UIColor = Constants.colors.orange {
+        didSet { iconView.iconColor = color }
+    }
+    var personalInformationCategory: PersonalInformationCategory? {
+        didSet {
+            if let name = personalInformationCategory?.name {
+                nameLabel.text = name
+            }
+            if let icon = personalInformationCategory?.icon {
+                iconView.icon = icon
+            }
+        }
+    }
+    
+    let nameLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Personal information"
+        label.font = UIFont.systemFont(ofSize: 25, weight: .heavy)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    let iconView: IconView = {
+        return IconView(icon: "user-circle", iconColor: Constants.colors.primaryLight)
+    }()
+    
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupViews()
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func setupViews() {
+        addSubview(nameLabel)
+        addSubview(iconView)
+        
+        addVisualConstraint("H:|[icon(25)]-[text]|", views: ["icon": iconView, "text": nameLabel])
+        iconView.centerYAnchor.constraint(equalTo: nameLabel.centerYAnchor).isActive = true
+        addVisualConstraint("V:|[nameLabel]|", views: ["nameLabel": nameLabel])
+    }
+}
+
+class ProfilePersonalInformatonCell: UICollectionViewCell {
+    var numberOfDaysStudy: Int?
+    var personalInformation: AggregatedPersonalInformation? {
+        didSet {
+            if let piName = personalInformation?.name {
+                nameLabel.text = piName
+            }
+        }
+    }
+    
+    var color: UIColor = Constants.colors.orange {
+        didSet {
+            if let review = personalInformation?.reviewPersonalInformation, let score = personalInformation?.numberOfVisits, let days = numberOfDaysStudy {
+                
+                // do something with the review
+                
+                let alpha:CGFloat = min(CGFloat(score) / CGFloat(days), 1.0)
+                bgView.backgroundColor = color.withAlphaComponent(alpha)
+                if alpha > 0.5 {
+                    nameLabel.textColor = .white
+                } else {
+                    nameLabel.textColor = color
+                }
+            } else {
+                bgView.backgroundColor = color.withAlphaComponent(0.3)
+                nameLabel.textColor = color
+            }
+        }
+    }
+    
+    lazy var bgView: UIView = {
+        let v = UIView()
+        v.layer.cornerRadius = 10
+        v.translatesAutoresizingMaskIntoConstraints = false
+        v.backgroundColor = color.withAlphaComponent(0.3)
+        return v
+    }()
+    
+    lazy var nameLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Personal information"
+        label.font = UIFont.boldSystemFont(ofSize: 16.0)
+        label.textColor = color
+        label.numberOfLines = 2
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupViews()
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func setupViews() {
+        addSubview(bgView)
+        bgView.addSubview(nameLabel)
+        
+        bgView.addVisualConstraint("H:|-14-[v0]-14-|", views: ["v0": nameLabel])
+        bgView.addVisualConstraint("V:|-14-[v0]-14-|", views: ["v0": nameLabel])
+        addVisualConstraint("H:|[v0]|", views: ["v0": bgView])
+        addVisualConstraint("V:|[v0]|", views: ["v0": bgView])
+    }
+}
 

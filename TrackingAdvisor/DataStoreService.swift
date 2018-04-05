@@ -27,14 +27,14 @@ import UIKit
 class DataStoreService: NSObject {
     static let shared = DataStoreService()
     var delegate: DataStoreUpdateProtocol?
-    var container: NSPersistentContainer? = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer
+    var container: NSPersistentContainer = (UIApplication.shared.delegate as! AppDelegate).persistentContainer
     
     override init() {
         super.init()
     }
     
     func updateDatabase(with userUpdate: UserUpdate, delete: Bool = false, callback:(()->Void)? = nil) {
-        container?.performBackgroundTask { [weak self] context in
+        container.performBackgroundTask { [weak self] context in
             guard let strongSelf = self else { return }
             
             if let places = userUpdate.p {
@@ -45,7 +45,7 @@ class DataStoreService: NSObject {
             if let visits = userUpdate.v, let days = userUpdate.days {
                 var savedVisits: Set<String> = Set()
                 for day in days {
-                    for v in strongSelf.getVisits(for: day) {
+                    for v in strongSelf.getVisits(for: day, sameContext: true) {
                         if let vid = v.id {
                             savedVisits.insert(vid)
                         }
@@ -100,7 +100,7 @@ class DataStoreService: NSObject {
     }
     
     func updateDatabase(with reviewChallenge: UserReviewChallenge) {
-        container?.performBackgroundTask { [weak self] context in
+        container.performBackgroundTask { [weak self] context in
             _ = try? ReviewChallenge.findOrCreateReviewChallenge(matching: reviewChallenge, in: context)
             
             do {
@@ -116,7 +116,7 @@ class DataStoreService: NSObject {
     }
     
     func saveReviewAnswer(with reviewId: String, answer: ReviewAnswer) {
-        container?.performBackgroundTask { [weak self] context in
+        container.performBackgroundTask { [weak self] context in
             _ = try? Review.saveReviewAnswer(reviewId: reviewId, answer: answer, in: context)
             
             do {
@@ -133,7 +133,7 @@ class DataStoreService: NSObject {
     }
     
     func saveCompletedReviewChallenge(with rcid: String, for date: Date) {
-        container?.performBackgroundTask { [weak self] context in
+        container.performBackgroundTask { [weak self] context in
             _ = try? ReviewChallenge.saveReviewChallengeCompleted(reviewChallengeId: rcid, for: date, in: context)
             
             do {
@@ -149,7 +149,7 @@ class DataStoreService: NSObject {
     }
     
     func updatePersonalInformationComment(with piid: String, comment: String) {
-        container?.performBackgroundTask { context in
+        container.performBackgroundTask { context in
             try? AggregatedPersonalInformation.updateComment(for: piid, comment: comment,  in: context)
             do {
                 try context.save()
@@ -160,7 +160,7 @@ class DataStoreService: NSObject {
     }
     
     func updatePersonalInformationReview(with piid: String, type: ReviewType, rating: Int32, callback: (([Int32])->Void)? = nil) {
-        container?.performBackgroundTask { [weak self] context in
+        container.performBackgroundTask { [weak self] context in
             let allRatings = try? AggregatedPersonalInformation.updateReview(for: piid, type: type, rating: rating, in: context)
             do {
                 try context.save()
@@ -180,7 +180,8 @@ class DataStoreService: NSObject {
     
     func getPersonalInformation(with piid: String) throws -> PersonalInformation? {
         print("getpersonalinformation")
-        guard let context = container?.viewContext else { return nil }
+//        guard let context = container?.viewContext else { return nil }
+        let context = container.viewContext
         context.reset()
         
         do {
@@ -194,7 +195,7 @@ class DataStoreService: NSObject {
     
     func updateAggregatedPersonalInformation(with personalInformation: [UserAggregatedPersonalInformation], callback: (()->Void)? = nil) {
         
-        container?.performBackgroundTask { [weak self] context in
+        container.performBackgroundTask { [weak self] context in
             for pi in personalInformation {
                 _ = try? AggregatedPersonalInformation.findOrCreateAggregatedPersonalInformation(matching: pi, in: context)
             }
@@ -213,7 +214,7 @@ class DataStoreService: NSObject {
     }
     
     func updateVisit(with vid: String, visited: Int32, callback: (()->Void)? = nil) {
-        container?.performBackgroundTask { [weak self] context in
+        container.performBackgroundTask { [weak self] context in
             try? Visit.updateVisit(for: vid, visited: visited, in: context)
             do {
                 try context.save()
@@ -229,7 +230,7 @@ class DataStoreService: NSObject {
     }
     
     func updateVisit(with vid: String, departure: Date, callback: (()->Void)? = nil) {
-        container?.performBackgroundTask { [weak self] context in
+        container.performBackgroundTask { context in
             try? Visit.updateVisit(for: vid, departure: departure, in: context)
             do {
                 try context.save()
@@ -244,7 +245,7 @@ class DataStoreService: NSObject {
     }
     
     func updatePlaceReviewed(with pid: String, reviewed: Bool, callback: (()->Void)? = nil) {
-        container?.performBackgroundTask { [weak self] context in
+        container.performBackgroundTask { [weak self] context in
             try? Place.updatePlaceReviewed(for: pid, reviewed: reviewed, in: context)
             do {
                 try context.save()
@@ -260,7 +261,7 @@ class DataStoreService: NSObject {
     }
     
     func updatePersonalInformationRating(with piid: String, rating: Int32, callback: (()->())? = nil) {
-        container?.performBackgroundTask { [weak self] context in
+        container.performBackgroundTask { [weak self] context in
             try? PersonalInformation.updateRating(for: piid, rating: rating, in: context)
             do {
                 try context.save()
@@ -276,7 +277,8 @@ class DataStoreService: NSObject {
     }
     
     func getUniqueVisitDays() -> [String] {
-        guard let context = container?.viewContext else { return [] }
+//        guard let context = container?.viewContext else { return [] }
+        let context = container.viewContext
         print("getUniqueVisitDays")
         context.reset()
         
@@ -289,7 +291,7 @@ class DataStoreService: NSObject {
         
         do {
             let matches = try context.fetch(request)
-            let distinct = NSOrderedSet(array: matches.map { $0.day! })
+            let distinct = NSOrderedSet(array: matches.map { $0.day ?? "" })
             let array = distinct.array as! [String]
             return array.reversed()
         } catch {
@@ -299,10 +301,14 @@ class DataStoreService: NSObject {
         return []
     }
     
-    func getVisits(for day: String) -> [Visit] {
-        guard let context = container?.viewContext else { return [] }
-        print("getVisits")
-        context.reset()
+    func getVisits(for day: String, sameContext: Bool = false) -> [Visit] {
+        let context = container.viewContext
+        
+        guard context != nil else { return [] }
+        
+        if !sameContext {
+            context.reset()
+        }
         
         // create the fetch request
         let request: NSFetchRequest<Visit> = Visit.fetchRequest()
@@ -316,6 +322,7 @@ class DataStoreService: NSObject {
         
         do {
             let matches = try context.fetch(request)
+            print("getVisits - got \(matches.count) visits for \(day)")
             return matches
         } catch {
             print("Could not fetch visits. \(error)")
@@ -325,7 +332,8 @@ class DataStoreService: NSObject {
     }
     
     func getVisit(for vid: String) -> Visit? {
-        guard let context = container?.viewContext else { return nil }
+//        guard let context = container.viewContext else { return nil }
+        let context = container.viewContext
         print("getvisit")
         context.reset()
         
@@ -345,10 +353,13 @@ class DataStoreService: NSObject {
         return nil
     }
     
-    func getAllVisits() -> [Visit] {
-        guard let context = container?.viewContext else { return [] }
+    func getAllVisits(sameContext: Bool = false) -> [Visit] {
+//        guard let context = container?.viewContext else { return [] }
+        let context = container.viewContext
         print("getallvisits")
-        context.reset()
+        if !sameContext {
+            context.reset()
+        }
         
         // create the fetch request
         let request: NSFetchRequest<Visit> = Visit.fetchRequest()
@@ -369,7 +380,8 @@ class DataStoreService: NSObject {
     
     func getAllPlaces(sameContext: Bool = false) -> [Place] {
         print("getallplaces")
-        guard let context = container?.viewContext else { return [] }
+//        guard let context = container?.viewContext else { return [] }
+        let context = container.viewContext
         if !sameContext {
             context.reset()
         }
@@ -390,10 +402,40 @@ class DataStoreService: NSObject {
         
         return []
     }
+    
+    func getAllPlacesReviewed(sameContext: Bool = false) -> [Place] {
+        print("getAllPlacesReviewed")
+        
+        let context = container.viewContext
+        if !sameContext {
+            context.reset()
+        }
+        
+        // create the fetch request
+        let request: NSFetchRequest<Place> = Place.fetchRequest()
+        
+        // Add a predicate
+        request.predicate = NSPredicate(format: "(reviewed == TRUE) AND (personalInformation.@count > 0) AND (visits.@count > 0)")
+        
+        // Add Sort Descriptor
+        let sortDescriptor = NSSortDescriptor(key: "added", ascending: true)
+        request.sortDescriptors = [sortDescriptor]
+        
+        do {
+            let matches = try context.fetch(request)
+            print("return \(matches.count) matches")
+            return matches
+        } catch {
+            print("Could not fetch all places reviewed. \(error)")
+        }
+        
+        return []
+    }
 
     func getAllPlacesToReview(sameContext: Bool = false) -> [Place] {
         print("getAllPlacesToReview")
-        guard let context = container?.viewContext else { return [] }
+//        guard let context = container?.viewContext else { return [] }
+        let context = container.viewContext
         if !sameContext {
             context.reset()
         }
@@ -409,8 +451,7 @@ class DataStoreService: NSObject {
         request.sortDescriptors = [sortDescriptor]
         
         do {
-            let matches = try context.fetch(request)
-            print("return \(matches.count) matches")
+            let matches = try context.fetch(request).filter({ $0.numberOfPersonalInformationToReview > 0 })
             return matches
         } catch {
             print("Could not fetch all places to review. \(error)")
@@ -421,7 +462,8 @@ class DataStoreService: NSObject {
     
     func getAllAggregatedPersonalInformation(sameContext: Bool = false) -> [AggregatedPersonalInformation] {
         print("getallaggregatedpersonalinformation")
-        guard let context = container?.viewContext else { return [] }
+//        guard let context = container?.viewContext else { return [] }
+        let context = container.viewContext
         if !sameContext {
             context.reset()
         }
@@ -443,8 +485,65 @@ class DataStoreService: NSObject {
         return []
     }
     
+    func getAggregatedPersonalInformationToReview(sameContext: Bool = false) -> [AggregatedPersonalInformation] {
+        print("getAggregatedPersonalInformationToReview")
+        //        guard let context = container?.viewContext else { return [] }
+        let context = container.viewContext
+        if !sameContext {
+            context.reset()
+        }
+        
+        // create the fetch request
+        let request: NSFetchRequest<AggregatedPersonalInformation> = AggregatedPersonalInformation.fetchRequest()
+        
+        // Add a predicate
+        request.predicate = NSPredicate(format: "(reviewed == NIL OR reviewed == FALSE)")
+        
+        // Add Sort Descriptor
+        let sortDescriptor = NSSortDescriptor(key: "name", ascending: true)
+        request.sortDescriptors = [sortDescriptor]
+        
+        do {
+            let matches = try context.fetch(request).filter({ $0.numberOfVisits > 0 })
+            return matches
+        } catch {
+            print("Could not fetch all aggregated personal information. \(error)")
+        }
+        
+        return []
+    }
+    
+    func getAggregatedPersonalInformationReviewed(sameContext: Bool = false) -> [AggregatedPersonalInformation] {
+        print("getAggregatedPersonalInformationReviewed")
+        //        guard let context = container?.viewContext else { return [] }
+        let context = container.viewContext
+        if !sameContext {
+            context.reset()
+        }
+        
+        // create the fetch request
+        let request: NSFetchRequest<AggregatedPersonalInformation> = AggregatedPersonalInformation.fetchRequest()
+        
+        // Add a predicate
+        request.predicate = NSPredicate(format: "(reviewed == TRUE)")
+        
+        // Add Sort Descriptor
+        let sortDescriptor = NSSortDescriptor(key: "name", ascending: true)
+        request.sortDescriptors = [sortDescriptor]
+        
+        do {
+            let matches = try context.fetch(request)
+            return matches
+        } catch {
+            print("Could not fetch all aggregated personal information. \(error)")
+        }
+        
+        return []
+    }
+    
     func deleteAllReviewChallenges() {
-        guard let context = container?.viewContext else { return }
+//        guard let context = container?.viewContext else { return }
+        let context = container.viewContext
         
         // deleting personal information
         let fetch = NSFetchRequest<NSFetchRequestResult>(entityName: "ReviewChallenge")
@@ -458,7 +557,8 @@ class DataStoreService: NSObject {
     }
     
     func deleteAllAggregatedPersonalInformation() {
-        guard let context = container?.viewContext else { return }
+//        guard let context = container?.viewContext else { return }
+        let context = container.viewContext
         
         // deleting personal information
         let fetch = NSFetchRequest<NSFetchRequestResult>(entityName: "AggregatedPersonalInformation")
@@ -472,7 +572,8 @@ class DataStoreService: NSObject {
     }
     
     func deleteAll() {
-        guard let context = container?.viewContext else { return }
+//        guard let context = container?.viewContext else { return }
+        let context = container.viewContext
         
         // deleting review personal information
         var fetch = NSFetchRequest<NSFetchRequestResult>(entityName: "ReviewPersonalInformation")
@@ -546,7 +647,8 @@ class DataStoreService: NSObject {
     }
     
     func deleteVisit(vid: String, callback:(()->Void)? = nil) {
-        guard let context = container?.viewContext else { return }
+//        guard let context = container?.viewContext else { return }
+        let context = container.viewContext
         
         if let visit = try! Visit.findVisit(matching: vid, in: context) {
             
@@ -567,7 +669,8 @@ class DataStoreService: NSObject {
     }
     
     func getLatestReviewChallenge() -> [ReviewChallenge] {
-        guard let context = container?.viewContext else { return [] }
+//        guard let context = container?.viewContext else { return [] }
+        let context = container.viewContext
         
         // create the fetch request
         let request: NSFetchRequest<ReviewChallenge> = ReviewChallenge.fetchRequest()
@@ -612,7 +715,7 @@ class DataStoreService: NSObject {
                 let days = getUniqueVisitDays()
                 for day in days {
                     if day == todayStr { continue }
-                    let lastVisit = getVisits(for: day).last
+                    let lastVisit = getVisits(for: day, sameContext: true).last
                     if let vid = lastVisit?.id, let lastVisitDeparture = lastVisit?.departure {
                         let endOfDay = lastVisitDeparture.endOfDay
                         updateVisit(with: vid, departure: endOfDay) {
@@ -625,31 +728,30 @@ class DataStoreService: NSObject {
     }
     
     func stats() {
-        if let context = container?.viewContext {
-            context.perform {
-                if let placeCount = try? context.count(for: Place.fetchRequest()) {
-                    print("\(placeCount) places")
-                }
-                if let visitCount = try? context.count(for: Visit.fetchRequest()) {
-                    print("\(visitCount) visits")
-                }
-                if let moveCount = try? context.count(for: Move.fetchRequest()) {
-                    print("\(moveCount) moves")
-                }
-                if let piCount = try? context.count(for: PersonalInformation.fetchRequest()) {
-                    print("\(piCount) personal information")
-                }
-                if let rcCount = try? context.count(for: ReviewChallenge.fetchRequest()) {
-                    print("\(rcCount) review challenges")
-                }
-                if let reviewCount = try? context.count(for: Review.fetchRequest()) {
-                    print("\(reviewCount) reviews")
-                }
-                if let aggregatedPICount = try? context.count(for: AggregatedPersonalInformation.fetchRequest()) {
-                    print("\(aggregatedPICount) aggregated personal information")
-                }
-                
+        let context = container.viewContext
+        context.perform {
+            if let placeCount = try? context.count(for: Place.fetchRequest()) {
+                print("\(placeCount) places")
             }
+            if let visitCount = try? context.count(for: Visit.fetchRequest()) {
+                print("\(visitCount) visits")
+            }
+            if let moveCount = try? context.count(for: Move.fetchRequest()) {
+                print("\(moveCount) moves")
+            }
+            if let piCount = try? context.count(for: PersonalInformation.fetchRequest()) {
+                print("\(piCount) personal information")
+            }
+            if let rcCount = try? context.count(for: ReviewChallenge.fetchRequest()) {
+                print("\(rcCount) review challenges")
+            }
+            if let reviewCount = try? context.count(for: Review.fetchRequest()) {
+                print("\(reviewCount) reviews")
+            }
+            if let aggregatedPICount = try? context.count(for: AggregatedPersonalInformation.fetchRequest()) {
+                print("\(aggregatedPICount) aggregated personal information")
+            }
+            
         }
     }
 }

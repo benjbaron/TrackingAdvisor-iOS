@@ -8,6 +8,7 @@
 
 import Foundation
 import Alamofire
+import CoreLocation
 
 struct UserPlace: Codable {
     let pid: String      // placeid
@@ -202,6 +203,33 @@ class UserUpdateHandler {
                     print("Error in response \(response.result)")
                 }
                 isRetrievingReviewChallengeFromServer = false
+            }
+        }
+    }
+    
+    class func getClosestPlace(coordinate: CLLocationCoordinate2D, callback: ((PlaceSearchResultDetail?)->Void)?) {
+        DispatchQueue.global(qos: .background).async {
+            let userid = Settings.getUserId() ?? ""
+            let parameters: Parameters = [
+                "userid": userid,
+                "lat": coordinate.latitude,
+                "lon": coordinate.longitude
+            ]
+            
+            Alamofire.request(Constants.urls.closestPlaceURL, method: .get, parameters: parameters).responseJSON { response in
+                if response.result.isSuccess {
+                    FileService.shared.log("Get closest place for the server", classname: "UserUpdateHandler")
+                    guard let data = response.data else { return }
+                    do {
+                        let decoder = JSONDecoder()
+                        let place = try decoder.decode(PlaceSearchResultDetail.self, from: data)
+                        callback?(place)
+                    } catch {
+                        print("Error serializing the json", error)
+                    }
+                } else {
+                    print("Error in response \(response.result)")
+                }
             }
         }
     }

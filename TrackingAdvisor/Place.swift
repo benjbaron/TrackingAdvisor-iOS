@@ -138,6 +138,17 @@ class Place: NSManagedObject {
         return res
     }
     
+    var numberOfPersonalInformationToReview: Int {
+        guard let personalInformation = personalInformation else { return 0 }
+        var res = 0
+        for case let pi as PersonalInformation in personalInformation {
+            if pi.rating == 0 {
+                res += 1
+            }
+        }
+        return res
+    }
+    
     func getPersonalInformationPhrase() -> String {
         let personalInformation = getPersonalInformation()
         var res = ""

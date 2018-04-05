@@ -40,18 +40,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             return true
         } else if locationStatus == .authorizedWhenInUse {
             launchStoryboard(storyboard: "LocationServicesWhenInUse")
-            return true
-        }
-        
-        // check if this is the first app launch
-        if !Settings.getOnboarding() {
-            launchStoryboard(storyboard: "Onboarding")
-            return true
-//        } else if Settings.getOptOut() {
-//            launchStoryboard(storyboard: "OptOut")
-//            return true
         } else {
-            launchStoryboard(storyboard: "Main")
+        
+            // check if this is the first app launch
+            if !Settings.getOnboarding() {
+                launchStoryboard(storyboard: "Onboarding")
+                return true
+            } else if Settings.getOptOut() {
+                launchStoryboard(storyboard: "OptOut")
+                return true
+            } else {
+                launchStoryboard(storyboard: "Main")
+            }
         }
         
         handleLaunchingOperations(application)
@@ -77,16 +77,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         FileService.shared.log("call -- applicationDidEnterBackground", classname: "AppDelegate")
         LocationRegionService.shared.restartUpdatingLocation()
-        
-        let places = DataStoreService.shared.getAllPlaces().filter { $0.emoji != nil }
-        let randomIndex = Int(arc4random_uniform(UInt32(places.count)))
-        let place = places[randomIndex]
-        
-        print("getting all places \(places.count) with index \(randomIndex), place: \(place)")
-        
-        if let emoji = place.emoji, let name = place.name {
-            NotificationService.shared.sendLocalNotificationNow(title: "Place checkin", body: "\(emoji) Are you at \(name)?")
-        }
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
@@ -102,6 +92,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // check if this is the first app launch
         if !Settings.getOnboarding() {
             launchStoryboard(storyboard: "Onboarding")
+            return
+        } else if Settings.getOptOut() {
+            launchStoryboard(storyboard: "OptOut")
             return
         } else {
             launchStoryboard(storyboard: "Main")
@@ -259,15 +252,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     // get today's update
                     UserUpdateHandler.retrieveLatestUserUpdates(for: DateHandler.dateToDayString(from: Date()))
                 } else  {
-                    // get the user challenge days
-                    if let reviewChallengesDays = userInfo["challenges"] as? [String] {
-                        for day in reviewChallengesDays {
-                            UserUpdateHandler.retrievingLatestReviewChallenge(for: day)
-                        }
-                        // show the challenge review tab
-                        DispatchQueue.main.async { () -> Void in
-                            (self?.window?.rootViewController as? UITabBarController)?.selectedIndex = 1
-                        }
+                    // show the review tab
+                    DispatchQueue.main.async { () -> Void in
+                        (self?.window?.rootViewController as? UITabBarController)?.selectedIndex = 1
                     }
                 }
             }
@@ -275,14 +262,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     private func handleLaunchingOperations(_ application: UIApplication) {
+        // force the location upload after one location has been collected
+        Settings.saveForceUploadLocation(with: true)
+        
         // start updating the location services again
         LocationRegionService.shared.startUpdatingLocation()
         
         // retrieve the latest data from the server
         DispatchQueue.global(qos: .background).async {
-            
-            // force upload last locations to server
-            UserLocation.upload(force: true, callback: nil)
             
             // update the personal categories if needed
             PersonalInformationCategory.updateIfNeeded()
@@ -291,7 +278,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             DataStoreService.shared.updateIfNeeded()
             
             // get today's update
-            UserUpdateHandler.retrieveLatestUserUpdates(for: DateHandler.dateToDayString(from: Date()))
+//            UserUpdateHandler.retrieveLatestUserUpdates(for: DateHandler.dateToDayString(from: Date()))
             
             let reviewChallenges = DataStoreService.shared.getLatestReviewChallenge()
             DispatchQueue.main.async { () -> Void in

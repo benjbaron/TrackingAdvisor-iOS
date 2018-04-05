@@ -107,6 +107,14 @@ class PersonalInformation : NSManagedObject {
                 assert(matches.count == 1, "PersonalInformation.updateRating -- database inconsistency")
                 let managedObject = matches[0]
                 managedObject.setValue(rating, forKey: "rating")
+                
+                // update the place reviewed
+                if let nbPI = managedObject.place?.numberOfPersonalInformationToReview,
+                   let pid = managedObject.place?.id, nbPI == 0 {
+                    try? Place.updatePlaceReviewed(for: pid, reviewed: true, in: context)
+                }
+                
+                
             }
         } catch {
             throw error

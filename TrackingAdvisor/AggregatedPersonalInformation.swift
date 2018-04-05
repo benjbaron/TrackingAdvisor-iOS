@@ -9,6 +9,15 @@
 import Foundation
 import CoreData
 
+
+struct AggregatedPersonalInformationExplanationPlace {
+    let place: Place
+    let pid: String
+    let lastVisit: Date?
+    let numberOfVisits: Int
+}
+
+
 @objc(AggregatedPersonalInformation)
 class AggregatedPersonalInformation : PersonalInformation {
     
@@ -114,6 +123,8 @@ class AggregatedPersonalInformation : PersonalInformation {
                     break
                 }
                 
+                managedObject.setValue(true, forKey: "reviewed")
+                
                 // return all personal information ratings
                 return [managedObject.reviewPersonalInformation, managedObject.reviewExplanation, managedObject.reviewPrivacy]
             }
@@ -140,7 +151,7 @@ class AggregatedPersonalInformation : PersonalInformation {
         }
     }
     
-    func getNumberOfPlacesVisited() -> Int {
+    var numberOfPlacesVisited: Int {
         var resSet = Set<String>()
         if let personalInformation = personalInformation {
             for case let pi as PersonalInformation in personalInformation {
@@ -153,7 +164,24 @@ class AggregatedPersonalInformation : PersonalInformation {
         return resSet.count
     }
     
-    func getNumberOfVisits() -> Int {
+    func getExplanationPlaces() -> [AggregatedPersonalInformationExplanationPlace] {
+        var res:[AggregatedPersonalInformationExplanationPlace] = []
+        if let personalInformation = personalInformation {
+            for case let pi as PersonalInformation in personalInformation {
+                if let place = pi.place, let visits = pi.place?.visits, visits.count > 0 {
+                    let expPlace = AggregatedPersonalInformationExplanationPlace(
+                            place: place,
+                            pid: place.id!,
+                            lastVisit: (Array(visits) as? [Visit] ?? []).sorted(by: { $0.arrival! < $1.arrival! }).last?.arrival,
+                            numberOfVisits: visits.count)
+                    res.append(expPlace)
+                }
+            }
+        }
+        return res
+    }
+    
+    var numberOfVisits: Int {
         var resSet = Set<String>()
         if let personalInformation = personalInformation {
             for case let pi as PersonalInformation in personalInformation {
@@ -170,12 +198,11 @@ class AggregatedPersonalInformation : PersonalInformation {
     }
     
     func getExplanation() -> String {
-        let numberOfPlaces = getNumberOfPlacesVisited()
-        let numberOfVisits = getNumberOfVisits()
+        let nop = numberOfPlacesVisited
+        let nov = numberOfVisits
+        let placeStr = nop > 1 ? "different places" : "place"
+        let visitStr = nov > 2 ? "\(nov) times" : (nov == 2 ? "twice" : "once")
         
-        let placeStr = numberOfPlaces > 1 ? "different places" : "place"
-        let visitStr = numberOfVisits > 2 ? "\(numberOfVisits) times" : (numberOfVisits == 2 ? "twice" : "once")
-        
-        return "You visited \(numberOfPlaces) \(placeStr) \(visitStr) with this personal information."
+        return "You visited \(nop) \(placeStr) \(visitStr) with this personal information."
     }
 }

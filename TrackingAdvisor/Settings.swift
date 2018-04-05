@@ -26,6 +26,7 @@ open class Settings {
             defaults.set(false, forKey: Constants.defaultsKeys.onboarding)
             defaults.set(false, forKey: Constants.defaultsKeys.optOut)
             defaults.set(nil, forKey: Constants.defaultsKeys.lastKnownLocation)
+            defaults.set(false, forKey: Constants.defaultsKeys.forceUploadLocation)
         }
     }
     
@@ -86,6 +87,11 @@ open class Settings {
         return nil
     }
     
+    open class func getForceUploadLocation() -> Bool {
+        let defautls = UserDefaults.standard
+        return defautls.bool(forKey: Constants.defaultsKeys.forceUploadLocation)
+    }
+    
     open class func savePushNotificationId(with pnid: String) {
         let defaults = UserDefaults.standard
         defaults.set(pnid, forKey: Constants.defaultsKeys.pushNotificationToken)
@@ -135,5 +141,10 @@ open class Settings {
         let defaults = UserDefaults.standard
         let archived = NSKeyedArchiver.archivedData(withRootObject: location)
         defaults.set(archived, forKey: Constants.defaultsKeys.lastKnownLocation)
+    }
+    
+    open class func saveForceUploadLocation(with value: Bool) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: Constants.defaultsKeys.forceUploadLocation)
     }
 }

@@ -55,7 +55,7 @@ struct TimelineBlock {
     }
     
     func height() -> CGFloat {
-        var height: CGFloat = 35.0
+        var height: CGFloat = 27.0
         if let h = bubbleView?.view?.frame.height { height += h }
         if let h = descriptionView?.view?.frame.height { height += h }
         if let h = descriptionSuppView?.view?.frame.height { height += h }
@@ -718,13 +718,13 @@ open class ISTimeline: UIScrollView {
                         
             rect = descriptionSuppRect != nil ? descriptionSuppRect! : rect
             
-            var feebackRect:CGRect?
+            var feedbackRect:CGRect?
             if points[i].showFeedback {
-                feebackRect = CGRect(x: rect.origin.x, y: rect.origin.y + rect.height,
+                feedbackRect = CGRect(x: rect.origin.x, y: rect.origin.y + rect.height,
                                      width: calcWidth(), height: 70.0)
             }
 
-            sections.append((point, bubbleRect, descriptionRect, descriptionSuppRect, titleLabel, descriptionLabel, descriptionSuppView, points[i].pointColor.cgColor, points[i].lineColor.cgColor, points[i].fill, points[i].icon, points[i].iconBg.cgColor, iconCenter, feebackRect))
+            sections.append((point, bubbleRect, descriptionRect, descriptionSuppRect, titleLabel, descriptionLabel, descriptionSuppView, points[i].pointColor.cgColor, points[i].lineColor.cgColor, points[i].fill, points[i].icon, points[i].iconBg.cgColor, iconCenter, feedbackRect))
             
             y += height
             y += ISTimeline.gap * 2.2 // section gap
@@ -833,9 +833,10 @@ open class ISTimeline: UIScrollView {
         btn.tag = tag
         btn.setTitle(text, for: .normal)
         btn.setTitleColor(Constants.colors.primaryDark, for: .normal)
-        btn.setTitleColor(.white, for: .highlighted)
-        btn.titleLabel?.textAlignment = .center
-        btn.titleLabel?.font = UIFont.systemFont(ofSize: 14.0, weight: .bold)
+        btn.setTitleColor(Constants.colors.primaryMidDark, for: .highlighted)
+        btn.setBackgroundColor(Constants.colors.superLightGray, for: .normal)
+        btn.setBackgroundColor(Constants.colors.primaryLight, for: .highlighted)
+        btn.titleLabel?.font =  UIFont.italicSystemFont(ofSize: 14.0)
         if type == 0 { // Yes
             btn.addTarget(self, action: #selector(feedbackButtonTappedYes), for: .touchUpInside)
         } else if type == 1 { // No, not at a place
@@ -844,11 +845,10 @@ open class ISTimeline: UIScrollView {
             btn.addTarget(self, action: #selector(feedbackButtonTappedOther), for: .touchUpInside)
         }
         
-        btn.backgroundColor = Constants.colors.primaryLight.withAlphaComponent(0.3)
         return btn
     }
     
-    func removeFeebackLine(at index: Int, callback: (()->Void)? = nil) {
+    func removeFeedbackLine(at index: Int, callback: (()->Void)? = nil) {
         if isAnimating { return }
         
         let duration = 0.25
@@ -1000,7 +1000,7 @@ open class ISTimeline: UIScrollView {
         print("At a place (\(sender.tag))")
         if !isEditing {
             let pt = self._points[sender.tag]
-            removeFeebackLine(at: sender.tag) { [weak self] in
+            removeFeedbackLine(at: sender.tag) { [weak self] in
                 guard let strongSelf = self else { return }
                 print("feedbackButtonTappedYes")
                 strongSelf.timelineValidatedPlaceTouchAction?(pt)
