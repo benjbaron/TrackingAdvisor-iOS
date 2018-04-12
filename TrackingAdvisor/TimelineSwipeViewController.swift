@@ -29,6 +29,7 @@ class TimelineSwipeViewController: UIViewController, EMPageViewControllerDataSou
         dataStoreService.delegate = self
         
         setChildController()
+        LogService.shared.log(LogService.types.tabTimeline)
     }
     
     private func setChildController() {

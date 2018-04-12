@@ -50,6 +50,8 @@ enum VisitActionType: Int {
     case edit = 1
     case delete = 2
     case visited = 3
+    case placeType = 4
+    case placeEdit = 5
 }
 
 protocol VisitTimesEditDelegate {
@@ -61,16 +63,21 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
 
     @objc func done(_ sender: Any) {
         // create a user place from the different information
-        let notificationView = NotificationView(text: "Updating the place...")
-        notificationView.frame = CGRect(x: 0, y: 0, width: view.frame.width - 50, height: 50)
-        notificationView.center = CGPoint(x: view.center.x, y: view.frame.height - 100.0)
+        let notificationView: NotificationView? = NotificationView(text: "Updating the place...")
+        notificationView?.frame = CGRect(x: 0, y: 0, width: view.frame.width - 50, height: 50)
+        notificationView?.center = CGPoint(x: view.center.x, y: view.frame.height - 100.0)
+        
+        if let vid = visit?.id {
+            LogService.shared.log(LogService.types.visitEditSaved,
+                                  args: [LogService.args.visitId: vid])
+        }
 
         updateVisit {
-            notificationView.text = "Done"
-            UIView.animate(withDuration: 1.0, animations: {
-                notificationView.alpha = 0
+            notificationView?.text = "Done"
+            UIView.animate(withDuration: 2.0, animations: {
+                notificationView?.alpha = 0
             }, completion: { success in
-                notificationView.removeFromSuperview()
+                notificationView?.remove()
             })
         }
         
@@ -78,11 +85,19 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         view.endEditing(true)
 
         presentingViewController?.dismiss(animated: true)
-        presentingViewController?.view.addSubview(notificationView)
+        if let view = notificationView {
+            presentingViewController?.view.addSubview(view)
+        }
+        notificationView?.autoRemove(with: 15, text: "Failed, try again")
     }
     
     @objc func back(_ sender: UIBarButtonItem) {
         view.endEditing(true)
+        
+        if let vid = visit?.id {
+            LogService.shared.log(LogService.types.visitEditBack,
+                                  args: [LogService.args.visitId: vid])
+        }
         
         // TODO: - ask if user is sure to leave the screen if there was any changes
         
@@ -108,6 +123,10 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                                             style: UIAlertActionStyle.destructive) {
             [weak self] result in
             if let vid = self?.visit?.id {
+                LogService.shared.log(LogService.types.visitEditDelete,
+                                      args: [LogService.args.visitId: vid,
+                                             LogService.args.userChoice: "delete"])
+                
                 UserUpdateHandler.deleteVisit(for: vid) { [weak self] in
                     DataStoreService.shared.deleteVisit(vid: vid)
                     self?.presentingViewController?.dismiss(animated: true)
@@ -116,8 +135,12 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                                                 
         }
         let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel) {
-            (result : UIAlertAction) -> Void in
-            print("Cancel delete the place")
+            [weak self] result in
+            if let vid = self?.visit?.id {
+                LogService.shared.log(LogService.types.visitEditDelete,
+                                      args: [LogService.args.visitId: vid,
+                                             LogService.args.userChoice: "cancel"])
+            }
         }
         
         alertController.addAction(deletePlaceAction)
@@ -210,7 +233,6 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     
     var visit: Visit? {
         didSet {
-            print("PlaceFinderMapTableViewController -- visit didSet")
             if let visit = visit, let place = visit.place {
                 color = place.getPlaceColor()
                 name = place.name
@@ -221,7 +243,6 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                 latitude = place.latitude
                 startDate = visit.arrival
                 endDate = visit.departure
-                print("\tname: \(name)")
             }
         }
     }
@@ -242,7 +263,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     
     var rawTrace: [VisitRawTrace]? {
         didSet {
-            guard rawTrace != nil else { return }
+            guard rawTrace != nil, mapView != nil else { return }
             if mapView != nil, let annotations = mapView.annotations, annotations.count > 0 {
                 mapView.removeAnnotations(annotations)
             }
@@ -281,7 +302,6 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        print("PlaceFinderMapTableViewController -- viewDidLoad")
         self.view.backgroundColor = .white
         
         // set up the navigation controller bar
@@ -332,6 +352,11 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         // Enable keyboard notifications when showing and hiding the keyboard
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+        
+        if let vid = visit?.id {
+            LogService.shared.log(LogService.types.visitEditAccess,
+                                  args: [LogService.args.visitId: vid])
+        }
         
         setupViews()
     }
@@ -505,6 +530,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                 .bold("\(searchText)")
             cell.placeNameLabel.attributedText = formattedString
             cell.placeAddressLabel.text = "Near \(formatAddress(street: searchResult.street, city: searchResult.city))"
+            cell.distanceLabel.text = ""
             cell.iconView.image = UIImage(named: "plus-circle")!.withRenderingMode(.alwaysTemplate)
             cell.iconView.tintColor = Constants.colors.primaryDark
             cell.iconView.contentMode = .scaleAspectFit
@@ -519,7 +545,9 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                 let place = searchResult.places[idx]
                 cell.placeNameLabel.text = place.name
                 cell.placeAddressLabel.text = place.city
-                cell.iconView.image = UIImage(named: "map-marker")!.withRenderingMode(.alwaysTemplate)
+                let distanceStr = place.distance < 10 ? "5 meters" : "\(Int(place.distance)) meters"
+                cell.distanceLabel.text = distanceStr
+                cell.icon = place.icon
                 cell.iconView.tintColor = Constants.colors.primaryLight
                 cell.place = place
             }
@@ -542,6 +570,15 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                 let coordinates = CLLocationCoordinate2D(latitude: latitude!, longitude: longitude!)
                 mapView.centerCoordinate = coordinates
                 hasMadeChanges = true
+                
+                if let vid = visit?.id {
+                    LogService.shared.log(LogService.types.visitEditSelected,
+                                          args: [LogService.args.visitId: vid,
+                                                 LogService.args.placeId: place.placeid,
+                                                 LogService.args.venueId: place.venueid,
+                                                 LogService.args.searchedText: searchbarView.text ?? ""])
+                }
+                
             } else {
                 if indexPath.row == 0 {
                     // select the new place
@@ -550,6 +587,14 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                     city = cell.city
                     formatedAddress = formatAddress(street: cell.street, city: cell.city)
                     hasMadeChanges = true
+                    
+                    if let vid = visit?.id {
+                        LogService.shared.log(LogService.types.visitEditSelected,
+                                              args: [LogService.args.visitId: vid,
+                                                     LogService.args.placeId: "",
+                                                     LogService.args.venueId: "",
+                                                     LogService.args.searchedText: searchbarView.text ?? ""])
+                    }
                 }
             }
             tableView.deselectRow(at: indexPath, animated: true)
@@ -584,11 +629,8 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     }
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        if searchText.count >= 3 {
-            getPlaces(matching: searchText)
-        } else if searchText.count == 0 {
-            getPlaces(matching: "")
-        }
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(reloadSearch), object: searchBar)
+        perform(#selector(reloadSearch), with: searchBar, afterDelay: 0.5)
     }
     
     func searchBar(_ searchBar: UISearchBar, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
@@ -599,6 +641,15 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
             }
         }
         return true
+    }
+    
+    @objc func reloadSearch(_ searchBar: UISearchBar) {
+        guard let searchText = searchBar.text else { return }
+        if searchText.count >= 3 {
+            getPlaces(matching: searchText)
+        } else if searchText.count == 0 {
+            getPlaces(matching: "")
+        }
     }
     
     // MARK: - fetch search result from server
@@ -925,11 +976,32 @@ class VisitTimesEditRow : UIView {
 
 
 class PlaceFinderTableViewCell: UITableViewCell {
+    
+    var icon: String? {
+        didSet {
+            if let icon = icon {
+                iconView.image = UIImage(named: icon)!.withRenderingMode(.alwaysTemplate)
+            }
+        }
+    }
+    
     var placeAddressLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12)
         label.textColor = Constants.colors.descriptionColor
         label.textAlignment = .left
+        label.lineBreakMode = .byTruncatingTail
+        label.numberOfLines = 1
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    var distanceLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 12)
+        label.textColor = Constants.colors.descriptionColor
+        label.textAlignment = .right
+        label.lineBreakMode = .byTruncatingTail
+        label.numberOfLines = 1
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -938,6 +1010,8 @@ class PlaceFinderTableViewCell: UITableViewCell {
         label.font = UIFont.boldSystemFont(ofSize: 16)
         label.textColor = .black
         label.textAlignment = .left
+        label.lineBreakMode = .byTruncatingTail
+        label.numberOfLines = 1
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -966,16 +1040,18 @@ class PlaceFinderTableViewCell: UITableViewCell {
     
     func setupViews() {
         addSubview(placeAddressLabel)
+        addSubview(distanceLabel)
         addSubview(placeNameLabel)
         addSubview(iconView)
         
         // add constraints
-        addVisualConstraint("V:|-5-[v0(30)]", views: ["v0": iconView])
-        addVisualConstraint("H:|-[v0(30)]", views: ["v0": iconView])
+        addVisualConstraint("V:|-5-[v0(25)]", views: ["v0": iconView])
+        addVisualConstraint("H:|-[v0(25)]", views: ["v0": iconView])
         addVisualConstraint("V:|-5-[v0]", views: ["v0": placeNameLabel])
         addVisualConstraint("V:[v0][v1]", views: ["v0": placeNameLabel, "v1": placeAddressLabel])
-        addVisualConstraint("H:[v0]-[v1]", views: ["v0": iconView, "v1": placeNameLabel])
-        addVisualConstraint("H:[v0]-[v1]", views: ["v0": iconView, "v1": placeAddressLabel])
+        addVisualConstraint("V:[v0][v1]", views: ["v0": placeNameLabel, "v1": distanceLabel])
+        addVisualConstraint("H:[v0]-[v1]-|", views: ["v0": iconView, "v1": placeNameLabel])
+        addVisualConstraint("H:[v0]-[v1]-[v2]-|", views: ["v0": iconView, "v1": placeAddressLabel, "v2": distanceLabel])
     }
 }
 

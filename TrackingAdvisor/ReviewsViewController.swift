@@ -47,7 +47,7 @@ class ReviewsViewController: UIViewController, UIScrollViewDelegate {
             personalInformationToReviewButton.setBackgroundColor(Constants.colors.orange, for: .normal)
         } else {
             personalInformationToReviewButton.setBackgroundColor(Constants.colors.orange.withAlphaComponent(0.5), for: .normal)
-            personalInformationToReviewButton.setTitle("You have no personal information to review", for: .normal)
+            personalInformationToReviewButton.setTitle("You have no\npersonal information to review", for: .normal)
         }
     }}
     
@@ -84,6 +84,7 @@ class ReviewsViewController: UIViewController, UIScrollViewDelegate {
         l.layer.masksToBounds = true
         l.setTitle("You have places to review", for: .normal)
         l.titleLabel?.textAlignment = .center
+        l.titleLabel?.numberOfLines = 2
         l.titleLabel?.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
         l.setTitleColor(.white, for: .normal)
         l.setTitleColor(Constants.colors.midPurple, for: .highlighted)
@@ -106,6 +107,7 @@ class ReviewsViewController: UIViewController, UIScrollViewDelegate {
         l.layer.masksToBounds = true
         l.setTitle("You have personal information to review", for: .normal)
         l.titleLabel?.textAlignment = .center
+        l.titleLabel?.numberOfLines = 2
         l.titleLabel?.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
         l.setTitleColor(.white, for: .normal)
         l.setTitleColor(Constants.colors.orange, for: .highlighted)
@@ -135,12 +137,14 @@ class ReviewsViewController: UIViewController, UIScrollViewDelegate {
     }()
     
     lazy var personalInformationReviewsSummary: InfoCardView = {
-        return InfoCardView(bigText: BigText(bigText: "XX", topExponent: "", smallBottomText: "PERSONAL\nINFORMATION"),
+        return InfoCardView(bigText: BigText(bigText: "XX", topExponent: "", smallBottomText: "INFO"),
                             descriptionText: "You have reviewed XX personal information items!")
     }()
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
+        LogService.shared.log(LogService.types.tabReviews)
         
         view.backgroundColor = .white
         self.navigationController?.isNavigationBarHidden = true
@@ -157,12 +161,17 @@ class ReviewsViewController: UIViewController, UIScrollViewDelegate {
             fullScreenView = FullScreenView(frame: view.frame)
             fullScreenView!.icon = "rocket"
             fullScreenView!.iconColor = Constants.colors.primaryLight
-            fullScreenView!.headerTitle = "Places and Personal information to review"
+            fullScreenView!.headerTitle = "Reviews"
             fullScreenView!.subheaderTitle = "After moving to a few places, we will ask you to review the personal information we have inferred from the places you visited."
             view.addSubview(fullScreenView!)
         } else {
             fullScreenView?.removeFromSuperview()
             setupViews()
+            
+            // update with the latest aggregated personal information
+            UserUpdateHandler.retrieveLatestAggregatedPersonalInformation { [weak self] in
+                self?.computeData()
+            }
         }
     }
     
@@ -232,5 +241,10 @@ class ReviewsViewController: UIViewController, UIScrollViewDelegate {
         let personalInformationToReview = DataStoreService.shared.getAggregatedPersonalInformationToReview()
         numberOfPersonalInformationReviewed = personalInformationReviewed.count
         numberOfPersonalInformationToReview = personalInformationToReview.count
+        
+        let allPersonalInformation = DataStoreService.shared.getAllAggregatedPersonalInformation()
+        print("allPersonalInformation: \(allPersonalInformation.count)")
+        print("personalInformationReviewed: \(personalInformationReviewed.count)")
+        print("personalInformationToReview: \(personalInformationToReview.count)")
     }
 }

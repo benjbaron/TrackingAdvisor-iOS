@@ -30,7 +30,7 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
     var timer = Timer()
     var delayTimer = Timer()
     var activityTimeout = (Double)(60)
-    var timeout = (Double)(3*60)
+    var timeout = (Double)(2*60)
     var minTimeout = (Double)(2*60)
     var maxTimeout = (Double)(30*60)
     
@@ -44,18 +44,14 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
     }
     
     @objc func startMonitoringLocation() {
-        FileService.shared.log("Start location monitoring", classname: "LocationAdaptiveService")
         startUpdatingLocation()
         checkIfUserHasMoved()
     }
     
     @objc func checkIfUserHasMoved() {
         // Check whether the user has moved in the past X minutes
-        FileService.shared.log("Check if user has moved", classname: "LocationAdaptiveService")
         ActivityService.shared.hasUserMoved(interval: timeout) { hasMoved in
             if hasMoved {
-                FileService.shared.log("User has moved in the past \(Int(self.timeout)) minutes",
-                    classname: "LocationAdaptiveService")
                 self.accuracy = kCLLocationAccuracyBest
                 self.distanceFilter = kCLDistanceFilterNone
                 self.timeout = self.minTimeout
@@ -73,7 +69,8 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
             self.bgTask = UIBackgroundTaskInvalid
         })
         
-        FileService.shared.log("Start updating location", classname: "LocationAdaptiveService")
+        LogService.shared.log(LogService.types.locationAdaptiveStart)
+        
         if CLLocationManager.authorizationStatus() == .notDetermined {
             locationManager.requestAlwaysAuthorization()
         }
@@ -87,9 +84,9 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
     }
     
     @objc func restartUpdatingLocation() {
-        FileService.shared.log("Restart updating location", classname: "LocationAdaptiveService")
         stopUpdatingLocation()
         startUpdatingLocation()
+        LogService.shared.log(LogService.types.locationAdaptiveRestart)
     }
     
     func stopUpdatingLocation() {
@@ -97,6 +94,7 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
         timer.invalidate()
         locationManager.stopUpdatingLocation()
         updating = false
+        LogService.shared.log(LogService.types.locationAdaptiveStop)
     }
     
     @objc func stopUpdatingLocationAfterXSeconds() {
@@ -137,17 +135,14 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
             
             let filename = DateHandler.dateToDayString(from: loc.timestamp) + ".csv"
             loc.dumps(to: filename) { [weak self] done in
+                print("dumped \(loc) in \(filename)")
                 guard let strongSelf = self else { return }
                 if done {
-                    FileService.shared.log("added location to \(filename)", classname: "LocationAdaptiveService")
-                    
                     // upload to server
                     UserLocation.upload {
-                        print("user location upload")
                         // stop forcing location file upload
                         if Settings.getForceUploadLocation() {
-                            Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { _ in
-                                print("timer after 10 seconds")
+                            Timer.scheduledTimer(withTimeInterval: 5, repeats: false) { _ in
                                 UserUpdateHandler.retrieveLatestUserUpdates(for: DateHandler.dateToDayString(from: Date()))
                             }
                             Settings.saveForceUploadLocation(with: false)
@@ -198,16 +193,25 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
         // Restart the locationManager after "timeout" seconds
         timer = Timer.scheduledTimer(timeInterval: timeout,
                                      target: self,
-                                     selector: #selector(LocationAdaptiveService.restartUpdatingLocation),
+                                     selector: #selector(timeoutLocationMonitoring),
                                      userInfo: nil,
                                      repeats: false)
         
-        // Will only stop the locationManager after 1 seconds, so that we can get some accurate locations
-        // The location manager will only operate for 1 seconds to save battery
+        // Will only stop the locationManager after 0.5 seconds, so that we can get some accurate locations
+        // The location manager will only operate for 0.5 seconds to save battery
         delayTimer = Timer.scheduledTimer(timeInterval: 0.5,
                                           target: self,
-                                          selector: #selector(LocationAdaptiveService.stopUpdatingLocationAfterXSeconds),
+                                          selector: #selector(timeoutLocationUpdate),
                                           userInfo: nil,
                                           repeats: false)
     }
+    
+    @objc func timeoutLocationMonitoring() {
+        restartUpdatingLocation()
+    }
+    
+    @objc func timeoutLocationUpdate() {
+        stopUpdatingLocationAfterXSeconds()
+    }
+    
 }

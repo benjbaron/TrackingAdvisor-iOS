@@ -39,7 +39,7 @@ class PlacePersonalInformationReviewCategory : UICollectionViewCell, UICollectio
     }}
     var place: Place? { didSet {
         if let place = place {
-            personalInformation = place.getOrderedPersonalInformation()
+            personalInformation = place.getOrderedPersonalInformationToReview()
             placeNameLabel.text = place.name
             if let visitCount = place.visits?.count {
                 let visitStr = visitCount > 2 ? "\(visitCount) times" : (visitCount == 2 ? "twice" : "once")
@@ -54,7 +54,7 @@ class PlacePersonalInformationReviewCategory : UICollectionViewCell, UICollectio
             count = pi.count
         }
     }}
-    var color: UIColor! = Constants.colors.midPurple {
+    var color: UIColor = Constants.colors.midPurple {
         didSet {
             iconView.iconColor = color
             mapView.tintColor = color
@@ -354,7 +354,7 @@ class PlacePersonalInformationReviewCategory : UICollectionViewCell, UICollectio
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! PersonalInformationCell
         
-        cell.color = color! // color must be declared before the personal information
+        cell.color = color // color must be declared before the personal information
         cell.personalInformation = personalInformation?[indexPath.item]
         cell.indexPath = indexPath
         cell.delegate = self

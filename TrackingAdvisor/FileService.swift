@@ -149,5 +149,4 @@ class FileService : NSObject {
         
         NSLog("[\(classname)] \(text)")
     }
-    
 }

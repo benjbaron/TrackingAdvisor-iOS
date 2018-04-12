@@ -30,6 +30,7 @@ class Visit: NSManagedObject {
     }
     
     class func findOrCreateVisit(matching userVisit: UserVisit, in context: NSManagedObjectContext) throws -> Visit {
+        
         let request: NSFetchRequest<Visit> = Visit.fetchRequest()
         request.predicate = NSPredicate(format: "id = %@", userVisit.vid)
         
@@ -51,13 +52,18 @@ class Visit: NSManagedObject {
                 managedObject.setValue(userVisit.pid, forKey: "placeid")
                 managedObject.setValue(DateHandler.dateToDayString(from: userVisit.a), forKey: "day")
                 
-                if let visited = userVisit.visited, visited { // 1: visited
-                    managedObject.setValue(1, forKey: "visited")
-                }
-                
                 if let newPlace = try! Place.findPlace(matching: userVisit.pid, in: context) {
                     managedObject.setValue(newPlace, forKey: "place")
                     newPlace.addToVisits(managedObject)
+                }
+                
+                if let visited = userVisit.visited, let placeName = managedObject.place?.name { // 1: visited
+                    print("\t\tvisited \(placeName): \(visited)")
+                    if visited {
+                        managedObject.setValue(1, forKey: "visited")
+                    } else {
+                        managedObject.setValue(0, forKey: "visited")
+                    }
                 }
                 
                 return managedObject

@@ -53,14 +53,14 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
                 places = api.getExplanationPlaces().sorted(by: { $0.numberOfVisits > $1.numberOfVisits })
             }
             if let explanationRating = aggregatedPersonalInformation?.reviewExplanation {
-                explanationRatingView.rating = max(1.0, Float(explanationRating))
+                explanationRatingView.rating = max(0.0, Float(explanationRating))
             }
             
             if let piRating = aggregatedPersonalInformation?.reviewPersonalInformation {
-                personalInformationRatingView.rating = max(1.0, Float(piRating))
+                personalInformationRatingView.rating = max(0.0, Float(piRating))
             }
             if let privacyRating = aggregatedPersonalInformation?.reviewPrivacy {
-                privacyRatingView.rating = max(1.0, Float(privacyRating))
+                privacyRatingView.rating = max(0.0, Float(privacyRating))
             }
             if let picid = aggregatedPersonalInformation?.category, let pic = PersonalInformationCategory.getPersonalInformationCategory(with: picid) {
                 personalInformationRatingView.question = pic.question
@@ -197,6 +197,7 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
     
     convenience init() {
         self.init(frame: CGRect.zero)
+        print("setupViews (0)")
         setupViews()
     }
     
@@ -254,6 +255,7 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
         addSubview(explanationRatingView)
         addSubview(privacyFeedbackRow)
         addSubview(dismissButton)
+        
         
         addVisualConstraint("H:|[v0]|", views: ["v0": headerBgView])
         addVisualConstraint("H:|[v0]|", views: ["v0": collectionView])

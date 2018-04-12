@@ -30,7 +30,7 @@ class ActivityService {
             if let data = pedometerData {
                 callback(Int(truncating: data.numberOfSteps))
             } else {
-                callback(0)
+                callback(-1)
             }
         }
     }
@@ -51,7 +51,6 @@ class ActivityService {
         let start = end.addingTimeInterval(interval)
         
         getSteps(from: start, to: end) { nbSteps in
-            FileService.shared.log("nbSteps: \(nbSteps)", classname: "ActivityService")
             if nbSteps > 50 {
                 self.getActivity(from: start, to: end) { arr in
                     guard let activities = arr else {
@@ -59,9 +58,6 @@ class ActivityService {
                         return
                     }
                     let (activity, confidence) = ActivityService.mostLikelyActivity(activities: activities)
-                    DispatchQueue.main.async { () -> Void in
-                        FileService.shared.log("nbSteps: \(nbSteps), ativities: \(activities), activity: \(activity), \(confidence)", classname: "ActivityService")
-                    }
                     if activity != .stationary {
                         callback(true)
                     } else {
@@ -141,7 +137,7 @@ class ActivityService {
     
     class func mostLikelyActivity(activities: [ActivityType:Int]?) -> (ActivityType,Int) {
         guard let act = activities, act.count > 0 else {
-            return (ActivityType.unknown, 0)
+            return (ActivityType.unknown, -1)
         }
         var bestActivity = ActivityType.unknown
         var bestConfidence = 0

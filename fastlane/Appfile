@@ -1,0 +1,8 @@
+app_identifier("TrackingAdvisor") # The bundle identifier of your app
+apple_id("benjamin.baron@me.com") # Your Apple email address
+
+itc_team_id("1295460") # iTunes Connect Team ID
+team_id("8UMT23UD55") # Developer Portal Team ID
+
+# For more information about the Appfile, see:
+#     https://docs.fastlane.tools/advanced/#appfile

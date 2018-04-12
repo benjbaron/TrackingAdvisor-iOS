@@ -31,6 +31,11 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     }
     
     @objc func back(_ sender: UIBarButtonItem) {
+        if let vid = visit?.id {
+            LogService.shared.log(LogService.types.visitBack,
+                                  args: [LogService.args.visitId: vid])
+        }
+        
         UserUpdateHandler.sendReviewUpdate(reviews: updatedReviews)
         presentingViewController?.dismiss(animated: true)
     }
@@ -77,6 +82,11 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if let vid = visit?.id {
+            LogService.shared.log(LogService.types.visitAccess,
+                                  args: [LogService.args.visitId: vid])
+        }
         
         self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
         self.navigationController?.navigationBar.shadowImage = UIImage()
@@ -128,6 +138,12 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
         self.view.addVisualConstraint("H:|[collection]|", views: ["collection" : collectionView])
         self.view.addVisualConstraint("V:|[header][collection]|", views: ["header" : headerView, "collection" : collectionView])
         
+        headerView.addTapGestureRecognizer { [weak self] in
+            let viewController = PlaceEditViewController()
+            viewController.place = self?.visit?.place
+            self?.navigationController?.pushViewController(viewController, animated: true)
+        }
+        
     }
     
     // MARK: - UICollectionViewDataSource delegate methods
@@ -153,7 +169,7 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: view.frame.width, height: 220)
+        return CGSize(width: view.frame.width, height: 240)
     }
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
@@ -166,6 +182,7 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
             }
             if let place = visit?.place {
                 headerCell.coordinates = CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude)
+                headerCell.placeType = place.placetype
             }
             if let visited = visit?.visited {
                 headerCell.setVisited(with: visited)
@@ -186,6 +203,9 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
         let headerView = HeaderPersonalInformationCell()
         if let visited = visit?.visited {
             headerView.setVisited(with: visited)
+        }
+        if let place = visit?.place {
+            headerView.placeType = place.placetype
         }
         
         // 2 - set the width through a constraint and layout the view
@@ -225,6 +245,17 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
         self.collectionView.reloadData()
     }
     
+    func didPressPlaceType(with answer: Int32) {
+        if let pid = visit?.place?.id {
+            UserUpdateHandler.placeType(for: pid, placeType: answer) { [weak self] in
+                guard let strongSelf = self else { return }
+                strongSelf.visit?.place?.placetype = answer
+                strongSelf.collectionView.collectionViewLayout.invalidateLayout()
+                strongSelf.collectionView.reloadData()
+            }
+        }
+    }
+    
     func didPressVisitEdit() {
         presentEditVC()
     }
@@ -241,8 +272,6 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     }
     
     func dataStoreDidUpdate(for day: String?) {
-        print("dataStoreDidUpdate -> reload data")
-        
         if let vid = visit?.id {
             visit = DataStoreService.shared.getVisit(for: vid)
         }
@@ -251,12 +280,27 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
 
 protocol HeaderReviewVisitDelegate {
     func didPressReviewVisit(with answer: ReviewAnswer)
+    func didPressPlaceType(with answer: Int32)
     func didPressVisitEdit()
     func didPressAddPersonalInformation()
 }
 
 class HeaderPersonalInformationCell : UICollectionViewCell, MGLMapViewDelegate {
     var delegate: HeaderReviewVisitDelegate?
+    
+    var placeType: Int32 = 0 { didSet {
+        if placeType == 1 { // 1: Maybe home
+            placeTypeView.title = "Set as home"
+            placeTypeViewHeight?.isActive = false
+        } else if placeType == 3 { // 3: Maybe work
+            placeTypeView.title = "Set as work"
+            placeTypeViewHeight?.isActive = false
+        } else {
+            placeTypeViewHeight?.isActive = true
+        }
+        setNeedsLayout()
+    }}
+    private var placeTypeViewHeight: NSLayoutConstraint?
     var hasPersonalInformation: Bool = true { didSet {
         if !hasPersonalInformation {
             instructionsLabel.text = "We do not have any personal information for this place at the moment."
@@ -270,6 +314,7 @@ class HeaderPersonalInformationCell : UICollectionViewCell, MGLMapViewDelegate {
             mapView.tintColor = color
             visitReviewView.textColor = color
             visitReviewView.backgroundColor = color.withAlphaComponent(0.3)
+            placeTypeView.color = color
             instructionsLabel.textColor = color
             addPersonalInformationLabel.textColor = color
             addPersonalInformationLabel.backgroundColor = color.withAlphaComponent(0.3)
@@ -328,6 +373,23 @@ class HeaderPersonalInformationCell : UICollectionViewCell, MGLMapViewDelegate {
 
         return review
     }()
+    private lazy var placeTypeView: YesNoCardView = {
+        let card = YesNoCardView(title: "Set as home", color: Constants.colors.primaryLight)
+        let yesAction: ()->() = { [weak self] in
+            if self?.placeType == 1 {
+                self?.delegate?.didPressPlaceType(with: 2) // 2: Home
+            } else if self?.placeType == 3 {
+                self?.delegate?.didPressPlaceType(with: 4) // 4: Work
+            }
+        }
+        let noAction: ()->() = { [weak self] in
+            self?.delegate?.didPressPlaceType(with: 0) // 0: None
+        }
+        card.noAction = noAction
+        card.yesAction = yesAction
+        
+        return card
+    }()
     
     private lazy var mapView: MGLMapView = {
         let map = MGLMapView(frame: .zero, styleURL: MGLStyle.lightStyleURL())
@@ -369,16 +431,21 @@ class HeaderPersonalInformationCell : UICollectionViewCell, MGLMapViewDelegate {
         addSubview(titleLabel)
         addSubview(instructionsLabel)
         addSubview(visitReviewView)
+        addSubview(placeTypeView)
         addSubview(mapView)
         addSubview(addPersonalInformationLabel)
         
         // add constraints
-        addVisualConstraint("V:|-14-[map(125)]-14-[review]-14-[title][instructions]-14-[addPI(64)]-14-|", views: ["map": mapView, "review": visitReviewView, "title": titleLabel, "instructions": instructionsLabel, "addPI": addPersonalInformationLabel])
+        addVisualConstraint("V:|-14-[map(125)]-14-[review]-14-[type]-14-[title][instructions]-14-[addPI(64)]-14-|", views: ["map": mapView, "review": visitReviewView, "type": placeTypeView, "title": titleLabel, "instructions": instructionsLabel, "addPI": addPersonalInformationLabel])
         addVisualConstraint("H:|-14-[map]-14-|", views: ["map" : mapView])
         addVisualConstraint("H:|-14-[review]-14-|", views: ["review": visitReviewView])
+        addVisualConstraint("H:|-14-[type]-14-|", views: ["type": placeTypeView])
         addVisualConstraint("H:|-14-[title]-14-|", views: ["title": titleLabel])
         addVisualConstraint("H:|-14-[instructions]-14-|", views: ["instructions": instructionsLabel])
         addVisualConstraint("H:|-14-[addPI]-14-|", views: ["addPI": addPersonalInformationLabel])
+        
+        placeTypeViewHeight = NSLayoutConstraint(item: placeTypeView, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 0.0)
+        placeTypeViewHeight?.isActive = true
         
         addPersonalInformationLabel.addTapGestureRecognizer { [weak self] in
             self?.addPersonalInformationLabel.alpha = 0.7
@@ -392,7 +459,13 @@ class HeaderPersonalInformationCell : UICollectionViewCell, MGLMapViewDelegate {
     }
     
     func height() -> CGFloat {
-        return 14 + mapView.bounds.height + 14 + visitReviewView.height() + 14 + titleLabel.bounds.height + instructionsLabel.bounds.height + 14 + addPersonalInformationLabel.bounds.height + 14
+        var height = 14 + mapView.bounds.height + 14 + visitReviewView.height()  + 14 + titleLabel.bounds.height + instructionsLabel.bounds.height + 14 + addPersonalInformationLabel.bounds.height + 14
+        
+        if placeType == 1 || placeType == 3 {
+            height += 50 + 14 // add the placeTypeView
+        }
+        
+        return height
     }
     
     func setVisited(with visited: Int32) {

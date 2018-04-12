@@ -21,71 +21,10 @@ class SettingsTableTableViewController: UITableViewController {
         self.versionNumber.text = "\(Bundle.main.appName) v \(Bundle.main.versionNumber) (Build \(Bundle.main.buildNumber))"
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        LogService.shared.log(LogService.types.tabSettings)
     }
-
-    // MARK: - Table view data source
-
-    /*
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
-        return 0
-    }
-    */
-    
-    /*
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of rows
-        return 0
-    }
-    */
-
-    /*
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "reuseIdentifier", for: indexPath)
-
-        // Configure the cell...
-
-        return cell
-    }
-    */
-
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
-    }
-    */
-
-    /*
-    // Override to support editing the table view.
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
-    }
-    */
-
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-
-    }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
-    }
-    */
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if let cell = tableView.cellForRow(at: indexPath) {
@@ -97,13 +36,13 @@ class SettingsTableTableViewController: UITableViewController {
                 let deleteAllAction = UIAlertAction(title: "Delete all",
                                                     style: UIAlertActionStyle.destructive) {
                     (result : UIAlertAction) -> Void in
-                    print("Delete all -- proceed")
+                    LogService.shared.log(LogService.types.settingsDelete, args: [LogService.args.userChoice: "delete"])
                     DataStoreService.shared.deleteAll()
                 }
                 
                 let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel) {
                     (result : UIAlertAction) -> Void in
-                    print("Cancel delete all")
+                    LogService.shared.log(LogService.types.settingsDelete, args: [LogService.args.userChoice: "cancel"])
                 }
                 
                 alertController.addAction(deleteAllAction)
@@ -111,7 +50,6 @@ class SettingsTableTableViewController: UITableViewController {
                 self.present(alertController, animated: true, completion: nil)
                 tableView.deselectRow(at: indexPath, animated: true)
             } else if id == "onboarding" {
-                print("Show onboarding screen")
                 
                 // Load the onboarding view and the navigation controller
                 let storyboard = UIStoryboard(name: "Onboarding", bundle: nil)
@@ -121,13 +59,12 @@ class SettingsTableTableViewController: UITableViewController {
                 initialViewController.modalPresentationStyle = .fullScreen
                 present(initialViewController, animated: true, completion: nil)
             } else if id == "optout" {
-                print("Opt-out of the study")
                 let alertController = UIAlertController(title: "Opt-out", message: "You will not be able to use this app and all the data we collected about you will be deleted from our servers.", preferredStyle: UIAlertControllerStyle.alert)
                 
                 let deleteAllAction = UIAlertAction(title: "Opt-out",
                                                     style: UIAlertActionStyle.destructive) {
                                                         (result : UIAlertAction) -> Void in
-                                                        print("opt-out -- proceed")
+                    LogService.shared.log(LogService.types.settingsOptout, args: [LogService.args.userChoice: "delete"])
                     UserUpdateHandler.optOut(callback: {
                         Settings.saveOptOut(with: true)
                         let appDelegate = UIApplication.shared.delegate as! AppDelegate
@@ -137,7 +74,7 @@ class SettingsTableTableViewController: UITableViewController {
                 
                 let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel) {
                     (result : UIAlertAction) -> Void in
-                    print("Cancel opt-out")
+                    LogService.shared.log(LogService.types.settingsOptout, args: [LogService.args.userChoice: "cancel"])
                 }
                 
                 alertController.addAction(deleteAllAction)
@@ -201,6 +138,8 @@ class SettingsPrivacyPolicyViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        LogService.shared.log(LogService.types.settingsPolicy)
         getTextFromServer(url: Constants.urls.privacyPolicyURL, for: text)
     }
     
@@ -211,6 +150,8 @@ class SettingsStudyTermsViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        LogService.shared.log(LogService.types.settingsTerms)
         getTextFromServer(url: Constants.urls.termsURL, for: text)
     }
 }

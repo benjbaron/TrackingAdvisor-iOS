@@ -20,6 +20,9 @@ class RawCollectedDataTextViewController: UIViewController {
         self.title = filename
         self.textView.text = filecontent
         
+        LogService.shared.log(LogService.types.settingsDataFile,
+                              args: [LogService.args.filename: filename])
+        
         // add an upload button in the view
         let addButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(addTapped))
         self.navigationItem.rightBarButtonItem = addButton
@@ -35,24 +38,26 @@ class RawCollectedDataTextViewController: UIViewController {
         
         let alertController = UIAlertController(title: "Choose an action", message: "What would you like to do?", preferredStyle: .actionSheet)
         
-        let sendButton = UIAlertAction(title: "Upload the file", style: .default) { [weak self] (action) in
-            print("upload button tapped")
-            guard let strongSelf = self else { return }
-            FileService.upload(file: strongSelf.file) { response in
-                print("data sent to the server!")
-                // TODO: Show on-screen confirmation
-            }
-        }
+//        let sendButton = UIAlertAction(title: "Upload the file", style: .default) { [weak self] (action) in
+//            print("upload button tapped")
+//            guard let strongSelf = self else { return }
+//            FileService.upload(file: strongSelf.file) { response in
+//                print("data sent to the server!")
+//                // TODO: Show on-screen confirmation
+//            }
+//        }
         
         let showMapButton = UIAlertAction(title: "Show map", style: .default) { [weak self] (action) in
-            print("Show map button tapped")
             guard let strongSelf = self else { return }
+            
+            LogService.shared.log(LogService.types.settingsDataFileMap,
+                                  args: [LogService.args.filename: strongSelf.filename])
+            
             // show the modal map
             if let controller = strongSelf.storyboard?.instantiateViewController(withIdentifier: "PositionMapModalViewController") as? UINavigationController {
                 if let mapViewVC = controller.topViewController as? PositionMapModalViewController {
                     mapViewVC.filename = strongSelf.filename
                     mapViewVC.file = strongSelf.file
-                    print("Show PositionMapModalViewController")
                     strongSelf.present(controller, animated: true, completion: nil)
                 }
             }
@@ -62,7 +67,7 @@ class RawCollectedDataTextViewController: UIViewController {
             print("Cancel button tapped")
         })
         
-        alertController.addAction(sendButton)
+//        alertController.addAction(sendButton)
         alertController.addAction(showMapButton)
         alertController.addAction(cancelButton)
         

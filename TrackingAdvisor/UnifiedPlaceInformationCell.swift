@@ -7,7 +7,7 @@
 //
 
 import UIKit
-import FloatRatingView
+import Cosmos
 
 protocol UnifiedPlaceInformationCategoryDelegate {
     func personalInformationReview(cat: String, personalInformation: PersonalInformation, type: ReviewType, rating: Int32)
@@ -147,7 +147,7 @@ class UnifiedPlaceInformationCategory: UICollectionViewCell, UICollectionViewDat
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let pi = personalInformation else { return UICollectionViewCell() }
+
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! UnifiedPlaceInformationCell
         cell.personalInformation = personalInformation?[indexPath.item]
         cell.color = color!
@@ -171,7 +171,6 @@ class UnifiedPlaceInformationCategory: UICollectionViewCell, UICollectionViewDat
 
     func didReviewPersonalInformation(personalInformation: PersonalInformation?, type: ReviewType, rating: Int32) {
         guard let pi = personalInformation, let cat = personalInformation?.category else { return }
-        print("didReviewPersonalInformation \(cat), \(pi.name), \(type), \(rating)")
         delegate?.personalInformationReview(cat: cat, personalInformation: pi, type: type, rating: rating)
     }
 }
@@ -195,12 +194,12 @@ class UnifiedPlaceInformationCell: UICollectionViewCell {
             }
         }
     }
-    var color: UIColor? = UIColor.orange {
+    var color: UIColor = Constants.colors.orange {
         didSet {
-            bgView.backgroundColor = color!.withAlphaComponent(0.3)
-            nameLabel.textColor = color!
-            explanationLabel.textColor = color!
-            dividerLineView.backgroundColor = color!
+            bgView.backgroundColor = color.withAlphaComponent(0.3)
+            nameLabel.textColor = color
+            explanationLabel.textColor = color
+            dividerLineView.backgroundColor = color
             personalInformationRatingView.color = color
             explanationRatingView.color = color
             privacyRatingView.color = color
@@ -221,7 +220,7 @@ class UnifiedPlaceInformationCell: UICollectionViewCell {
         let v = UIView()
         v.layer.cornerRadius = 16
         v.translatesAutoresizingMaskIntoConstraints = false
-        v.backgroundColor = color!.withAlphaComponent(0.3)
+        v.backgroundColor = color.withAlphaComponent(0.3)
         return v
     }()
     

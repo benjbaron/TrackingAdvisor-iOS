@@ -14,6 +14,7 @@ struct UserPlace: Codable {
     let pid: String      // placeid
     let name: String     // name
     let t: String        // type
+    let pt: Int32?       // place type
     let lon: Double      // longitude
     let lat: Double      // latitude
     let c: String?       // city
@@ -84,30 +85,31 @@ struct UserAggregatedPersonalInformation : Codable {
     let piid: String
     let picid: String
     let name: String
-    let d: String?         // description
+    let d: String?            // description
     let icon: String?
-    let s: [String] = []   // source
+    let s: [String] = []      // source
     let privacy: String?
     var rpi: Int32 = 0
     var rexp: Int32 = 0
     var rpriv: Int32 = 0
     var explanation: String?
     var piids: [String] = []  // personal information ids list
-    var com: String?       // explanation comment
+    var com: String?          // explanation comment
 }
 
 struct UserUpdate: Codable {
-    let uid: String?           // userid
+    let uid: String?                          // userid
     let from: Date?
     let to: Date?
     let days: [String]?
-    let rv: [UserReviewVisit]? // reviews for visits
-    let rpi: [UserReviewPersonalInformation]? // reviews for personal information
-    let p: [UserPlace]?        // places
-    let v: [UserVisit]?        // visits
-    let m: [UserMove]?         // moves
-    let pi: [UserPersonalInformation]? // personalinformation
-    let q: [String]?           // questions
+    let rv: [UserReviewVisit]?                    // reviews for visits
+    let rpi: [UserReviewPersonalInformation]?     // reviews for personal information
+    let p: [UserPlace]?                           // places
+    let v: [UserVisit]?                           // visits
+    let m: [UserMove]?                            // moves
+    let pi: [UserPersonalInformation]?            // personal information
+    let api: [UserAggregatedPersonalInformation]? // aggregated personal information
+    let q: [String]?                              // questions
 }
 
 class UserUpdateHandler {
@@ -125,17 +127,23 @@ class UserUpdateHandler {
                 return
             }
             
+            var date = lastUserUpdate
             if force {
                 days.insert(day)
+                if let dayDate = DateHandler.dateFromDayString(from: day) {
+                    date = dayDate
+                    print("force -- start from \(date)")
+                }
             }
             
             // 0 - get the days since the last update
-            var date = lastUserUpdate
+            
             let today = Date()
             while date <= today {
                 days.insert(DateHandler.dateToDayString(from: date))
                 date = calendar.date(byAdding: .day, value: 1, to: date)!
             }
+            print("days: \(days)")
         }
         
         DispatchQueue.global(qos: .background).async {
@@ -149,8 +157,12 @@ class UserUpdateHandler {
             ]
             
             Alamofire.request(Constants.urls.userUpdateURL, method: .get, parameters: parameters).responseJSON { response in
+                LogService.shared.log(LogService.types.serverResponse,
+                                      args: [LogService.args.responseMethod: "get",
+                                             LogService.args.responseUrl: Constants.urls.userUpdateURL,
+                                             LogService.args.responseCode: String(response.response?.statusCode ?? 0)])
+                
                 if response.result.isSuccess {
-                    FileService.shared.log("Retrieved latest user update from server", classname: "UserUpdateHandler")
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()
@@ -185,7 +197,6 @@ class UserUpdateHandler {
             
             Alamofire.request(Constants.urls.reviewChallengeURL, method: .get, parameters: parameters).responseJSON { response in
                 if response.result.isSuccess {
-                    FileService.shared.log("Retrieved latest user challenge update from server", classname: "UserUpdateHandler")
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()
@@ -217,8 +228,12 @@ class UserUpdateHandler {
             ]
             
             Alamofire.request(Constants.urls.closestPlaceURL, method: .get, parameters: parameters).responseJSON { response in
+                LogService.shared.log(LogService.types.serverResponse,
+                                      args: [LogService.args.responseMethod: "get",
+                                             LogService.args.responseUrl: Constants.urls.closestPlaceURL,
+                                             LogService.args.responseCode: String(response.response?.statusCode ?? 0)])
+                
                 if response.result.isSuccess {
-                    FileService.shared.log("Get closest place for the server", classname: "UserUpdateHandler")
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()
@@ -246,8 +261,13 @@ class UserUpdateHandler {
             ]
             
             Alamofire.request(Constants.urls.reviewUpdateURL, method: .post, parameters: parameters, encoding: JSONEncoding.default).responseJSON { response in
+                
+                LogService.shared.log(LogService.types.serverResponse,
+                                      args: [LogService.args.responseMethod: "post",
+                                             LogService.args.responseUrl: Constants.urls.reviewUpdateURL,
+                                             LogService.args.responseCode: String(response.response?.statusCode ?? 0)])
+                
                 if response.result.isSuccess {
-                    FileService.shared.log("Sent review update to server", classname: "UserUpdateHandler")
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()
@@ -274,8 +294,13 @@ class UserUpdateHandler {
             ]
             
             Alamofire.request(Constants.urls.personalInformationReviewUpdateURL, method: .post, parameters: parameters, encoding: JSONEncoding.default).responseJSON { response in
+                
+                LogService.shared.log(LogService.types.serverResponse,
+                                      args: [LogService.args.responseMethod: "post",
+                                             LogService.args.responseUrl: Constants.urls.personalInformationReviewUpdateURL,
+                                             LogService.args.responseCode: String(response.response?.statusCode ?? 0)])
+                
                 if response.result.isSuccess {
-                    FileService.shared.log("Sent review update to server", classname: "UserUpdateHandler")
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()
@@ -301,8 +326,13 @@ class UserUpdateHandler {
             ]
             
             Alamofire.request(Constants.urls.reviewChallengeUpdateURL, method: .post, parameters: parameters, encoding: JSONEncoding.default).responseJSON { response in
+                
+                LogService.shared.log(LogService.types.serverResponse,
+                                      args: [LogService.args.responseMethod: "post",
+                                             LogService.args.responseUrl: Constants.urls.reviewChallengeUpdateURL,
+                                             LogService.args.responseCode: String(response.response?.statusCode ?? 0)])
+                
                 if response.result.isSuccess {
-                    FileService.shared.log("Sent review challenge update to server", classname: "UserUpdateHandler")
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()
@@ -329,14 +359,20 @@ class UserUpdateHandler {
             ]
             
             Alamofire.request(Constants.urls.personalInformationUpdateURL, method: .post, parameters: parameters, encoding: JSONEncoding.default).responseJSON { response in
+                
+                LogService.shared.log(LogService.types.serverResponse,
+                                      args: [LogService.args.responseMethod: "post",
+                                             LogService.args.responseUrl: Constants.urls.personalInformationUpdateURL,
+                                             LogService.args.responseCode: String(response.response?.statusCode ?? 0)])
+                
                 if response.result.isSuccess {
-                    FileService.shared.log("Sent personal information addition to server", classname: "UserUpdateHandler")
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()
                         let userUpdate = try decoder.decode(UserUpdate.self, from: data)
-                        DataStoreService.shared.updateDatabase(with: userUpdate)
-                        callback?()
+                        DataStoreService.shared.updateDatabase(with: userUpdate) {
+                            callback?()
+                        }
                     } catch {
                         print("Error serializing the json", error)
                     }
@@ -358,8 +394,13 @@ class UserUpdateHandler {
             ]
             
             Alamofire.request(Constants.urls.personalInformationUpdateURL, method: .post, parameters: parameters, encoding: JSONEncoding.default).responseJSON { response in
+                
+                LogService.shared.log(LogService.types.serverResponse,
+                                      args: [LogService.args.responseMethod: "post",
+                                             LogService.args.responseUrl: Constants.urls.personalInformationUpdateURL,
+                                             LogService.args.responseCode: String(response.response?.statusCode ?? 0)])
+                
                 if response.result.isSuccess {
-                    FileService.shared.log("Sent personal information update to server", classname: "UserUpdateHandler")
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()
@@ -386,8 +427,13 @@ class UserUpdateHandler {
             ]
             
             Alamofire.request(Constants.urls.addvisitURL, method: .post, parameters: parameters, encoding: JSONEncoding.default).responseJSON { response in
+                
+                LogService.shared.log(LogService.types.serverResponse,
+                                      args: [LogService.args.responseMethod: "post",
+                                             LogService.args.responseUrl: Constants.urls.addvisitURL,
+                                             LogService.args.responseCode: String(response.response?.statusCode ?? 0)])
+                
                 if response.result.isSuccess {
-                    FileService.shared.log("Sent visit delete update to server", classname: "UserUpdateHandler")
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()
@@ -414,8 +460,13 @@ class UserUpdateHandler {
             ]
             
             Alamofire.request(Constants.urls.addvisitURL, method: .post, parameters: parameters, encoding: JSONEncoding.default).responseJSON { response in
+                
+                LogService.shared.log(LogService.types.serverResponse,
+                                      args: [LogService.args.responseMethod: "post",
+                                             LogService.args.responseUrl: Constants.urls.addvisitURL,
+                                             LogService.args.responseCode: String(response.response?.statusCode ?? 0)])
+                
                 if response.result.isSuccess {
-                    FileService.shared.log("Sent visit visited update to server", classname: "UserUpdateHandler")
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()
@@ -432,7 +483,83 @@ class UserUpdateHandler {
         }
     }
     
-    class func retrieveLatestAggregatedPersonalInformation(callback: (()->Void)?) {
+    class func placeType(for pid: String, placeType: Int32, callback: (()->Void)? = nil) {
+        DispatchQueue.global(qos: .background).async {
+            let userid = Settings.getUserId() ?? ""
+            let parameters: Parameters = [
+                "type": VisitActionType.placeType.rawValue,
+                "userid": userid,
+                "placeid": pid,
+                "placetype": placeType
+            ]
+            
+            Alamofire.request(Constants.urls.addvisitURL, method: .post, parameters: parameters, encoding: JSONEncoding.default).responseJSON { response in
+                
+                LogService.shared.log(LogService.types.serverResponse,
+                                      args: [LogService.args.responseMethod: "post",
+                                             LogService.args.responseUrl: Constants.urls.addvisitURL,
+                                             LogService.args.responseCode: String(response.response?.statusCode ?? 0)])
+                
+                if response.result.isSuccess {
+                    guard let data = response.data else { return }
+                    do {
+                        print("data")
+                        let decoder = JSONDecoder()
+                        decoder.dateDecodingStrategy = .secondsSince1970
+                        let userUpdate = try decoder.decode(UserUpdate.self, from: data)
+                        DataStoreService.shared.updateDatabase(with: userUpdate) {
+                            callback?()
+                        }
+                    } catch {
+                        print("Error serializing the json", error)
+                    }
+                } else {
+                    print("Error in response \(response.result)")
+                }
+            }
+        }
+    }
+    
+    class func placeEdit(for pid: String, placeName: String, placeAddress: String, placeCity: String, callback: (()->Void)? = nil) {
+        DispatchQueue.global(qos: .background).async {
+            let userid = Settings.getUserId() ?? ""
+            let parameters: Parameters = [
+                "type": VisitActionType.placeEdit.rawValue,
+                "userid": userid,
+                "placeid": pid,
+                "name": placeName,
+                "address": placeAddress,
+                "city": placeCity
+            ]
+            
+            Alamofire.request(Constants.urls.addvisitURL, method: .post, parameters: parameters, encoding: JSONEncoding.default).responseJSON { response in
+                
+                LogService.shared.log(LogService.types.serverResponse,
+                                      args: [LogService.args.responseMethod: "post",
+                                             LogService.args.responseUrl: Constants.urls.addvisitURL,
+                                             LogService.args.responseCode: String(response.response?.statusCode ?? 0)])
+                
+                if response.result.isSuccess {
+                    guard let data = response.data else { return }
+                    do {
+                        print("data")
+                        let decoder = JSONDecoder()
+                        decoder.dateDecodingStrategy = .secondsSince1970
+                        let userUpdate = try decoder.decode(UserUpdate.self, from: data)
+                        DataStoreService.shared.updateDatabase(with: userUpdate) {
+                            callback?()
+                        }
+                    } catch {
+                        print("Error serializing the json", error)
+                    }
+                } else {
+                    print("Error in response \(response.result)")
+                }
+            }
+        }
+    }
+    
+    class func retrieveLatestAggregatedPersonalInformation(callback: (()->Void)? = nil) {
         DispatchQueue.global(qos: .background).async {
             let userid = Settings.getUserId() ?? ""
             let parameters: Parameters = [
@@ -440,13 +567,20 @@ class UserUpdateHandler {
             ]
             
             Alamofire.request(Constants.urls.aggregatedPersonalInformationURL, method: .get, parameters: parameters).responseJSON { response in
+                
+                LogService.shared.log(LogService.types.serverResponse,
+                                      args: [LogService.args.responseMethod: "get",
+                                             LogService.args.responseUrl: Constants.urls.aggregatedPersonalInformationURL,
+                                             LogService.args.responseCode: String(response.response?.statusCode ?? 0)])
+                
                 if response.result.isSuccess {
-                    FileService.shared.log("update Aggregated Personal Information", classname: "UserUpdateHandler")
+                    
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()
                         let pis = try decoder.decode([UserAggregatedPersonalInformation].self, from: data)
                         DataStoreService.shared.updateAggregatedPersonalInformation(with: pis) {
+                            print("updateAggregatedPersonalInformation callback")
                             callback?()
                         }
                     } catch {
@@ -475,9 +609,13 @@ class UserUpdateHandler {
             ]
             
             Alamofire.request(Constants.urls.registerURL, method: .post, parameters: parameters, encoding: JSONEncoding.default).responseJSON { response in
-                print(response.result)
+                
+                LogService.shared.log(LogService.types.serverResponse,
+                                      args: [LogService.args.responseMethod: "post",
+                                             LogService.args.responseUrl: Constants.urls.registerURL,
+                                             LogService.args.responseCode: String(response.response?.statusCode ?? 0)])
+                
                 if response.result.isSuccess {
-                    FileService.shared.log("Register user to server", classname: "UserUpdateHandler")
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()
@@ -504,9 +642,14 @@ class UserUpdateHandler {
             ]
             
             Alamofire.request(Constants.urls.optOutURL, method: .post, parameters: parameters, encoding: JSONEncoding.default).responseJSON { response in
+                
+                LogService.shared.log(LogService.types.serverResponse,
+                                      args: [LogService.args.responseMethod: "post",
+                                             LogService.args.responseUrl: Constants.urls.optOutURL,
+                                             LogService.args.responseCode: String(response.response?.statusCode ?? 0)])
+                
                 print(response.result)
                 if response.result.isSuccess {
-                    FileService.shared.log("User sent opt-out", classname: "UserUpdateHandler")
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()
@@ -542,9 +685,13 @@ class UserUpdateHandler {
             ]
             
             Alamofire.request(Constants.urls.updateUserInfoURL, method: .post, parameters: parameters, encoding: JSONEncoding.default).responseJSON { response in
-                print(response.result)
+                
+                LogService.shared.log(LogService.types.serverResponse,
+                                      args: [LogService.args.responseMethod: "post",
+                                             LogService.args.responseUrl: Constants.urls.updateUserInfoURL,
+                                             LogService.args.responseCode: String(response.response?.statusCode ?? 0)])
+                
                 if response.result.isSuccess {
-                    FileService.shared.log("Update user info to server", classname: "UserUpdateHandler")
                     guard let data = response.data else { return }
                     do {
                         let decoder = JSONDecoder()

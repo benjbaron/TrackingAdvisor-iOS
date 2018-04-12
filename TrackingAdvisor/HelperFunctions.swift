@@ -322,9 +322,9 @@ class FullScreenView: UIView {
 
 class NotificationView: UIView {
     
-    var color: UIColor = Constants.colors.primaryDark.withAlphaComponent(0.5) {
+    var color: UIColor = Constants.colors.primaryLight {
         didSet {
-            self.backgroundColor = color.withAlphaComponent(0.5)
+            self.backgroundColor = color
         }
     }
     
@@ -333,6 +333,8 @@ class NotificationView: UIView {
             label.text = text
         }
     }
+    
+    var timer: Timer?
     
     lazy var label: UILabel = {
         let l = UILabel()
@@ -370,6 +372,21 @@ class NotificationView: UIView {
         
         addVisualConstraint("V:|-[v0]-|", views: ["v0": label])
         addVisualConstraint("H:|-[v0]-|", views: ["v0": label])
+    }
+    
+    func autoRemove(with delay: TimeInterval, text: String) {
+        timer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
+            self?.text = text
+            self?.backgroundColor = Constants.colors.darkRed
+            self?.timer = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { [weak self] _ in
+                self?.removeFromSuperview()
+            }
+        }
+    }
+    
+    func remove() {
+        timer?.invalidate()
+        self.removeFromSuperview()
     }
 }
 

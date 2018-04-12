@@ -17,6 +17,8 @@ class RawCollectedDataViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        LogService.shared.log(LogService.types.settingsData)
+        
         files = FileService.shared.listFiles()
 
         // Uncomment the following line to preserve selection between presentations
@@ -71,6 +73,10 @@ class RawCollectedDataViewController: UITableViewController {
     
     func handleDeleteFile(alertAction: UIAlertAction!){
         if let indexPath = deleteFileIndexPath {
+            let filename = files[indexPath.row].deletingPathExtension().lastPathComponent
+            LogService.shared.log(LogService.types.settingsDataFileDelete,
+                                  args: [LogService.args.filename: filename])
+            
             tableView.beginUpdates()
             // Delete the file from the file system
             FileService.shared.delete(file: files[indexPath.row])

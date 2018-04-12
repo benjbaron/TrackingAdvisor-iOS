@@ -50,6 +50,12 @@ class PersonalInformationChooserViewController: UIViewController, UICollectionVi
     
     func goBack(_ notificationView: NotificationView?) {
         view.endEditing(true)
+        
+        if let pid = place?.id {
+            LogService.shared.log(LogService.types.personalInfoBack,
+                                  args: [LogService.args.placeId: pid])
+        }
+        
         guard let controllers = navigationController?.viewControllers else { return }
         let count = controllers.count
         if count == 2 {
@@ -71,22 +77,30 @@ class PersonalInformationChooserViewController: UIViewController, UICollectionVi
     }
     
     func saveChanges() {
-        let notificationView = NotificationView(text: "Updating the personal information...")
-        notificationView.color = color
-        notificationView.frame = CGRect(x: 0, y: 0, width: view.frame.width - 50, height: 50)
-        notificationView.center = CGPoint(x: view.center.x, y: view.frame.height - 100.0)
+        
+        if let pid = place?.id {
+            LogService.shared.log(LogService.types.personalInfoSaved,
+                                  args: [LogService.args.placeId: pid])
+        }
+        
+        let notificationView: NotificationView? = NotificationView(text: "Updating the personal information...")
+        notificationView?.color = color
+        notificationView?.frame = CGRect(x: 0, y: 0, width: view.frame.width - 50, height: 50)
+        notificationView?.center = CGPoint(x: view.center.x, y: view.frame.height - 100.0)
         
         if selectedPersonalInformation != "", let pid = place?.id,
             let picid = selectedPersonalInformationCategory?.picid {
             
             self.goBack(notificationView)
             
+            notificationView?.autoRemove(with: 15, text: "Failed, try again")
+            
             UserUpdateHandler.addNewPersonalInformation(for: pid, name: selectedPersonalInformation, picid: picid) {
-                notificationView.text = "Done"
+                notificationView?.text = "Done"
                 UIView.animate(withDuration: 1.0, animations: {
-                    notificationView.alpha = 0
+                    notificationView?.alpha = 0
                 }, completion: { success in
-                    notificationView.removeFromSuperview()
+                    notificationView?.remove()
                 })
             }
         }
@@ -412,10 +426,17 @@ class PersonalInformationChooserViewController: UIViewController, UICollectionVi
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if let cell = tableView.cellForRow(at: indexPath) as? PersonalInformationChooserTableViewCell {
-            if cell.name != nil {
+            if let piName = cell.name {
                 // select the personal information
-                selectedPersonalInformation = cell.name!
+                selectedPersonalInformation = piName
                 hasMadeChanges = true
+                
+                if let pid = place?.id {
+                    LogService.shared.log(LogService.types.personalInfoSelected,
+                                          args: [LogService.args.placeId: pid,
+                                                 LogService.args.personalInfo: piName,
+                                                 LogService.args.searchedText: searchbarView.text ?? ""])
+                }
             }
             tableView.deselectRow(at: indexPath, animated: true)
         }
@@ -442,6 +463,12 @@ class PersonalInformationChooserViewController: UIViewController, UICollectionVi
         
         Alamofire.request(Constants.urls.piAutcompleteURL, method: .get, parameters: parameters)
             .responseJSON { [weak self] response in
+                
+                LogService.shared.log(LogService.types.serverResponse,
+                                      args: [LogService.args.responseMethod: "get",
+                                             LogService.args.responseUrl: Constants.urls.piAutcompleteURL,
+                                             LogService.args.responseCode: String(response.response?.statusCode ?? 0)])
+                
                 guard let strongSelf = self else { return }
                 if response.result.isSuccess {
                     guard let data = response.data else { return }

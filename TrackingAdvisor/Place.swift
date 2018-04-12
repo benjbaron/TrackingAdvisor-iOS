@@ -40,6 +40,10 @@ class Place: NSManagedObject {
         place.longitude = userPlace.lon
         place.name = userPlace.name
         place.color = userPlace.col
+        
+        if let pt = userPlace.pt {
+            place.placetype = pt
+        }
     }
     
     class func findOrCreatePlace(matching userPlace: UserPlace, in context: NSManagedObjectContext) throws -> Place {
@@ -63,6 +67,9 @@ class Place: NSManagedObject {
                 managedObject.setValue(userPlace.col, forKey: "color")
                 managedObject.setValue(userPlace.icon, forKey: "icon")
                 managedObject.setValue(userPlace.emoji, forKey: "emoji")
+                if let pt = userPlace.pt {
+                    managedObject.setValue(pt, forKey: "placetype")
+                }
                 
                 return managedObject
             }
@@ -83,6 +90,10 @@ class Place: NSManagedObject {
         place.emoji = userPlace.emoji
         place.added = Date()
         
+        if let pt = userPlace.pt {
+            place.placetype = pt
+        }
+        
         return place
     }
     
@@ -101,8 +112,23 @@ class Place: NSManagedObject {
             throw error
         }
     }
-
     
+    class func updatePlaceType(for pid: String, answer: Int32, in context: NSManagedObjectContext) throws {
+        let request: NSFetchRequest<Place> = Place.fetchRequest()
+        request.predicate = NSPredicate(format: "id = %@", pid)
+        
+        do {
+            let matches = try context.fetch(request)
+            if matches.count > 0 {
+                assert(matches.count == 1, "Place.updatePlaceReviewed -- database inconsistency")
+                let managedObject = matches[0]
+                managedObject.setValue(answer, forKey: "placetype")
+            }
+        } catch {
+            throw error
+        }
+    }
+
     func formatAddressString() -> String {
         let addressString = address ?? ""
         let cityString = city ?? ""
@@ -138,11 +164,50 @@ class Place: NSManagedObject {
         return res
     }
     
+    func getPersonalInformationToReview() -> [String: [PersonalInformation]] {
+        var categories: [String: [PersonalInformation]] = [:]
+        guard let personalInformation = personalInformation else { return categories }
+        for case let pi as PersonalInformation in personalInformation {
+            guard let picid = pi.category, pi.rating == 0 else { continue }
+            if categories[picid] == nil {
+                categories[picid] = []
+            }
+            categories[picid]!.append(pi)
+        }
+        
+        return categories
+    }
+    
+    func getOrderedPersonalInformationToReview() -> [PersonalInformation] {
+        let pis = getPersonalInformationToReview()
+        if pis.count == 0 { return [] }
+        let pics = pis.keys.sorted(by: { $0 < $1 })
+        
+        var res: [PersonalInformation] = []
+        for pic in pics {
+            for pi in pis[pic]!.sorted(by: { $0.name! < $1.name! }) {
+                res.append(pi)
+            }
+        }
+        return res
+    }
+
     var numberOfPersonalInformationToReview: Int {
         guard let personalInformation = personalInformation else { return 0 }
         var res = 0
         for case let pi as PersonalInformation in personalInformation {
             if pi.rating == 0 {
+                res += 1
+            }
+        }
+        return res
+    }
+    
+    var numberOfVisitsConfirmed: Int {
+        guard let visits = visits else { return 0 }
+        var res = 0
+        for case let visit as Visit in visits {
+            if visit.visited == 1 {
                 res += 1
             }
         }

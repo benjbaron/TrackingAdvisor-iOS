@@ -35,6 +35,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
     var timelineTitle: String!
     var timelineSubtitle: String!
     var timelineDay: String!
+    var canUpdate: Bool = true
     var isAnimating = false
     var isFolded = true
     var annotations: [PointAnnotation] = []
@@ -54,17 +55,16 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        UserUpdateHandler.retrieveLatestUserUpdates(for: DateHandler.dateToDayString(from: Date()))
+        LogService.shared.log(LogService.types.timelineDay,
+                              args: [LogService.args.day: timelineDay])
         reload()
     }
     
     func reload() {
-        print("reload")
         guard let timeline = self.timeline else { return }
         
-        let visits = DataStoreService.shared.getVisits(for: timelineDay, sameContext: true)
+        let visits = DataStoreService.shared.getVisits(for: timelineDay, sameContext: false)
         updateLastVisit(from: visits)
-        
         annotations.removeAll()
         
         let touchAction = { [weak self] (point:ISPoint) in
@@ -83,8 +83,16 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         
         let feedbackTouchAction = { [weak self] (point: ISPoint) in
             guard let strongSelf = self else { return }
+            
             let controller = PlaceFinderMapTableViewController()
             controller.visit = point.visit
+            
+            if let vid = point.visit?.id {
+                LogService.shared.log(LogService.types.timelineFeedback,
+                                      args: [LogService.args.day: strongSelf.timelineDay,
+                                             LogService.args.visitId: vid,
+                                             LogService.args.value: "edit"])
+            }
             
             let controllerNavigation = UINavigationController(rootViewController: controller)
             controllerNavigation.modalTransitionStyle = .crossDissolve
@@ -92,17 +100,31 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             strongSelf.present(controllerNavigation, animated: true, completion: nil)
         }
         
-        let visitValidatedTouchAction = { (_ point: ISPoint?) in
+        let visitValidatedTouchAction = { [weak self] (_ point: ISPoint?) in
+            guard let strongSelf = self else { return }
+            
             if let vid = point?.visit?.id {
+                point?.visit?.visited = 1
+                LogService.shared.log(LogService.types.timelineFeedback,
+                                      args: [LogService.args.day: strongSelf.timelineDay,
+                                             LogService.args.visitId: vid,
+                                             LogService.args.value: "yes"])
                 UserUpdateHandler.visitedVisit(for: vid) {
+                    print("timeline - updateVisit \(vid)")
                     DataStoreService.shared.updateVisit(with: vid, visited: 1)
                 }
                 
             }
         }
         
-        let visitRemovedTouchAction = { (_ point: ISPoint?) in
+        let visitRemovedTouchAction = { [weak self](_ point: ISPoint?) in
+            guard let strongSelf = self else { return }
+            
             if let vid = point?.visit?.id {
+                LogService.shared.log(LogService.types.timelineFeedback,
+                                      args: [LogService.args.day: strongSelf.timelineDay,
+                                             LogService.args.visitId: vid,
+                                             LogService.args.value: "delete"])
                 UserUpdateHandler.deleteVisit(for: vid) {
                     DataStoreService.shared.deleteVisit(vid: vid)
                 }
@@ -112,6 +134,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         
         let addPlaceTouchAction = { [weak self] (pt1: ISPoint?, pt2: ISPoint?) in
             guard let strongSelf = self else { return }
+            
             let controller = PlaceFinderMapTableViewController()
             controller.color = Constants.colors.primaryDark
             controller.name = "Add a place"
@@ -154,8 +177,18 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             strongSelf.present(controllerNavigation, animated: true, completion: nil)
         }
         
-        let updateTimelineTouchAction = { [weak self] in
+        let updateTimelineTouchAction = { [weak self] (sender: UIButton) in
             guard let strongSelf = self else { return }
+            if !strongSelf.canUpdate { return }
+            
+            LogService.shared.log(LogService.types.timelineUpdate,
+                                  args: [LogService.args.day: strongSelf.timelineDay])
+            
+            
+            strongSelf.canUpdate = false
+            Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
+                self?.canUpdate = true
+            }
             UserUpdateHandler.retrieveLatestUserUpdates(for: strongSelf.timelineDay, force: true) {
                 strongSelf.reload()
             }
@@ -181,6 +214,21 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
                         
             let lineColor = Constants.colors.primaryDark
             
+            var label: String?
+            var labelColor: UIColor?
+            if let placeType = visit.place?.placetype {
+                if placeType == 1 {
+                    label = "Home"
+                    labelColor = Constants.colors.primaryLight
+                } else if placeType == 3 {
+                    label = "Work"
+                    labelColor = Constants.colors.primaryLight
+                } else if placeType == 4 {
+                    label = "Work"
+                    labelColor = Constants.colors.primaryDark
+                }
+            }
+            
             var showFeedback = true
             if visit.visited != 0 {
                 showFeedback = false
@@ -188,10 +236,12 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             
             let point = ISPoint(
                 title: placeName,
+                label: label,
                 description: times,
                 descriptionSupp: placePersonalInformationIcons,
                 pointColor: Constants.colors.primaryLight,
                 lineColor: lineColor,
+                labelColor: labelColor,
                 touchUpInside: touchAction,
                 feedbackTouchUpInside: feedbackTouchAction,
                 addPlaceTouchUpInside: addPlaceTouchAction,
@@ -221,13 +271,12 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         timeline.timelimeAddPlaceLastTouchAction = addPlaceTouchAction
         timeline.timelineValidatedPlaceTouchAction = visitValidatedTouchAction
         timeline.timelineRemovedPlaceTouchAction = visitRemovedTouchAction
-        
-        print("done reload with \(timelinePoints.count) timeline points")
     }
     
     private func updateLastVisit(from visits: [Visit]) {
-        if  let lastVisit = visits.last, let vid = lastVisit.id,
-            let lon = lastVisit.place?.longitude, let lat = lastVisit.place?.latitude,
+        if  let lastVisit = visits.last,
+            let lon = lastVisit.place?.longitude,
+            let lat = lastVisit.place?.latitude,
             let lastKnownLocation = Settings.getLastKnownLocation() {
             
             let now = Date()
@@ -237,8 +286,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             let distance = visitLocation.distance(from: lastKnownLocation)
             
             if todayStr == timelineDay && distance <= 50 {
-                print("updateLastVisit for \(lastVisit.place?.name) with \(distance)")
-                DataStoreService.shared.updateVisit(with: vid, departure: now)
+                lastVisit.departure = now
             }
             
         }
@@ -257,6 +305,10 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
     }
     
     private func foldMapView() {
+        LogService.shared.log(LogService.types.timelineMap,
+                              args: [LogService.args.day: timelineDay,
+                                     LogService.args.toggle: "hide"])
+        
         isAnimating = true
         self.hideAnnotations()
         UIView.animate(withDuration: 0.5, animations: { [weak self] in
@@ -272,6 +324,10 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
     }
     
     private func unfoldMapView() {
+        LogService.shared.log(LogService.types.timelineMap,
+                              args: [LogService.args.day: timelineDay,
+                                     LogService.args.toggle: "show"])
+        
         isAnimating = true
         UIView.animate(withDuration: 0.5, animations: { [weak self] in
             self?.mapViewHeight.constant = 350

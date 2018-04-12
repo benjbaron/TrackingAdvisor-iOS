@@ -105,14 +105,12 @@ class ActivityServiceOld: NSObject {
         
         guard let manager = self.manager else { return }
         
-        FileService.shared.log("Start monitoring activity", classname: "ActivityService")
         self.updating = true
         manager.startActivityUpdates(to: OperationQueue()) { data in
             guard let activity = data else { return }
             DispatchQueue.main.async {
                 self.isStationary = activity.stationary
                 self.activities.append(self.activitiesToDict(activity))
-                FileService.shared.log("Received Activity Update: \(activity)", classname: "ActivityService")
             }
         }
         
@@ -131,8 +129,6 @@ class ActivityServiceOld: NSObject {
     }
     
     @objc func syncAfterXSeconds() {
-        NSLog("syncAfterXSeconds called")
-        FileService.shared.log("Number of activites recorded: \(activities.count)", classname: "ActivityService")
         if self.delegate != nil {
             self.delegate.activityDidUpdate(activities: self.activities.first!)
         }

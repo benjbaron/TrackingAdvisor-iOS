@@ -76,7 +76,7 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
     
     func startUpdatingLocation() {
         requestPermission()
-
+        
         locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
         locationManager.distanceFilter = kCLDistanceFilterNone
 
@@ -90,28 +90,39 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
         deleteRegions()
 
         locationManager.startMonitoringSignificantLocationChanges()
+        LogService.shared.log(LogService.types.locationSignificantStart)
         locationManager.startMonitoringVisits()
+        LogService.shared.log(LogService.types.locationVisitStart)
         
-        adaptiveLocationManager = LocationAdaptiveService.shared
-        adaptiveLocationManager.startUpdatingLocation()
+        if !ProcessInfo.processInfo.isLowPowerModeEnabled {
+            adaptiveLocationManager = LocationAdaptiveService.shared
+            adaptiveLocationManager.startUpdatingLocation()
+            LogService.shared.log(LogService.types.locationStart)
+        }
     }
     
     func stopUpdatingLocation() {
+        
         locationManager.stopUpdatingLocation()
         adaptiveLocationManager = LocationAdaptiveService.shared
         adaptiveLocationManager.stopUpdatingLocation()
+        LogService.shared.log(LogService.types.locationStop)
     }
     
     func restartUpdatingLocation() {
-//        FileService.shared.log("restartUpdatingLocation called", classname: "LocationRegionService")
         stopUpdatingLocation()
         startUpdatingLocation()
+        LogService.shared.log(LogService.types.locationRestart)
     }
     
     func deleteRegions() {
-//        FileService.shared.log("Delete all regions", classname: "LocationRegionService")
-        for region in locationManager.monitoredRegions {
+        for case let region as CLCircularRegion in locationManager.monitoredRegions {
             locationManager.stopMonitoring(for: region)
+            LogService.shared.log(LogService.types.locationRegionDelete,
+                                  args: [LogService.args.regionId: region.identifier,
+                                         LogService.args.regionLat: String(region.center.latitude),
+                                         LogService.args.regionLon: String(region.center.longitude),
+                                         LogService.args.regionRadius: String(region.radius)])
         }
         usleep(1000)
         currentRegions.removeAll()
@@ -126,19 +137,33 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
         var radius: CLLocationDistance = 100.0
         if let prev = previousLocation {
             let s = location.speed(with: prev)
-            print("distance: \(location.distance(from: prev)), duration: \(location.timestamp.timeIntervalSince1970 - prev.timestamp.timeIntervalSince1970)")
             if s > 5.0 {
                 radius = max(100.0, min(100.0 * sqrt(s), 1000.0))
             }
-            FileService.shared.log("Speed: \(s), radius: \(radius)", classname: "LocationRegionService")
         }
         
         let region = CLCircularRegion(center: location.coordinate, radius: radius, identifier: "currentRegion")
-        let regionDefault = CLCircularRegion(center: location.coordinate, radius: 500, identifier: "currentRegionDefault")
+        let regionDefault = CLCircularRegion(center: location.coordinate, radius: 1250, identifier: "currentRegionDefault")
         currentRegions.append(region)
         currentRegions.append(regionDefault)
+        
         locationManager.startMonitoring(for: region)
+        locationManager.startMonitoring(for: regionDefault)
+        
+        LogService.shared.log(LogService.types.locationRegionCreate,
+                              args: [LogService.args.regionId: region.identifier,
+                                     LogService.args.regionLat: String(region.center.latitude),
+                                     LogService.args.regionLon: String(region.center.longitude),
+                                     LogService.args.regionRadius: String(region.radius)])
+        
+        LogService.shared.log(LogService.types.locationRegionCreate,
+                              args: [LogService.args.regionId: regionDefault.identifier,
+                                     LogService.args.regionLat: String(regionDefault.center.latitude),
+                                     LogService.args.regionLon: String(regionDefault.center.longitude),
+                                     LogService.args.regionRadius: String(regionDefault.radius)])
+        
         previousLocation = location
+        
     }
     
     
@@ -178,56 +203,99 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         let location = locations.last!
         
-        DispatchQueue.global(qos: .background).async {
-            self.updateRegions(for: location)
+        if !ProcessInfo.processInfo.isLowPowerModeEnabled {
+            DispatchQueue.global(qos: .background).async {
+                NSLog("loclog locationManager didUpdateLocations, no low power")
+                self.updateRegions(for: location)
+            }
+        } else {
+            saveLocationToFile(location)
         }
+        
         restartUpdatingLocation()
         locationUpdateType = .significant
+        
+        LogService.shared.log(LogService.types.locationUpdate,
+                              args: [LogService.args.locationLat: String(location.coordinate.latitude),
+                                     LogService.args.locationLon: String(location.coordinate.longitude),
+                                     LogService.args.locationAccuracy: String(location.horizontalAccuracy),
+                                     LogService.args.locationTimestamp: location.timestamp.localTime])
     }
     
     func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
-        FileService.shared.log("didExitRegion \(region.identifier)", classname: "LocationRegionService")
         restartUpdatingLocation()
+
         updating = true
         locationUpdateType = .region
+        
+        if let region = region as? CLCircularRegion {
+            LogService.shared.log(LogService.types.locationRegionExit,
+                                  args: [LogService.args.regionId: region.identifier,
+                                         LogService.args.regionLat: String(region.center.latitude),
+                                         LogService.args.regionLon: String(region.center.longitude),
+                                         LogService.args.regionRadius: String(region.radius)])
+        }
     }
     
     func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
         let location = regionLocations[region.identifier]
         guard let loc = location else { return }
-//        FileService.shared.log("didEnterRegion \(region.identifier) and location \(loc)", classname: "LocationRegionService")
+
         DispatchQueue.global(qos: .background).async {
             self.updateRegions(for: loc)
         }
         restartUpdatingLocation()
         locationUpdateType = .region
+        
+        if let region = region as? CLCircularRegion {
+            LogService.shared.log(LogService.types.locationRegionEnter,
+                                  args: [LogService.args.regionId: region.identifier,
+                                         LogService.args.regionLat: String(region.center.latitude),
+                                         LogService.args.regionLon: String(region.center.longitude),
+                                         LogService.args.regionRadius: String(region.radius)])
+        }
     }
     
     func locationManager(_ manager: CLLocationManager, didVisit visit: CLVisit) {
-//        FileService.shared.log("didVisit \(visit)", classname: "LocationRegionService")
         restartUpdatingLocation()
         locationUpdateType = .visit
         
 //        UserUpdateHandler.getClosestPlace(coordinate: visit.coordinate) { place in
 //            if let emoji = place?.emoji, let name = place?.name {
-//                NotificationService.shared.sendLocalNotificationNow(body: "\(emoji) Are you at \(name)?")
+//                var text = "\(emoji) Are you at \(name)?"
+//                if visit.departureDate != Date.distantFuture {
+//                    text = "\(emoji) Were you at \(name)?"
+//                }
+//                NotificationService.shared.sendLocalNotificationNow(body: text)
 //            }
 //        }
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didStartMonitoringFor region: CLRegion) {
-//        FileService.shared.log("Started monitoring region \(region.identifier); number of regions: \(locationManager.monitoredRegions.count)", classname: "LocationRegionService")
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didDetermineState state: CLRegionState, for region: CLRegion) {
-//        FileService.shared.log("didDetermineState for region \(region.identifier) -- \(state.rawValue)", classname: "LocationRegionService")
+        
+        if ProcessInfo.processInfo.isLowPowerModeEnabled {
+            saveVisitToFile(visit, timestamp: visit.arrivalDate)
+            
+            if visit.departureDate != Date.distantFuture {
+                saveVisitToFile(visit, timestamp: visit.departureDate)
+            }
+        }
+        
+        LogService.shared.log(LogService.types.locationVisitUpdate,
+                              args: [LogService.args.visitStart: visit.arrivalDate.localTime,
+                                     LogService.args.visitEnd: visit.departureDate.localTime,
+                                     LogService.args.visitLat: String(visit.coordinate.latitude),
+                                     LogService.args.visitLon: String(visit.coordinate.longitude),
+                                     LogService.args.visitAccuracy: String(visit.horizontalAccuracy)])
+        
+        
     }
     
     func locationManager(_ manager: CLLocationManager, monitoringDidFailFor region: CLRegion?, withError error: Error) {
-        FileService.shared.log("Location Manager FAILED monitoring region \((error as NSError).description) for region \(String(describing: region))",
-            classname: "LocationRegionService")
-        if let region = region {
+        if let region = region as? CLCircularRegion {
             locationManager.startMonitoring(for: region)
+            LogService.shared.log(LogService.types.locationRegionFailed,
+                                  args: [LogService.args.regionId: region.identifier,
+                                         LogService.args.regionLat: String(region.center.latitude),
+                                         LogService.args.regionLon: String(region.center.longitude),
+                                         LogService.args.regionRadius: String(region.radius)])
         }
     }
     
@@ -248,9 +316,42 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
     
     // MARK - Delegate method for LocationAdaptiveUpdateProtocol
     func locationDidUpdate(location: UserLocation) {
-        FileService.shared.log("locationDidUpdate \(location.latitude),\(location.longitude)", classname: "LocationRegionService")
         let loc = CLLocation(latitude: location.latitude, longitude: location.longitude)
         updateRegions(for: loc)
+                
+        LogService.shared.log(LogService.types.locationUpdateBest,
+                              args: [LogService.args.locationLat: String(location.latitude),
+                                     LogService.args.locationLon: String(location.longitude),
+                                     LogService.args.locationAccuracy: String(location.accuracy),
+                                     LogService.args.locationTimestamp: location.timestamp.localTime])
+    }
+    
+    
+    func saveLocationToFile(_ location: CLLocation) {
+        Settings.saveLastKnownLocation(with: location)
+        let loc = UserLocation(id: self.id, location: location, targetAccuracy: self.locationManager.desiredAccuracy)
+        self.currentLocation = loc
+        
+        let filename = DateHandler.dateToDayString(from: loc.timestamp) + ".csv"
+        loc.dumps(to: filename) { done in
+            if done {
+                // upload to server
+                UserLocation.upload()
+            }
+        }
+    }
+    
+    func saveVisitToFile(_ visit: CLVisit, timestamp: Date) {
+        let loc = UserLocation(id: self.id, visit: visit, targetAccuracy: self.locationManager.desiredAccuracy, timestamp: timestamp)
+        self.currentLocation = loc
+        
+        let filename = DateHandler.dateToDayString(from: loc.timestamp) + ".csv"
+        loc.dumps(to: filename) { done in
+            if done {
+                // upload to server
+                UserLocation.upload()
+            }
+        }
     }
 }
 

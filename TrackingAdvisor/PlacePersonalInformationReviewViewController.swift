@@ -59,6 +59,8 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        LogService.shared.log(LogService.types.reviewPlaces)
+        
         places = DataStoreService.shared.getAllPlacesToReview()
         
         let layout = UICollectionViewFlowLayout()
@@ -117,6 +119,7 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
             let headerCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerCellId, for: indexPath) as! PlacePersonalInformationReviewHeaderCell
             headerCell.delegate = self
             headerCell.color = color
+            headerCell.numberOfPlacesToReview = places.count
             return headerCell
         } else {
             assert(false, "Unexpected element kind")
@@ -135,8 +138,11 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
     // MARK: - PlacePersonalInformationReviewCategoryDelegate method
     func placePersonalInformationReview(place: Place?, personalInformation: PersonalInformation?, answer: FeedbackType, placeIndexPath: IndexPath, personalInformationIndexPath: IndexPath) {
         if let pi = personalInformation, let piid = pi.id {
-            placesStatus[placeIndexPath.item] = personalInformationIndexPath.item
+            LogService.shared.log(LogService.types.reviewPlacesPi,
+                                  args: [LogService.args.piId: piid,
+                                         LogService.args.value: String(answer.rawValue)])
             
+            placesStatus[placeIndexPath.item] = personalInformationIndexPath.item
             updatedReviews[piid] = answer.rawValue
             personalInformation?.rating = answer.rawValue
             DataStoreService.shared.updatePersonalInformationRating(with: piid, rating: answer.rawValue)
@@ -162,6 +168,7 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
     
     func deletePlaceFromReviews(place: Place?, at indexPath: IndexPath?) {
         if let idx = indexPath {
+            
             updateVisitAtPlace(with: place, visited: 2, at: indexPath) { [weak self] in
                 if let count = self?.places.count, idx.item == count {
                     self?.showEndScreen()
@@ -172,8 +179,16 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
     
     func goToNextPlace(currentPlace: Place?, indexPath: IndexPath?) {
         if let idx = indexPath {
+            if let pid = currentPlace?.id {
+                LogService.shared.log(LogService.types.reviewPlacesNext,
+                                      args: [LogService.args.placeId: pid,
+                                             LogService.args.value: String(idx.item),
+                                             LogService.args.total: String(places.count)])
+            }
+            
             updateVisitAtPlace(with: currentPlace, visited: 1, at: indexPath) { [weak self] in
                 if let count = self?.places.count, idx.item == count {
+                    LogService.shared.log(LogService.types.reviewPlacesEndAll)
                     self?.showEndScreen()
                 }
             }
@@ -186,6 +201,10 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
         // 2: not visited
         
         if let place = place, let pid = place.id, let idx = indexPath {
+            LogService.shared.log(LogService.types.reviewPlacesVisited,
+                                  args: [LogService.args.placeId: pid,
+                                         LogService.args.userChoice: String(visited)])
+            
             DataStoreService.shared.updatePlaceReviewed(with: pid, reviewed: true)
 
             self.places.remove(at: idx.item)
@@ -204,11 +223,28 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
     func didPressBackButton() {
         goBack()
     }
+    
+    // MARK: - DataStoreUpdateProtocol methods
+    func dataStoreDidUpdateAggregatedPersonalInformation() {
+        // get the latest aggregatedPersonalInformation
+        places = DataStoreService.shared.getAllPlacesToReview()
+    }
 }
 
 class PlacePersonalInformationReviewHeaderCell : UICollectionViewCell {
     
     var delegate: PersonalInformationReviewHeaderCellDelegate?
+    var numberOfPlacesToReview: Int? {
+        didSet {
+            if numberOfPlacesToReview == 0 {
+                subtitle.text = "You have no place to review"
+            } else if numberOfPlacesToReview == 1 {
+                subtitle.text = "You have one place to review"
+            } else if let nb = numberOfPlacesToReview {
+                subtitle.text = "You have \(nb) places to review"
+            }
+        }
+    }
     
     @objc fileprivate func tappedBackButton() {
         delegate?.didPressBackButton?()
@@ -224,6 +260,18 @@ class PlacePersonalInformationReviewHeaderCell : UICollectionViewCell {
         label.text = "Place reviews"
         label.font = UIFont.systemFont(ofSize: 34, weight: .heavy)
         label.textColor = Constants.colors.black
+        label.lineBreakMode = .byWordWrapping
+        label.numberOfLines = 2
+        label.textAlignment = .left
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private let subtitle: UILabel = {
+        let label = UILabel()
+        label.text = "You have XX places to review"
+        label.font = UIFont.italicSystemFont(ofSize: 16.0)
+        label.textColor = Constants.colors.lightGray
         label.lineBreakMode = .byWordWrapping
         label.numberOfLines = 2
         label.textAlignment = .left
@@ -258,11 +306,13 @@ class PlacePersonalInformationReviewHeaderCell : UICollectionViewCell {
     
     func setupViews() {
         addSubview(mainTitle)
+        addSubview(subtitle)
         addSubview(backButton)
         
         addVisualConstraint("H:|-16-[v0]-|", views: ["v0": mainTitle])
+        addVisualConstraint("H:|-16-[v0]-|", views: ["v0": subtitle])
         addVisualConstraint("H:|-14-[v0(75)]", views: ["v0": backButton])
-        addVisualConstraint("V:|-20-[v1(40)][v0]", views: ["v0": mainTitle, "v1": backButton])
+        addVisualConstraint("V:|-20-[back(40)][title][subtitle]", views: ["title": mainTitle, "subtitle": subtitle, "back": backButton])
         
         translatesAutoresizingMaskIntoConstraints = false
     }

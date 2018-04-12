@@ -9,7 +9,7 @@
 import UIKit
 import Mapbox
 
-class ProfileViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, PersonalInformationReviewCategoryDelegate {
+class ProfileViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, PersonalInformationReviewCategoryDelegate, DataStoreUpdateProtocol, OverlayViewDelegate {
     
     var updatedReviews: [String:[Int32]] = [:]
     var pics: [String]! = []
@@ -62,11 +62,18 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        LogService.shared.log(LogService.types.tabProfile)
+        
         view.backgroundColor = .white
         self.navigationController?.isNavigationBarHidden = true
         self.tabBarController?.tabBar.isHidden = false
         
-        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationReviewed(sameContext: true)
+        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationReviewed(sameContext: false)
+        
+        DataStoreService.shared.delegate = self
+        
+        computeData()
+        collectionView.reloadData()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -175,10 +182,11 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        
         let picid = pics[indexPath.section-1]
         if let pi = personalInformation[picid]?[indexPath.item] {
+            print("overlayView (1)")
             let overlayView = AggregatedPersonalInformationExplanationOverlayView()
+            print("overlayView (2)")
             overlayView.color = color
             overlayView.picIndexPath = indexPath
             overlayView.indexPath = indexPath
@@ -186,15 +194,40 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
             overlayView.picid = picid
             overlayView.aggregatedPersonalInformation = pi
             overlayView.showAllQuestions = true
+            
+            print("overlayView (3)")
+            
+            if let piid = pi.id {
+                LogService.shared.log(LogService.types.profilePiOverlay,
+                                      args: [LogService.args.piId: piid])
+                print("LogService")
+            }
+            
+            print("overlayView (4)")
+            OverlayView.shared.delegate = self
             OverlayView.shared.showOverlay(with: overlayView)
+            print("overlayView (5)")
         }
     }
     
-    // MARK: PersonalInformationReviewCategoryDelegate methods
+    // MARK: - OverlayViewDelegate methods
+    func overlayViewDismissed() {
+        if updatedReviews.count > 0 {
+            UserUpdateHandler.sendPersonalInformationReviewUpdate(reviews: updatedReviews)
+            updatedReviews.removeAll()
+        }
+    }
+    
+    // MARK: - PersonalInformationReviewCategoryDelegate methods
     
     func personalInformationReview(cat: String, personalInformation: AggregatedPersonalInformation, type: ReviewType, rating: Int32, picIndexPath: IndexPath, personalInformationIndexPath: IndexPath) {
         
         if let piid = personalInformation.id {
+            LogService.shared.log(LogService.types.profilePiReview,
+                                  args: [LogService.args.piId: piid,
+                                         LogService.args.reviewType: String(type.rawValue),
+                                         LogService.args.value: String(rating)])
+            
             DataStoreService.shared.updatePersonalInformationReview(with: piid, type: type, rating: rating) { [weak self] allRatings in
                 self?.updatedReviews[piid] = allRatings
             }
@@ -207,12 +240,27 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
         viewController.personalInformation = personalInformation
         viewController.color = color
         
+        if let piid = personalInformation.id {
+            LogService.shared.log(LogService.types.profilePiFeedback,
+                                  args: [LogService.args.piId: piid])
+        }
+        
         self.navigationController?.pushViewController(viewController, animated: true)
+    }
+    
+    // MARK: - DataStoreUpdateProtocol methods
+    func dataStoreDidUpdateAggregatedPersonalInformation() {
+        // get the latest aggregatedPersonalInformation
+        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationReviewed(sameContext: false)
+    }
+    
+    func dataStoreDidUpdate(for day: String?) {
+        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationReviewed(sameContext: false)
     }
     
     func computeData() {
         // get all visits
-        let allVisits = DataStoreService.shared.getAllVisits(sameContext: true)
+        let allVisits = DataStoreService.shared.getAllVisitsConfirmed(sameContext: true)
         let today = Date()
         
         // compute the number of days since the start of the study
@@ -221,7 +269,7 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
         }
         
         if allVisits.count == 0 {
-            numberOfDaysStudy = 0
+            numberOfDaysStudy = 1
             return
         }
         
@@ -233,7 +281,6 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
         let placesToReview = DataStoreService.shared.getAllPlacesToReview(sameContext: true)
         numberOfPlacesToReviewTotal = placesToReview.count
         
-        let aggregatedPersonalInformation = DataStoreService.shared.getAllAggregatedPersonalInformation(sameContext: true)
         numberOfAggregatedPersonalInformation = aggregatedPersonalInformation.count
         
         // put all the places in the map
@@ -272,6 +319,9 @@ class ProfileHeaderCell: UICollectionViewCell, MGLMapViewDelegate {
     }}
     
     var numberOfDaysStudy: Int? { didSet {
+        if numberOfDaysStudy == nil {
+            numberOfDaysStudy = 1
+        }
         studySummary.bigText.bigText = String(numberOfDaysStudy!)
         if numberOfDaysStudy == 1 {
             studySummary.descriptionText = "This is your first day in the study!"
@@ -287,6 +337,9 @@ class ProfileHeaderCell: UICollectionViewCell, MGLMapViewDelegate {
     }}
     
     var numberofPlacesVisited: Int? { didSet {
+        if numberofPlacesVisited == nil {
+            numberofPlacesVisited = 0
+        }
         studyStats.statsOne.bigText = String(numberofPlacesVisited!)
         if numberofPlacesVisited! < 2 {
             studyStats.statsOne.smallBottomText = "PLACE\nVISITED"
@@ -296,13 +349,19 @@ class ProfileHeaderCell: UICollectionViewCell, MGLMapViewDelegate {
     }}
     
     var numberOfAggregatedPersonalInformation: Int? { didSet {
+        if numberOfAggregatedPersonalInformation == nil {
+            numberOfAggregatedPersonalInformation = 0
+        }
         studyStats.statsTwo.bigText = String(numberOfAggregatedPersonalInformation!)
-        if numberOfAggregatedPersonalInformation! < 2 {
-            studyStats.statsTwo.smallBottomText = "PERSONAL\nINFORMATION"
+        if numberOfAggregatedPersonalInformation == 0 {
+            mainTitlePI.isHidden = true
         }
     }}
     
     var numberOfPlacesToReviewTotal: Int? { didSet {
+        if numberOfPlacesToReviewTotal == nil {
+            numberOfPlacesToReviewTotal = 0
+        }
         studyStats.statsThree.bigText = String(numberOfPlacesToReviewTotal!)
         if numberOfPlacesToReviewTotal! < 2 {
             studyStats.statsThree.smallBottomText = "PLACE TO\nREVIEW"
@@ -342,7 +401,7 @@ class ProfileHeaderCell: UICollectionViewCell, MGLMapViewDelegate {
     
     var studyStats: StatsCardView = {
         return StatsCardView(statsOne: BigText(bigText: "0", smallBottomText: "PLACES\nVISITED"),
-                             statsTwo: BigText(bigText: "0", smallBottomText: "PERSONAL\nINFORMATION"),
+                             statsTwo: BigText(bigText: "0", smallBottomText: "PERSONAL\nINFO"),
                              statsThree: BigText(bigText: "0", smallBottomText: "PLACES TO\nREVIEW"))
     }()
     
@@ -451,6 +510,8 @@ class ProfileHeaderCell: UICollectionViewCell, MGLMapViewDelegate {
     }
     
     func animateMapViewIn() {
+        LogService.shared.log(LogService.types.profileMap)
+        
         if let startingFrame = mapView.superview?.convert(mapView.frame, to: nil), let parent = parent {
             mapView.alpha = 0
             zoomMapView.frame = startingFrame
@@ -548,7 +609,7 @@ class ProfilePersonalInformatonCell: UICollectionViewCell {
     
     var color: UIColor = Constants.colors.orange {
         didSet {
-            if let review = personalInformation?.reviewPersonalInformation, let score = personalInformation?.numberOfVisits, let days = numberOfDaysStudy {
+            if let score = personalInformation?.numberOfVisits, let days = numberOfDaysStudy {
                 
                 // do something with the review
                 

@@ -13,6 +13,7 @@ struct TimelineBlock {
     var lineLayer:MovableLineLayer? = nil
     var pointLayer: MoveableLayer? = nil
     var bubbleView: MoveableView? = nil
+    var labelView: MoveableView? = nil
     var descriptionView: MoveableView? = nil
     var descriptionSuppView: MoveableView? = nil
     var feedbackView: MoveableView? = nil
@@ -23,6 +24,7 @@ struct TimelineBlock {
         if let layer = lineLayer { res.append(layer) }
         if let layer = pointLayer { res.append(layer) }
         if let layer = bubbleView { res.append(layer) }
+        if let layer = labelView { res.append(layer) }
         if let layer = descriptionView { res.append(layer) }
         if let layer = descriptionSuppView { res.append(layer) }
         if let layer = feedbackView { res.append(layer) }
@@ -31,7 +33,8 @@ struct TimelineBlock {
     
     func hideAllLayers() {
         iconView?.hide();lineLayer?.hide();pointLayer?.hide();bubbleView?.hide()
-        descriptionView?.hide();descriptionSuppView?.hide();feedbackView?.hide()
+        labelView?.hide();descriptionView?.hide();descriptionSuppView?.hide()
+        feedbackView?.hide()
     }
     
     func decrementPosition() {
@@ -39,6 +42,7 @@ struct TimelineBlock {
         lineLayer?.position -= 1
         pointLayer?.position -= 1
         bubbleView?.position -= 1
+        labelView?.position -= 1
         descriptionView?.position -= 1
         descriptionSuppView?.position -= 1
         feedbackView?.position -= 1
@@ -49,6 +53,7 @@ struct TimelineBlock {
         lineLayer?.maxPosition -= 1
         pointLayer?.maxPosition -= 1
         bubbleView?.maxPosition -= 1
+        labelView?.maxPosition -= 1
         descriptionView?.maxPosition -= 1
         descriptionSuppView?.maxPosition -= 1
         feedbackView?.maxPosition -= 1
@@ -57,6 +62,7 @@ struct TimelineBlock {
     func height() -> CGFloat {
         var height: CGFloat = 27.0
         if let h = bubbleView?.view?.frame.height { height += h }
+        if let h = labelView?.view?.frame.height { height += h }
         if let h = descriptionView?.view?.frame.height { height += h }
         if let h = descriptionSuppView?.view?.frame.height { height += h }
         if let h = feedbackView?.view?.frame.height { height += h }
@@ -338,7 +344,7 @@ open class ISTimeline: UIScrollView {
             timelineSubtitleLabel.text = timelineSubtitle
         }
     }
-    open var timelineUpdateTouchAction: (()->Void)?
+    open var timelineUpdateTouchAction: ((_ sender: UIButton)->Void)?
     open var timelimeAddPlaceFirstTouchAction: ((_ pt1:ISPoint?, _ pt2:ISPoint?)->Void)?
     open var timelimeAddPlaceLastTouchAction: ((_ pt1:ISPoint?, _ pt2:ISPoint?)->Void)?
     open var timelineValidatedPlaceTouchAction: ((_ pt:ISPoint?)->Void)?
@@ -365,7 +371,7 @@ open class ISTimeline: UIScrollView {
     
     fileprivate var isAnimating = false
     
-    fileprivate var sections:[(point:CGPoint, bubbleRect:CGRect, descriptionRect:CGRect?, descriptionSuppRect:CGRect?, titleLabel:UILabel, descriptionLabel:UILabel?, descriptionSuppView:UIView?, pointColor:CGColor, lineColor:CGColor, fill:Bool, icon:UIImage, iconBg:CGColor, iconCenter:CGPoint, feedbackRect:CGRect?)] = []
+    fileprivate var sections:[(point:CGPoint, bubbleRect:CGRect, labelRect:CGRect?, descriptionRect:CGRect?, descriptionSuppRect:CGRect?, titleLabel:UILabel, labelLabel: UILabel?, descriptionLabel:UILabel?, descriptionSuppView:UIView?, pointColor:CGColor, lineColor:CGColor, fill:Bool, icon:UIImage, iconBg:CGColor, iconCenter:CGPoint, feedbackRect:CGRect?)] = []
     
     override public init(frame: CGRect) {
         super.init(frame: frame)
@@ -384,8 +390,8 @@ open class ISTimeline: UIScrollView {
         buildTimelineSubtitleLabel()
     }
     
-    @objc fileprivate func updateTimeline() {
-        timelineUpdateTouchAction?()
+    @objc fileprivate func updateTimeline(sender: UIButton!) {
+        timelineUpdateTouchAction?(sender)
     }
     
     @objc fileprivate func editTimeline() {
@@ -583,6 +589,9 @@ open class ISTimeline: UIScrollView {
                 
                 // get the maxY position
                 var positionY = sections[i].bubbleRect.maxY
+                if let rect = sections[i].labelRect, positionY < rect.maxY {
+                    positionY = rect.maxY
+                }
                 if let rect = sections[i].descriptionRect, positionY < rect.maxY {
                     positionY = rect.maxY
                 }
@@ -627,6 +636,13 @@ open class ISTimeline: UIScrollView {
             self.addSubview(bubbleLayer)
             layers[i].bubbleView = MoveableView(view: bubbleLayer, position: i, maxPosition: sections.count - 1)
             
+            let labelLabel = sections[i].labelLabel
+            if (labelLabel != nil) {
+                let labelLayer = drawLabel(sections[i].labelRect!, backgroundColor: Constants.colors.primaryLight, textColor: Constants.colors.titleColor, labelLabel: sections[i].labelLabel!)
+                self.addSubview(labelLayer)
+                layers[i].labelView = MoveableView(view: labelLayer, position: i, maxPosition: sections.count - 1)
+            }
+            
             let descriptionLabel = sections[i].descriptionLabel
             if (descriptionLabel != nil) {
                 let descriptionLayer = drawDescription(sections[i].descriptionRect!, textColor: Constants.colors.descriptionColor, descriptionLabel: sections[i].descriptionLabel!)
@@ -659,11 +675,15 @@ open class ISTimeline: UIScrollView {
         var y:CGFloat = self.bounds.origin.y + self.contentInset.top + timelineTitleOffset
         for i in 0 ..< _points.count {
             let titleLabel = buildTitleLabel(i)
+            let labelLabel = buildLabelLabel(i)
             let descriptionLabel = buildDescriptionLabel(i)
             let descriptionSuppView = _points[i].descriptionSupp
             
             let titleHeight = titleLabel.intrinsicContentSize.height
             var height:CGFloat = titleHeight
+            if labelLabel != nil {
+                height += labelLabel!.intrinsicContentSize.height
+            }
             if descriptionLabel != nil {
                 height += descriptionLabel!.intrinsicContentSize.height
             }
@@ -690,22 +710,46 @@ open class ISTimeline: UIScrollView {
             }
             
             let offset:CGFloat = bubbleArrows ? 13 : 5
-            let bubbleRect = CGRect(
-                x: point.x + pointDiameter + lineWidth / 2 + offset,
-                y: y + pointDiameter / 2,
-                width: titleWidth,
-                height: titleHeight + ISTimeline.gap / 2)
+            
+            let startX = point.x + pointDiameter + lineWidth / 2 + offset
+            let startY = y + pointDiameter / 2
+            
+            var labelRect:CGRect?
+            if labelLabel != nil {
+                labelRect = CGRect(
+                    x: startX,
+                    y: startY,
+                    width: labelLabel!.intrinsicContentSize.width,
+                    height: labelLabel!.intrinsicContentSize.height + ISTimeline.gap / 2)
+            }
+            
+            var bubbleRect:CGRect!
+            if labelLabel != nil {
+                bubbleRect = CGRect(
+                    x: labelRect!.origin.x,
+                    y: labelRect!.origin.y + labelRect!.height,
+                    width: titleWidth,
+                    height: titleHeight + ISTimeline.gap / 2)
+            } else {
+                bubbleRect = CGRect(
+                    x: startX,
+                    y: startY,
+                    width: titleWidth,
+                    height: titleHeight + ISTimeline.gap / 2)
+            }
+            
+            var rect:CGRect! = bubbleRect
             
             var descriptionRect:CGRect?
             if descriptionLabel != nil {
                 descriptionRect = CGRect(
-                    x: bubbleRect.origin.x,
-                    y: bubbleRect.origin.y + bubbleRect.height,
+                    x: rect.origin.x,
+                    y: rect.origin.y + rect.height,
                     width: calcWidth(),
                     height: descriptionLabel!.intrinsicContentSize.height)
             }
             
-            var rect = descriptionRect != nil ? descriptionRect! : bubbleRect
+            rect = descriptionRect != nil ? descriptionRect! : rect
             
             var descriptionSuppRect:CGRect?
             if descriptionSuppView != nil {
@@ -724,7 +768,7 @@ open class ISTimeline: UIScrollView {
                                      width: calcWidth(), height: 70.0)
             }
 
-            sections.append((point, bubbleRect, descriptionRect, descriptionSuppRect, titleLabel, descriptionLabel, descriptionSuppView, points[i].pointColor.cgColor, points[i].lineColor.cgColor, points[i].fill, points[i].icon, points[i].iconBg.cgColor, iconCenter, feedbackRect))
+            sections.append((point, bubbleRect, labelRect, descriptionRect, descriptionSuppRect, titleLabel, labelLabel, descriptionLabel, descriptionSuppView, points[i].pointColor.cgColor, points[i].lineColor.cgColor, points[i].fill, points[i].icon, points[i].iconBg.cgColor, iconCenter, feedbackRect))
             
             y += height
             y += ISTimeline.gap * 2.2 // section gap
@@ -756,6 +800,25 @@ open class ISTimeline: UIScrollView {
         titleLabel.numberOfLines = 0
         titleLabel.preferredMaxLayoutWidth = calcWidth()
         return titleLabel
+    }
+    
+    fileprivate func buildLabelLabel(_ index:Int) -> UILabel? {
+        let text = points[index].label
+        let color = points[index].labelColor
+        if text != nil {
+            let label = UILabelPadding()
+            label.text = text
+            label.textColor = .white
+            label.layer.cornerRadius = 5.0
+            label.layer.masksToBounds = true
+            label.font = UIFont.systemFont(ofSize: 18.0, weight: .bold)
+            label.lineBreakMode = .byWordWrapping
+            label.backgroundColor = color
+            label.numberOfLines = 1
+            label.sizeToFit()
+            return label
+        }
+        return nil
     }
     
     fileprivate func buildDescriptionLabel(_ index:Int) -> UILabel? {
@@ -997,32 +1060,26 @@ open class ISTimeline: UIScrollView {
     }
     
     @objc func feedbackButtonTappedYes(sender: UIButton) {
-        print("At a place (\(sender.tag))")
         if !isEditing {
             let pt = self._points[sender.tag]
             removeFeedbackLine(at: sender.tag) { [weak self] in
                 guard let strongSelf = self else { return }
-                print("feedbackButtonTappedYes")
                 strongSelf.timelineValidatedPlaceTouchAction?(pt)
             }
         }
     }
     
     @objc func feedbackButtonTappedNo(sender: UIButton) {
-        print("Not at a place (\(sender.tag))")
-        print("number of layers: \(self.layers.count), number of points: \(_points.count)")
         if !isEditing {
             let pt = self._points[sender.tag]
             removeVisitFromTimeline(at: sender.tag) { [weak self] in
                 guard let strongSelf = self else { return }
-                print("feedbackButtonTappedNo")
                 strongSelf.timelineRemovedPlaceTouchAction?(pt)
             }
         }
     }
     
     @objc func feedbackButtonTappedOther(sender: UIButton) {
-        print("At an other place (\(sender.tag))")
         if !isEditing {
             points[sender.tag].feedbackTouchUpInside?(points[sender.tag])
         }
@@ -1142,6 +1199,15 @@ open class ISTimeline: UIScrollView {
         return titleLabel
     }
     
+    fileprivate func drawLabel(_ rect:CGRect, backgroundColor:UIColor, textColor:UIColor, labelLabel:UILabel) -> UILabel {
+        
+        let titleRect = CGRect(x: rect.origin.x - 5, y: rect.origin.y, width: rect.size.width, height: rect.size.height)
+        labelLabel.textColor = .white
+        labelLabel.frame = titleRect
+        
+        return labelLabel
+    }
+    
     fileprivate func drawDescription(_ rect:CGRect, textColor:UIColor, descriptionLabel:UILabel) -> UILabel {
         descriptionLabel.textColor = textColor
         descriptionLabel.frame = CGRect(x: rect.origin.x, y: rect.origin.y, width: rect.width - 10, height: rect.height)
@@ -1174,6 +1240,7 @@ open class ISTimeline: UIScrollView {
         } else {
             for (index, layer) in layers.enumerated() {
                 if (layer.bubbleView != nil && layer.bubbleView!.view!.frame.contains(point) ||
+                    (layer.labelView != nil && layer.labelView!.view!.frame.contains(point)) ||
                     (layer.descriptionView != nil && layer.descriptionView!.view!.frame.contains(point)) ||
                     (layer.descriptionSuppView != nil && layer.descriptionSuppView!.view!.frame.contains(point))) {
                     _points[index].touchUpInside?(_points[index])

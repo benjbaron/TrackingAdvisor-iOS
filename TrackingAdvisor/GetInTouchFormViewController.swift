@@ -20,6 +20,8 @@ class GetInTouchFormViewController: FormViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        LogService.shared.log(LogService.types.settingsContact)
+        
         form +++ Section()
             <<< TextRow(){
                 $0.title = "Your name"

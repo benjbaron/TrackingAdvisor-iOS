@@ -34,6 +34,12 @@ class DateHandler {
     class func dateToTimePeriodString(from date: Date) -> String {
         return Formatter.timePeriod.string(from: date)
     }
+    
+    class func dateFromDayString(from day: String) -> Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.date(from: day)
+    }
 }
 
 extension Formatter {

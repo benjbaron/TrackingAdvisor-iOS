@@ -27,11 +27,14 @@ open class Settings {
             defaults.set(false, forKey: Constants.defaultsKeys.optOut)
             defaults.set(nil, forKey: Constants.defaultsKeys.lastKnownLocation)
             defaults.set(false, forKey: Constants.defaultsKeys.forceUploadLocation)
+            defaults.set(0, forKey: Constants.defaultsKeys.currentSessionId)
+            defaults.set(String(), forKey: Constants.defaultsKeys.currentAppState)
         }
     }
     
     open class func getUserId() -> String? {
         let defaults = UserDefaults.standard
+//        return "fcf538a1-f9d3-4935-a746-b4cd9ade6577"
         return defaults.string(forKey: Constants.defaultsKeys.userid) ?? nil
     }
     
@@ -88,8 +91,18 @@ open class Settings {
     }
     
     open class func getForceUploadLocation() -> Bool {
-        let defautls = UserDefaults.standard
-        return defautls.bool(forKey: Constants.defaultsKeys.forceUploadLocation)
+        let defaults = UserDefaults.standard
+        return defaults.bool(forKey: Constants.defaultsKeys.forceUploadLocation)
+    }
+    
+    open class func getCurrentSessionId() -> Int {
+        let defaults = UserDefaults.standard
+        return defaults.integer(forKey: Constants.defaultsKeys.currentSessionId)
+    }
+    
+    open class func getCurrentAppState() -> String? {
+        let defaults = UserDefaults.standard
+        return defaults.string(forKey: Constants.defaultsKeys.currentAppState)
     }
     
     open class func savePushNotificationId(with pnid: String) {
@@ -146,5 +159,21 @@ open class Settings {
     open class func saveForceUploadLocation(with value: Bool) {
         let defaults = UserDefaults.standard
         defaults.set(value, forKey: Constants.defaultsKeys.forceUploadLocation)
+    }
+    
+    open class func saveCurrentSessionId(with value: Int) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: Constants.defaultsKeys.currentSessionId)
+    }
+    
+    open class func incrementCurrentSessionId() {
+        let defaults = UserDefaults.standard
+        let currentSessionId = defaults.integer(forKey: Constants.defaultsKeys.currentSessionId)
+        defaults.set(currentSessionId+1, forKey: Constants.defaultsKeys.currentSessionId)
+    }
+    
+    open class func saveCurrentAppState(with value: String) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: Constants.defaultsKeys.currentAppState)
     }
 }

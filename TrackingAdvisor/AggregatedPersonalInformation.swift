@@ -115,6 +115,7 @@ class AggregatedPersonalInformation : PersonalInformation {
                 switch type {
                 case .personalInformation:
                     managedObject.setValue(rating, forKey: "reviewPersonalInformation")
+                    managedObject.setValue(true, forKey: "reviewed")
                 case .explanation:
                     managedObject.setValue(rating, forKey: "reviewExplanation")
                 case .privacy:
@@ -122,8 +123,6 @@ class AggregatedPersonalInformation : PersonalInformation {
                 default:
                     break
                 }
-                
-                managedObject.setValue(true, forKey: "reviewed")
                 
                 // return all personal information ratings
                 return [managedObject.reviewPersonalInformation, managedObject.reviewExplanation, managedObject.reviewPrivacy]
@@ -155,7 +154,7 @@ class AggregatedPersonalInformation : PersonalInformation {
         var resSet = Set<String>()
         if let personalInformation = personalInformation {
             for case let pi as PersonalInformation in personalInformation {
-                if let pid = pi.place?.id, let visits = pi.place?.visits, visits.count > 0 {
+                if let pid = pi.place?.id, let nbVisits = pi.place?.numberOfVisitsConfirmed, nbVisits > 0 {
                     resSet.insert(pid)
                 }
             }
@@ -168,12 +167,14 @@ class AggregatedPersonalInformation : PersonalInformation {
         var res:[AggregatedPersonalInformationExplanationPlace] = []
         if let personalInformation = personalInformation {
             for case let pi as PersonalInformation in personalInformation {
-                if let place = pi.place, let visits = pi.place?.visits, visits.count > 0 {
+                if let place = pi.place, let visits = pi.place?.visits, let nbVisits = pi.place?.numberOfVisitsConfirmed, nbVisits > 0 {
+                    let visitFiltered = (Array(visits) as? [Visit] ?? []).filter({ $0.visited == 1 }).sorted(by: { $0.arrival! < $1.arrival! })
                     let expPlace = AggregatedPersonalInformationExplanationPlace(
                             place: place,
                             pid: place.id!,
-                            lastVisit: (Array(visits) as? [Visit] ?? []).sorted(by: { $0.arrival! < $1.arrival! }).last?.arrival,
-                            numberOfVisits: visits.count)
+                            lastVisit: visitFiltered.last?.arrival,
+                            numberOfVisits: visitFiltered.count)
+                    
                     res.append(expPlace)
                 }
             }
@@ -185,9 +186,9 @@ class AggregatedPersonalInformation : PersonalInformation {
         var resSet = Set<String>()
         if let personalInformation = personalInformation {
             for case let pi as PersonalInformation in personalInformation {
-                if let visits = pi.place?.visits {
+                if pi.rating > 1, let visits = pi.place?.visits {
                     for case let visit as Visit in visits {
-                        if let vid = visit.id {
+                        if let vid = visit.id, visit.visited == 1 {
                             resSet.insert(vid)
                         }
                     }

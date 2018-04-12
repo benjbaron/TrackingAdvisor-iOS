@@ -23,8 +23,8 @@ class UserLocation {
     let latitude: Double
     let longitude: Double
     let timestamp: Date
-    let accuracy: Double
-    let targetAccuracy: Double
+    let accuracy: CLLocationAccuracy
+    let targetAccuracy: CLLocationAccuracy
     let speed: Double
     
     var batteryLevel: Float {
@@ -50,7 +50,14 @@ class UserLocation {
         return NetworkService.shared.getSSID() ?? "none"
     }
     
-    init(id: String, location: CLLocation, targetAccuracy: Double) {
+    var lowPower: String {
+        if ProcessInfo.processInfo.isLowPowerModeEnabled {
+            return "lp"
+        }
+        return "none"
+    }
+    
+    init(id: String, location: CLLocation, targetAccuracy: CLLocationAccuracy ) {
         UIDevice.current.isBatteryMonitoringEnabled = true
         
         self.userid = id
@@ -59,6 +66,18 @@ class UserLocation {
         self.timestamp = location.timestamp
         self.speed = location.speed
         self.accuracy = location.horizontalAccuracy
+        self.targetAccuracy = targetAccuracy
+    }
+    
+    init(id: String, visit: CLVisit, targetAccuracy: CLLocationAccuracy, timestamp: Date) {
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        
+        self.userid = id
+        self.latitude = visit.coordinate.latitude
+        self.longitude = visit.coordinate.longitude
+        self.timestamp = timestamp
+        self.speed = -1
+        self.accuracy = visit.horizontalAccuracy
         self.targetAccuracy = targetAccuracy
     }
     
@@ -71,11 +90,11 @@ class UserLocation {
                 
                 let (mostLikelyActivity, activityConfidence) = ActivityService.mostLikelyActivity(activities: activities)
                 
-                // get the number of steps and the
+                // get the number of steps
                 ActivityService.shared.getSteps(from: lastLocationUpdate, to: strongSelf.timestamp) { (nbSteps:Int) in
                     
-                    let line = "\(strongSelf.userid),\(strongSelf.latitude),\(strongSelf.longitude),\(strongSelf.timestamp.localTime),\(strongSelf.accuracy),\(strongSelf.targetAccuracy),\(strongSelf.speed),\(nbSteps),\(mostLikelyActivity),\(activityConfidence),\(strongSelf.ssid),\(strongSelf.batteryLevel),\(strongSelf.batteryState)\n"
-                    let header = "User,Lat,Lon,Timestamp,Accuracy,TargetAccuracy,Speed,nbSteps,activity,activityConfidence,ssid,batteryLevel,batteryCharge\n"
+                    let line = "\(strongSelf.userid),\(strongSelf.latitude),\(strongSelf.longitude),\(strongSelf.timestamp.localTime),\(strongSelf.accuracy),\(strongSelf.targetAccuracy),\(strongSelf.speed),\(nbSteps),\(mostLikelyActivity),\(activityConfidence),\(strongSelf.ssid),\(strongSelf.batteryLevel),\(strongSelf.batteryState),\(strongSelf.lowPower)\n"
+                    let header = "User,Lat,Lon,Timestamp,Accuracy,TargetAccuracy,Speed,nbSteps,activity,activityConfidence,ssid,batteryLevel,batteryCharge,lowPower\n"
                     
                     if !FileService.shared.fileExists(file: file) {
                         FileService.shared.write(header, in: file)
@@ -95,15 +114,18 @@ class UserLocation {
         }
     }
     
-    class func upload(force: Bool = false, callback: (() -> Void)?) {
+    class func upload(force: Bool = false, callback: (() -> Void)? = nil) {
         // See if the data needs to be uploaded to the server
         
         let force = Settings.getForceUploadLocation() || force
         if let lastFileUpdate = Settings.getLastFileUpdate() {
             if force || (!force && abs(lastFileUpdate.timeIntervalSinceNow) > Constants.variables.minimumDurationBetweenLocationFileUploads) {
-                FileService.shared.log("upload file \(Constants.filenames.locationFile) in the background", classname: "UserLocation")
+                LogService.shared.log(LogService.types.serverRequest,
+                                      args: [LogService.args.requestMethod: "post",
+                                             LogService.args.requestUrl: Constants.urls.locationUploadURL])
                 
-                guard let path = FileService.shared.getFilePath(for: Constants.filenames.locationFile) else { return }
+                guard let path = FileService.shared.getFilePath(for: Constants.filenames.locationFile),
+                      let logPath = FileService.shared.getFilePath(for: Constants.filenames.logFile) else { return }
                 
                 let date = Date()
                 
@@ -113,9 +135,14 @@ class UserLocation {
                         let day = DateHandler.dateToDayString(from: date)
                         let time = DateHandler.dateToHourString(from: date)
                         let filename = "\(id)_\(day)_\(time).csv"
+                        let logFilename = "\(id)_\(day)_\(time)_log.csv"
                         multipartFormData.append(path,
                                                  withName: "trace",
                                                  fileName: filename,
+                                                 mimeType: "text/csv")
+                        multipartFormData.append(logPath,
+                                                 withName: "log",
+                                                 fileName: logFilename,
                                                  mimeType: "text/csv")
                     },
                     to: Constants.urls.locationUploadURL,
@@ -123,16 +150,20 @@ class UserLocation {
                         switch encodingResult {
                         case .success(let upload, _, _):
                             upload.responseJSON { response in
-                                FileService.shared.log("response received from server: \(response.result.isSuccess)", classname: "UserLocation")
+                                LogService.shared.log(LogService.types.serverResponse,
+                                                      args: [LogService.args.responseMethod: "post",
+                                                             LogService.args.responseUrl: Constants.urls.locationUploadURL,
+                                                             LogService.args.responseCode: String(response.response?.statusCode ?? 0)])
+                                
                                 // delete the file if success
                                 if response.result.isSuccess {
                                     Settings.saveLastFileUpdate(with: date)
                                     FileService.shared.delete(file: path)
+                                    FileService.shared.delete(file: logPath)
                                     callback?()
                                 }
                             }
                         case .failure(let encodingError):
-                            FileService.shared.log("failed to send to server", classname: "UserLocation")
                             print(encodingError)
                         }
                 })

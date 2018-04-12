@@ -23,6 +23,8 @@ struct Constants {
         static let optOut = "optOut"
         static let lastKnownLocation = "lastKnownLocation"
         static let forceUploadLocation = "forceUploadLocation"
+        static let currentSessionId = "currentSessionId"
+        static let currentAppState = "currentAppState"
     }
     
     struct variables {
@@ -54,6 +56,7 @@ struct Constants {
     
     struct filenames {
         static let locationFile = "locations.csv"
+        static let logFile = "logs.csv"
     }
     
     struct urls {

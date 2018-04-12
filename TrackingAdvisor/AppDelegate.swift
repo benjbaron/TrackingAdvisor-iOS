@@ -20,13 +20,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         Settings.registerDefaults()
         registerNotificationCustomActions()
         
+        Settings.incrementCurrentSessionId()
+        Settings.saveCurrentAppState(with: "active")
+        
         // Override point for customization after application launch.
         if launchOptions?[.location] != nil {
-            FileService.shared.log("App launched (location-triggered)", classname: "AppDelegate")
+            LogService.shared.log(LogService.types.appLaunchType,
+                                  args: [LogService.args.launchType: "location"])
         } else if launchOptions?[.remoteNotification] != nil {
-            FileService.shared.log("App launched (pushNotification-triggered)", classname: "AppDelegate")
+            LogService.shared.log(LogService.types.appLaunchType,
+                                  args: [LogService.args.launchType: "pushNotification"])
         } else {
-            FileService.shared.log("App launched (user-triggered)", classname: "AppDelegate")
+            LogService.shared.log(LogService.types.appLaunchType,
+                                  args: [LogService.args.launchType: "user"])
         }
         
         // if the app was launched for a notification
@@ -40,6 +46,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             return true
         } else if locationStatus == .authorizedWhenInUse {
             launchStoryboard(storyboard: "LocationServicesWhenInUse")
+            
         } else {
         
             // check if this is the first app launch
@@ -61,6 +68,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func launchStoryboard(storyboard: String) {
         UIApplication.shared.isStatusBarHidden = true
+        
+        LogService.shared.log(LogService.types.appStoryboard,
+                              args: [LogService.args.storyboard: storyboard])
+        
         let storyboard = UIStoryboard(name: storyboard, bundle: nil)
         let controller = storyboard.instantiateInitialViewController()
         self.window?.rootViewController = controller
@@ -75,13 +86,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
         // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
         
-        FileService.shared.log("call -- applicationDidEnterBackground", classname: "AppDelegate")
+        LogService.shared.log(LogService.types.appBackground)
         LocationRegionService.shared.restartUpdatingLocation()
+        Settings.saveCurrentAppState(with: "background")
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
         // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
-        FileService.shared.log("call -- applicationWillEnterForeground", classname: "AppDelegate")
+        LogService.shared.log(LogService.types.appForeground)
         
         let locationStatus = LocationRegionService.getLocationServiceStatus()
         if locationStatus == .denied || locationStatus == .restricted {
@@ -102,6 +114,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         LocationRegionService.shared.restartUpdatingLocation()
         handleLaunchingOperations(application)
+        Settings.saveCurrentAppState(with: "foreground")
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
@@ -112,7 +125,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
         // Saves changes in the application's managed object context before the application terminates.
         self.saveContext()
-        FileService.shared.log("call -- applicationWillTerminate", classname: "AppDelegate")
+        Settings.saveCurrentAppState(with: "inactive")
+        LogService.shared.log(LogService.types.appTerminate)
+        
     }
 
     // MARK: - Core Data stack
@@ -164,7 +179,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func registerForPushNotifications() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge]) {
             (granted, error) in
-            print("Permission granted: \(granted)")
             
             guard granted else { return }
             
@@ -236,9 +250,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
         
         handleRemoteNotifications(with: userInfo)
-        
-        FileService.shared.log("call -- didReceiveRemoteNotification", classname: "AppDelegate")
         LocationRegionService.shared.restartUpdatingLocation()
+        
+        LogService.shared.log(LogService.types.notificationReceived)
     }
     
     private func handleRemoteNotifications(with userInfo: [AnyHashable : Any]) {
@@ -251,10 +265,59 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     
                     // get today's update
                     UserUpdateHandler.retrieveLatestUserUpdates(for: DateHandler.dateToDayString(from: Date()))
+                    
+                    // get latest aggregated personal information
+                    UserUpdateHandler.retrieveLatestAggregatedPersonalInformation()
+                    
+                    LogService.shared.log(LogService.types.notificationReceived,
+                                          args: [LogService.args.launchType: "content-available"])
                 } else  {
-                    // show the review tab
-                    DispatchQueue.main.async { () -> Void in
-                        (self?.window?.rootViewController as? UITabBarController)?.selectedIndex = 1
+                    // get the notification type
+                    print("user notification: \(userInfo)")
+                    if let notificationType = userInfo["type"] as? String {
+                        if notificationType == "timeline" {
+                            if let day = userInfo["day"] as? String {
+                                DispatchQueue.main.async { () -> Void in
+                                    // show the timeline tab
+                                    if let tabController = self?.window?.rootViewController as? UITabBarController {
+                                        tabController.selectedIndex = 0
+                                        
+                                        if let vc = tabController.viewControllers?[0] {
+                                            if let timelineVC = vc.childViewControllers[0] as? TimelineSwipeViewController {
+                                                
+                                                if let index = timelineVC.days.index(of: day) {
+                                                    if let newCurrentViewController = timelineVC.viewController(at: index) {
+                                                    timelineVC.pageViewController?.selectViewController(newCurrentViewController, direction: .forward, animated: false, completion: nil)
+                                                    }
+                                                }
+                                                
+                                            }
+                                        } else {
+                                            print("Could not get the first controller")
+                                        }
+                                        
+                                        // get today's  udpate
+                                        UserUpdateHandler.retrieveLatestUserUpdates(for: day)
+                                        
+                                        LogService.shared.log(LogService.types.notificationOpen,
+                                                              args: [LogService.args.launchType: "timeline"])
+                                    }
+                                }
+                            }
+                        } else if notificationType == "review" {
+                            DispatchQueue.main.async { () -> Void in
+                                // get latest aggregated personal information
+                                UserUpdateHandler.retrieveLatestAggregatedPersonalInformation() {
+                                    // show the review tab
+                                    if let tabController = self?.window?.rootViewController as? UITabBarController {
+                                        tabController.selectedIndex = 1
+                                        
+                                        LogService.shared.log(LogService.types.notificationOpen,
+                                                              args: [LogService.args.launchType: "review"])
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -268,26 +331,56 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // start updating the location services again
         LocationRegionService.shared.startUpdatingLocation()
         
+        // update the dates from the database
+        DataStoreService.shared.updateIfNeeded()
+        
+        // update tab badges
+        updateTabBadges()
+        
         // retrieve the latest data from the server
         DispatchQueue.global(qos: .background).async {
             
             // update the personal categories if needed
             PersonalInformationCategory.updateIfNeeded()
             
-            // update the dates from the database
-            DataStoreService.shared.updateIfNeeded()
+            UserUpdateHandler.retrieveLatestAggregatedPersonalInformation()
             
             // get today's update
-//            UserUpdateHandler.retrieveLatestUserUpdates(for: DateHandler.dateToDayString(from: Date()))
+            UserUpdateHandler.retrieveLatestUserUpdates(for: DateHandler.dateToDayString(from: Date()))
             
-            let reviewChallenges = DataStoreService.shared.getLatestReviewChallenge()
-            DispatchQueue.main.async { () -> Void in
-                if reviewChallenges.count > 0 {
-                    application.applicationIconBadgeNumber = 1
+        }
+    }
+    
+    func updateTabBadges(type: String? = nil) {
+        if let tabController = self.window?.rootViewController as? UITabBarController {
+            
+            if type == nil || type == "visits" {
+                // get the number of visits to confirm
+                let today = DateHandler.dateToDayString(from: Date())
+                let numberOfVisitsToConfirm = DataStoreService.shared.getVisits(for: today, sameContext: true).filter({ $0.visited == 0 }).count
+                                
+                if numberOfVisitsToConfirm == 0 {
+                    tabController.tabBar.items?[0].badgeValue = nil
                 } else {
-                    application.applicationIconBadgeNumber = 0
+                    tabController.tabBar.items?[0].badgeValue = String(numberOfVisitsToConfirm)
                 }
             }
+            
+            if type == nil || type == "reviews" {
+                // get the number of places to review
+                let numberOfPlacesToReview = DataStoreService.shared.getAllPlacesToReview(sameContext: true).count
+                
+                // get the number of personal information to review
+                let numberOfAggregatePersonalInformationToReview = DataStoreService.shared.getAggregatedPersonalInformationToReview(sameContext: true).count
+                
+                let sum = numberOfPlacesToReview + numberOfAggregatePersonalInformationToReview
+                if sum == 0 {
+                    tabController.tabBar.items?[1].badgeValue = nil
+                } else {
+                    tabController.tabBar.items?[1].badgeValue = String(sum)
+                }
+            }
+            
         }
     }
 }

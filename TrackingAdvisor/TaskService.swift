@@ -25,14 +25,10 @@ class TaskService : NSObject {
         var bgTaskId = UIBackgroundTaskInvalid
         
         if(app.responds(to: Selector(("beginBackgroundTask")))) {
-            bgTaskId = app.beginBackgroundTask(expirationHandler: {
-                FileService.shared.log("Background task \(bgTaskId) expired", classname: "TaskManager")
-            })
+            bgTaskId = app.beginBackgroundTask()
             if(self._masterTaskId == UIBackgroundTaskInvalid) {
                 self._masterTaskId = bgTaskId
-                FileService.shared.log("Started Master Task ID \(self._masterTaskId)", classname: "TaskManager")
             } else {
-                FileService.shared.log("Started Background Task \(bgTaskId)", classname: "TaskManager")
                 self._bgTaskList.append(bgTaskId)
                 self.endBackgroundTasks()
             }
@@ -56,21 +52,13 @@ class TaskService : NSObject {
             
             for _ in 0 ..< count {
                 let bgTaskId = self._bgTaskList[0] as Int
-                FileService.shared.log("Ending Background Task  with ID \(bgTaskId)", classname: "TaskManager")
                 app.endBackgroundTask(bgTaskId)
                 self._bgTaskList.remove(at: 0)
             }
             
-            if(self._bgTaskList.count > 0) {
-                FileService.shared.log("Background Task Still Active \(self._bgTaskList[0])", classname: "TaskManager")
-            }
-            
             if(all) {
-                FileService.shared.log("Killing Master Task \(self._masterTaskId)", classname: "TaskManager")
                 app.endBackgroundTask(self._masterTaskId)
                 self._masterTaskId = UIBackgroundTaskInvalid
-            } else {
-                FileService.shared.log("Kept Master Task ID \(self._masterTaskId)", classname: "TaskManager")
             }
         }
         

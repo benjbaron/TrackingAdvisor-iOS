@@ -101,12 +101,12 @@ class PersonalInformationCategory: NSObject, NSCoding, Decodable {
         Alamofire.request(Constants.urls.personalInformationCategoriesURL, method: .get, parameters: parameters).responseJSON { response in
             if response.result.isSuccess {
                 guard let data = response.data else { return }
+                print(data)
                 do {
                     let decoder = JSONDecoder()
                     decoder.dateDecodingStrategy = .secondsSince1970
                     let pics = try decoder.decode([PersonalInformationCategory].self, from: data)
                     _ = savePersonalInformationCategories(pics: pics)
-                    FileService.shared.log("Retrieved latest personal information categories from server", classname: "PersonalInformationCategory")
                 } catch {
                     print("Error serializing the json", error)
                 }
@@ -118,7 +118,6 @@ class PersonalInformationCategory: NSObject, NSCoding, Decodable {
         if let lastUpdate = Settings.getLastPersonalInformationCategoryUpdate() {
             let pics = loadPersonalInformationCategories()
             if force || pics == nil || pics?.count == 0 || abs(lastUpdate.timeIntervalSinceNow) > Constants.variables.minimumDurationBetweenPersonalInformationCategoryUpdates {
-                FileService.shared.log("update the personal information categories in the background", classname: "PersonalInformationCategory")
                 DispatchQueue.global(qos: .background).async {
                     PersonalInformationCategory.retrieveLatestPersonalInformationCategories()
                     Settings.saveLastPersonalInformationCategoryUpdate(with: Date())

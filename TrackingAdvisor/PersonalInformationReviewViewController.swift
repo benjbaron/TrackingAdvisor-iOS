@@ -37,7 +37,6 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
                     }
                 }
                 
-                
                 pics = personalInformation!.keys.sorted(by: { $0 < $1 })
                 self.fullScreenView?.removeFromSuperview()
                 if collectionView == nil {
@@ -62,15 +61,7 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
         self.navigationController?.isNavigationBarHidden = true
         self.tabBarController?.tabBar.isHidden = false
         
-        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationToReview(sameContext: true)
-        
-        // update with the latest
-        UserUpdateHandler.retrieveLatestAggregatedPersonalInformation { [weak self] in
-            // show if view is visible
-            if self?.viewIfLoaded?.window != nil {
-                self?.aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationToReview(sameContext: true)
-            }
-        }
+        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationToReview(sameContext: false)
         
         DataStoreService.shared.delegate = self
         
@@ -90,6 +81,8 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        LogService.shared.log(LogService.types.reviewPi)
         
         if personalInformation.count == 0 {
             fullScreenView = FullScreenView(frame: view.frame)
@@ -160,6 +153,9 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
             let headerCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerCellId, for: indexPath) as! PersonalInformationReviewHeaderCell
             headerCell.delegate = self
             headerCell.color = color
+            let numberOfPersonalInformationToReview = aggregatedPersonalInformation.filter({ !$0.reviewed }).count
+            headerCell.numberOfPersonalInformationToReview = numberOfPersonalInformationToReview
+            
             return headerCell
         } else {
             assert(false, "Unexpected element kind")
@@ -179,7 +175,14 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
     func personalInformationReview(cat: String, personalInformation: AggregatedPersonalInformation, type: ReviewType, rating: Int32, picIndexPath: IndexPath, personalInformationIndexPath: IndexPath) {
         
         if let piid = personalInformation.id {
-            picStatus[picIndexPath.item] = personalInformationIndexPath.item
+            if type == .personalInformation {
+                picStatus[picIndexPath.item] = personalInformationIndexPath.item
+            }
+            
+            LogService.shared.log(LogService.types.reviewPiReview,
+                                  args: [LogService.args.piId: piid,
+                                         LogService.args.reviewType: String(type.rawValue),
+                                         LogService.args.value: String(rating)])
             
             DataStoreService.shared.updatePersonalInformationReview(with: piid, type: type, rating: rating) { [weak self] allRatings in
                 self?.updatedReviews[piid] = allRatings
@@ -188,10 +191,14 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
     }
     
     func explanationFeedback(cat: String, personalInformation: AggregatedPersonalInformation) {
-        
         OverlayView.shared.hideOverlayView()
         let viewController = ExplanationFeedbackViewController()
         viewController.personalInformation = personalInformation
+        
+        if let piid = personalInformation.id {
+            LogService.shared.log(LogService.types.reviewPiFeedback,
+                                  args: [LogService.args.piId: piid])
+        }
         
         self.navigationController?.pushViewController(viewController, animated: true)
     }
@@ -204,12 +211,34 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
         overlayView.delegate = self
         overlayView.picid = cat
         overlayView.aggregatedPersonalInformation = personalInformation
+        
+        if let piid = personalInformation.id {
+            LogService.shared.log(LogService.types.reviewPiOverlay,
+                                  args: [LogService.args.piId: piid])
+        }
+        
         OverlayView.shared.showOverlay(with: overlayView)
     }
     
     func goToNextPersonalInformation(currentPersonalInformation: AggregatedPersonalInformation?, picIndexPath: IndexPath?, personalInformationIndexPath: IndexPath?) {
+        
         if let picIdx = picIndexPath, let piIdx = personalInformationIndexPath {
+            
+            if let piid = currentPersonalInformation?.id,
+               let count = personalInformation[pics[picIdx.item]]?.count {
+                LogService.shared.log(LogService.types.reviewPiNext,
+                                      args: [LogService.args.piId: piid,
+                                             LogService.args.value: String(picIdx.item),
+                                             LogService.args.total: String(count)])
+            }
+            
             picStatus[picIdx.item] = piIdx.item
+            
+            // update header count
+            if let headerView = collectionView.supplementaryView(forElementKind: UICollectionElementKindSectionHeader, at: IndexPath(item: 0, section: 0)) as? PersonalInformationReviewHeaderCell {
+                let numberOfPersonalInformationToReview = aggregatedPersonalInformation.filter({ !$0.reviewed }).count
+                headerView.numberOfPersonalInformationToReview = numberOfPersonalInformationToReview
+            }
         }
     }
     
@@ -224,6 +253,7 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
                 self?.collectionView.reloadData()
                 
                 if let count = self?.pics.count, idx.item == count {
+                    LogService.shared.log(LogService.types.reviewPiEndAll)
                     self?.showEndScreen()
                 }
             })
@@ -248,6 +278,12 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
         }
         view.addSubview(fullScreenView)
     }
+    
+    // MARK: - DataStoreUpdateProtocol methods
+    func dataStoreDidUpdateAggregatedPersonalInformation() {
+        // get the latest aggregatedPersonalInformation
+        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationToReview(sameContext: false)
+    }
 }
 
 @objc protocol PersonalInformationReviewHeaderCellDelegate {
@@ -256,6 +292,17 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
 
 class PersonalInformationReviewHeaderCell : UICollectionViewCell {
     var delegate: PersonalInformationReviewHeaderCellDelegate?
+    var numberOfPersonalInformationToReview: Int? {
+        didSet {
+            if numberOfPersonalInformationToReview == 0 {
+                subtitle.text = "You have no personal information to review"
+            } else if numberOfPersonalInformationToReview == 1 {
+                subtitle.text = "You have one personal information to review"
+            } else if let nb = numberOfPersonalInformationToReview {
+                subtitle.text = "You have \(nb) personal information to review"
+            }
+        }
+    }
     
     @objc fileprivate func tappedBackButton() {
         delegate?.didPressBackButton?()
@@ -284,9 +331,21 @@ class PersonalInformationReviewHeaderCell : UICollectionViewCell {
     
     private let mainTitle: UILabel = {
         let label = UILabel()
-        label.text = "Personal information review"
+        label.text = "Personal information reviews"
         label.font = UIFont.systemFont(ofSize: 34, weight: .heavy)
         label.textColor = Constants.colors.black
+        label.lineBreakMode = .byWordWrapping
+        label.numberOfLines = 2
+        label.textAlignment = .left
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private let subtitle: UILabel = {
+        let label = UILabel()
+        label.text = "You have XX personal information to review"
+        label.font = UIFont.italicSystemFont(ofSize: 16.0)
+        label.textColor = Constants.colors.lightGray
         label.lineBreakMode = .byWordWrapping
         label.numberOfLines = 2
         label.textAlignment = .left
@@ -305,12 +364,14 @@ class PersonalInformationReviewHeaderCell : UICollectionViewCell {
     
     func setupViews() {
         addSubview(mainTitle)
+        addSubview(subtitle)
         addSubview(backButton)
         
         addVisualConstraint("H:|-16-[v0]-|", views: ["v0": mainTitle])
+        addVisualConstraint("H:|-16-[v0]-|", views: ["v0": subtitle])
         addVisualConstraint("H:|-14-[v0(75)]", views: ["v0": backButton])
-        addVisualConstraint("V:|-20-[v1(40)][v0]", views: ["v0": mainTitle, "v1": backButton])
-        
+        addVisualConstraint("V:|-20-[back(40)][title][subtitle]", views: ["title": mainTitle, "subtitle": subtitle, "back": backButton])
+
         translatesAutoresizingMaskIntoConstraints = false
     }
 }

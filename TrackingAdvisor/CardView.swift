@@ -236,6 +236,92 @@ class ReviewCardView: UIView {
     }
 }
 
+class YesNoCardView: UIView {
+    var yesAction: (() -> ())?
+    var noAction: (() -> ())?
+    
+    var color: UIColor = Constants.colors.orange { didSet {
+        yesButton.backgroundColor = color
+        noButton.backgroundColor = color.withAlphaComponent(0.3)
+        noButton.setTitleColor(color, for: .normal)
+    }}
+    var title: String? { didSet {
+        yesButton.setTitle(title, for: .normal)
+    }}
+    
+    private lazy var yesButton: UIButton = {
+        let l = UIButton(type: .system)
+        l.setTitle(title, for: .normal)
+        l.titleLabel?.textAlignment = .center
+        l.titleLabel?.numberOfLines = 2
+        l.titleLabel?.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
+        l.setTitleColor(.white, for: .normal)
+        l.backgroundColor = color.withAlphaComponent(0.8)
+        l.translatesAutoresizingMaskIntoConstraints = false
+        l.addTarget(self, action: #selector(tappedYesButton), for: .touchUpInside)
+        return l
+    }()
+    
+    private lazy var noButton: UIButton = {
+        let l = UIButton(type: .system)
+        l.setTitle("No", for: .normal)
+        l.titleLabel?.textAlignment = .center
+        l.titleLabel?.numberOfLines = 2
+        l.titleLabel?.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
+        l.setTitleColor(color, for: .normal)
+        l.backgroundColor = color.withAlphaComponent(0.3)
+        l.translatesAutoresizingMaskIntoConstraints = false
+        l.addTarget(self, action: #selector(tappedNoButton), for: .touchUpInside)
+        return l
+    }()
+    
+    @objc fileprivate func tappedYesButton() {
+        yesAction?()
+    }
+    
+    @objc fileprivate func tappedNoButton() {
+        noAction?()
+    }
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+    
+    convenience init(title: String, color: UIColor) {
+        self.init(frame: CGRect.zero)
+        
+        self.title = title
+        self.color = color
+        setupViews()
+    }
+    
+    required init(coder aDecoder: NSCoder) {
+        fatalError("This class does not support NSCoding")
+    }
+    
+    func setupViews() {
+        self.layer.cornerRadius = 5.0
+        
+        self.clipsToBounds = true
+        self.layer.masksToBounds = true
+        
+        
+        addSubview(yesButton)
+        addSubview(noButton)
+        
+        addVisualConstraint("H:|[yes][no(75)]|", views: ["yes": yesButton, "no": noButton])
+        addVisualConstraint("V:|[yes(50@750)]|", views: ["yes": yesButton])
+        addVisualConstraint("V:|[no(50@750)]|", views: ["no": noButton])
+        
+        translatesAutoresizingMaskIntoConstraints = false
+    }
+    
+    func height() -> Int {
+        return 50
+    }
+    
+}
+
 class StatsCardView: UIView {
     var statsOne: BigText! {
         didSet {

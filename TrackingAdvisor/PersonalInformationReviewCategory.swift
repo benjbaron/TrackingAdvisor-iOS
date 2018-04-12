@@ -7,7 +7,7 @@
 //
 
 import UIKit
-import FloatRatingView
+import Cosmos
 
 @objc protocol PersonalInformationReviewCategoryDelegate {
     func personalInformationReview(cat: String, personalInformation: AggregatedPersonalInformation, type: ReviewType, rating: Int32, picIndexPath: IndexPath, personalInformationIndexPath: IndexPath)
@@ -23,16 +23,12 @@ class PersonalInformationReviewCategory: UICollectionViewCell, UICollectionViewD
     var delegate: PersonalInformationReviewCategoryDelegate?
     var lastPI: Bool = false
     var status: Int = -1 { didSet {
-        guard let picid = personalInformationCategory?.picid else { return }
-        print("\(picid) - status \(status)")
         if status+1 == personalInformation.count {
-            print("\(picid) - end container \(personalInformation.count)")
             setupEndContainerView()
         } else {
             setupCollectionView()
             infoCollectionView.scrollToItem(at: IndexPath(item: status+1, section: 0), at: .centeredHorizontally, animated: false)
             count = personalInformation.count - (status+1)
-            print("\tcount: \(count)")
         }
     }}
     var personalInformationCategory: PersonalInformationCategory? {
@@ -59,9 +55,7 @@ class PersonalInformationReviewCategory: UICollectionViewCell, UICollectionViewD
     }
     var count: Int = 1 {
         didSet {
-            guard let picid = personalInformationCategory?.picid else { return }
             let piCount = personalInformation.count
-            print("\(picid) - \(count) / \(piCount)")
             // Update the card count
             if count > piCount {
                 cardCountLabel.alpha = 0
@@ -144,7 +138,6 @@ class PersonalInformationReviewCategory: UICollectionViewCell, UICollectionViewD
     }
     
     func setupCollectionView() {
-        print("setupCollectionView")
         // remove all subviews from the container view
         containerView.subviews.forEach({ $0.removeFromSuperview() })
         
@@ -241,7 +234,6 @@ class PersonalInformationReviewCategory: UICollectionViewCell, UICollectionViewD
         cell.color = color
         cell.delegate = self
         cell.indexPath = indexPath
-        print("lastPI: \(indexPath.item) / \(personalInformation.count)")
         cell.lastPI = indexPath.item+1 == personalInformation.count
         
         return cell
@@ -265,6 +257,9 @@ class PersonalInformationReviewCategory: UICollectionViewCell, UICollectionViewD
     func didReviewPersonalInformation(personalInformation: AggregatedPersonalInformation?, type: ReviewType, rating: Int32, indexPath: IndexPath?) {
         guard let pi = personalInformation, let cat = personalInformation?.category else { return }
         if let picIdx = self.indexPath, let indexPath = indexPath {
+            if type == .personalInformation {
+                personalInformation?.reviewed = true
+            }
             delegate?.personalInformationReview(cat: cat, personalInformation: pi, type: type, rating: rating, picIndexPath: picIdx, personalInformationIndexPath: indexPath)
         }
     }
@@ -288,6 +283,7 @@ class PersonalInformationReviewCategory: UICollectionViewCell, UICollectionViewD
         
          if let indexPath = indexPath {
             let piCount = self.personalInformation.count
+            
             // scroll to next item
             if piCount > indexPath.item + 1 {
                 infoCollectionView.scrollToItem(at: IndexPath(item: indexPath.item+1, section:indexPath.section), at: .centeredHorizontally, animated: true)
@@ -325,13 +321,10 @@ class PersonalInformationReviewCell: UICollectionViewCell {
             if let explanation = personalInformation?.getExplanation() {
                 explanationLabel.text = explanation
             }
-            if let piRating = personalInformation?.reviewPersonalInformation {
-                personalInformationRatingView.rating = max(1.0, Float(piRating))
-                canSkip = canSkip || piRating > 0
-            }
-            if let privacyRating = personalInformation?.reviewPrivacy {
-                privacyRatingView.rating = max(1.0, Float(privacyRating))
-                canSkip = canSkip || privacyRating > 0
+            if let piRating = personalInformation?.reviewPersonalInformation, let privacyRating = personalInformation?.reviewPrivacy {
+                personalInformationRatingView.rating = max(0.0, Float(piRating))
+                privacyRatingView.rating = max(0.0, Float(privacyRating))
+                canSkip = privacyRating > 0 && piRating > 0
             }
             if let picid = personalInformation?.category, let pic = PersonalInformationCategory.getPersonalInformationCategory(with: picid) {
                 personalInformationRatingView.question = pic.question
@@ -406,7 +399,7 @@ class PersonalInformationReviewCell: UICollectionViewCell {
     lazy var personalInformationRatingView: QuestionRatingRow = {
         let row = QuestionRatingRow(with: "How relevant is the personal information?") { [weak self] value in
             if let pi = self?.personalInformation, let canSkip = self?.canSkip {
-                self?.canSkip = canSkip || value > 0
+                self?.canSkip = value > 0 && pi.reviewPrivacy > 0
                 pi.reviewPersonalInformation = Int32(value)
                 self?.delegate?.didReviewPersonalInformation(personalInformation: pi, type: .personalInformation, rating: Int32(value), indexPath: self?.indexPath)
             }
@@ -418,7 +411,7 @@ class PersonalInformationReviewCell: UICollectionViewCell {
     lazy var privacyRatingView: QuestionRatingRow = {
         let row = QuestionRatingRow(with: "How sensitive is the personal information?") { [weak self] value in
             if let pi = self?.personalInformation, let canSkip = self?.canSkip {
-                self?.canSkip = canSkip ||  value > 0
+                self?.canSkip = value > 0 && pi.reviewPersonalInformation > 0
                 pi.reviewPrivacy = Int32(value)
                 self?.delegate?.didReviewPersonalInformation(personalInformation: pi, type: .privacy, rating: Int32(value), indexPath: self?.indexPath)
             }

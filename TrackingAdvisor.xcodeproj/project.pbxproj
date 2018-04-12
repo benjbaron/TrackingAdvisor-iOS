@@ -29,9 +29,12 @@
 		B530432D1FDEDBD400DBC7C0 /* Networking.swift in Sources */ = {isa = PBXBuildFile; fileRef = B530432C1FDEDBD400DBC7C0 /* Networking.swift */; };
 		B530432F1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B530432E1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift */; };
 		B5317A9E203DCE420057B857 /* PersonalInformationChooserViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5317A9D203DCE420057B857 /* PersonalInformationChooserViewController.swift */; };
+		B539944A207D71BD00737CAF /* PlaceEditViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5399449207D71BD00737CAF /* PlaceEditViewController.swift */; };
 		B53FB6FB1FAB74630000112E /* ActivityServiceOld.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53FB6FA1FAB74630000112E /* ActivityServiceOld.swift */; };
 		B53FB6FD1FAB9A870000112E /* FileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53FB6FC1FAB9A870000112E /* FileService.swift */; };
 		B54C36B1200EBAFC0085BFEA /* OneTimelinePlaceDetailPersonalInformationCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54C36B0200EBAFC0085BFEA /* OneTimelinePlaceDetailPersonalInformationCollectionView.swift */; };
+		B54D496A207CB99800398138 /* RatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54D4969207CB99800398138 /* RatingView.swift */; };
+		B54D496C207CF3AC00398138 /* PlacesVisitedListTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54D496B207CF3AC00398138 /* PlacesVisitedListTableViewController.swift */; };
 		B54D98EC2048161F00CBECA4 /* ExplanationFeedbackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54D98EB2048161F00CBECA4 /* ExplanationFeedbackViewController.swift */; };
 		B54D98EE2049AFF700CBECA4 /* LocationServicesDenied.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B54D98ED2049AFF700CBECA4 /* LocationServicesDenied.storyboard */; };
 		B55B59DA206A2F460068BCA0 /* LocationServicesWhenInUse.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B55B59D9206A2F460068BCA0 /* LocationServicesWhenInUse.storyboard */; };
@@ -42,6 +45,7 @@
 		B568B3BC202B05EC00425A20 /* Onboarding.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B568B3BB202B05EC00425A20 /* Onboarding.storyboard */; };
 		B568D8801FB45D0700E051B1 /* LocationAdaptiveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568D87F1FB45D0700E051B1 /* LocationAdaptiveService.swift */; };
 		B568D8821FB45FD800E051B1 /* ActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568D8811FB45FD800E051B1 /* ActivityService.swift */; };
+		B574986B207B700B001C4B54 /* LogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B574986A207B700B001C4B54 /* LogService.swift */; };
 		B57768FA2016027900A0FD1B /* PlacePersonalInformationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57768F92016027900A0FD1B /* PlacePersonalInformationController.swift */; };
 		B577690420164C2B00A0FD1B /* HeaderPlace.swift in Sources */ = {isa = PBXBuildFile; fileRef = B577690320164C2B00A0FD1B /* HeaderPlace.swift */; };
 		B57F514E1FD55A5B0018B416 /* NetworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57F514D1FD55A5B0018B416 /* NetworkService.swift */; };
@@ -139,9 +143,12 @@
 		B530432C1FDEDBD400DBC7C0 /* Networking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Networking.swift; sourceTree = "<group>"; };
 		B530432E1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OneTimelinePlaceDetailViewController.swift; sourceTree = "<group>"; };
 		B5317A9D203DCE420057B857 /* PersonalInformationChooserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalInformationChooserViewController.swift; sourceTree = "<group>"; };
+		B5399449207D71BD00737CAF /* PlaceEditViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceEditViewController.swift; sourceTree = "<group>"; };
 		B53FB6FA1FAB74630000112E /* ActivityServiceOld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityServiceOld.swift; sourceTree = "<group>"; };
 		B53FB6FC1FAB9A870000112E /* FileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileService.swift; sourceTree = "<group>"; };
 		B54C36B0200EBAFC0085BFEA /* OneTimelinePlaceDetailPersonalInformationCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OneTimelinePlaceDetailPersonalInformationCollectionView.swift; sourceTree = "<group>"; };
+		B54D4969207CB99800398138 /* RatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingView.swift; sourceTree = "<group>"; };
+		B54D496B207CF3AC00398138 /* PlacesVisitedListTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlacesVisitedListTableViewController.swift; sourceTree = "<group>"; };
 		B54D98EB2048161F00CBECA4 /* ExplanationFeedbackViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplanationFeedbackViewController.swift; sourceTree = "<group>"; };
 		B54D98ED2049AFF700CBECA4 /* LocationServicesDenied.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LocationServicesDenied.storyboard; sourceTree = "<group>"; };
 		B55B59D9206A2F460068BCA0 /* LocationServicesWhenInUse.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LocationServicesWhenInUse.storyboard; sourceTree = "<group>"; };
@@ -153,6 +160,7 @@
 		B568D87E1FB3827100E051B1 /* TrackingAdvisor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TrackingAdvisor.entitlements; sourceTree = "<group>"; };
 		B568D87F1FB45D0700E051B1 /* LocationAdaptiveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationAdaptiveService.swift; sourceTree = "<group>"; };
 		B568D8811FB45FD800E051B1 /* ActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityService.swift; sourceTree = "<group>"; };
+		B574986A207B700B001C4B54 /* LogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogService.swift; sourceTree = "<group>"; };
 		B57768F92016027900A0FD1B /* PlacePersonalInformationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlacePersonalInformationController.swift; sourceTree = "<group>"; };
 		B577690320164C2B00A0FD1B /* HeaderPlace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderPlace.swift; sourceTree = "<group>"; };
 		B57F514D1FD55A5B0018B416 /* NetworkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkService.swift; sourceTree = "<group>"; };
@@ -246,6 +254,7 @@
 			children = (
 				B577690320164C2B00A0FD1B /* HeaderPlace.swift */,
 				B5C28A8A20321D2700B48017 /* CardView.swift */,
+				B54D4969207CB99800398138 /* RatingView.swift */,
 			);
 			name = UIViews;
 			sourceTree = "<group>";
@@ -266,6 +275,7 @@
 				B57F514D1FD55A5B0018B416 /* NetworkService.swift */,
 				B530432C1FDEDBD400DBC7C0 /* Networking.swift */,
 				B55B59DB206A37120068BCA0 /* OverlayView.swift */,
+				B574986A207B700B001C4B54 /* LogService.swift */,
 			);
 			name = Services;
 			sourceTree = "<group>";
@@ -351,6 +361,8 @@
 				B5DA0A782052E2FD00EDA570 /* PlacePersonalInformationReviewCategory.swift */,
 				B517F5B720742A1A00507DA5 /* ReviewsViewController.swift */,
 				B517F5B92074D61800507DA5 /* AggregatedPersonalInformationExplanationOverlayView.swift */,
+				B54D496B207CF3AC00398138 /* PlacesVisitedListTableViewController.swift */,
+				B5399449207D71BD00737CAF /* PlaceEditViewController.swift */,
 			);
 			path = TrackingAdvisor;
 			sourceTree = "<group>";
@@ -427,7 +439,6 @@
 				B5FBCD681FA8FD5B007EBEDC /* Embed Frameworks */,
 				B53F20771FC3342100006B67 /* ShellScript */,
 				DD8EBFF992FA1FF3D58A538C /* [CP] Embed Pods Frameworks */,
-				0B10D7954AF51D5AF66EC3F5 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -446,8 +457,6 @@
 				B599B3B31FA0B57F006D70B4 /* Sources */,
 				B599B3B41FA0B57F006D70B4 /* Frameworks */,
 				B599B3B51FA0B57F006D70B4 /* Resources */,
-				C4DE704250666480E63FFDC1 /* [CP] Embed Pods Frameworks */,
-				0117AD128905334A9C5ED9D5 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -467,8 +476,6 @@
 				B599B3BE1FA0B580006D70B4 /* Sources */,
 				B599B3BF1FA0B580006D70B4 /* Frameworks */,
 				B599B3C01FA0B580006D70B4 /* Resources */,
-				51EBA160AFD10A73670E6A7B /* [CP] Embed Pods Frameworks */,
-				24281CD7DBE9C2927267346D /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -573,66 +580,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		0117AD128905334A9C5ED9D5 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-TrackingAdvisorTests/Pods-TrackingAdvisorTests-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		0B10D7954AF51D5AF66EC3F5 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-TrackingAdvisor/Pods-TrackingAdvisor-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		24281CD7DBE9C2927267346D /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-TrackingAdvisorUITests/Pods-TrackingAdvisorUITests-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		51EBA160AFD10A73670E6A7B /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-TrackingAdvisorUITests/Pods-TrackingAdvisorUITests-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		7C03E0038C9D320ACD05296E /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -700,21 +647,6 @@
 			shellPath = /bin/sh;
 			shellScript = "";
 		};
-		C4DE704250666480E63FFDC1 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-TrackingAdvisorTests/Pods-TrackingAdvisorTests-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		DD8EBFF992FA1FF3D58A538C /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -723,8 +655,8 @@
 			inputPaths = (
 				"${SRCROOT}/Pods/Target Support Files/Pods-TrackingAdvisor/Pods-TrackingAdvisor-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/Alamofire/Alamofire.framework",
+				"${BUILT_PRODUCTS_DIR}/Cosmos/Cosmos.framework",
 				"${BUILT_PRODUCTS_DIR}/Eureka/Eureka.framework",
-				"${BUILT_PRODUCTS_DIR}/FloatRatingView/FloatRatingView.framework",
 				"${BUILT_PRODUCTS_DIR}/Fuse/Fuse.framework",
 				"${PODS_ROOT}/Mapbox-iOS-SDK/dynamic/Mapbox.framework",
 				"${PODS_ROOT}/Mapbox-iOS-SDK/dynamic/Mapbox.framework.dSYM",
@@ -732,8 +664,8 @@
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Alamofire.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Cosmos.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Eureka.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FloatRatingView.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Fuse.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Mapbox.framework",
 				"${DWARF_DSYM_FOLDER_PATH}/Mapbox.framework.dSYM",
@@ -750,7 +682,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B574986B207B700B001C4B54 /* LogService.swift in Sources */,
 				B51C756A1FB4C643008C4BBF /* TaskService.swift in Sources */,
+				B539944A207D71BD00737CAF /* PlaceEditViewController.swift in Sources */,
 				B55DE5D41FAB582B00CACB47 /* DataStoreService.swift in Sources */,
 				B5DA0A752052076500EDA570 /* PersonalInformationReviewCategory.swift in Sources */,
 				B5174B69205723EC0018FB3F /* AggregatedPersonalInformation.swift in Sources */,
@@ -797,6 +731,7 @@
 				B53043231FDED92A00DBC7C0 /* UserUpdateHandler.swift in Sources */,
 				B5C3474C1FB0B4760078C12E /* RawCollectedDataTextViewController.swift in Sources */,
 				B568D8801FB45D0700E051B1 /* LocationAdaptiveService.swift in Sources */,
+				B54D496A207CB99800398138 /* RatingView.swift in Sources */,
 				B517F5B820742A1A00507DA5 /* ReviewsViewController.swift in Sources */,
 				B5FE77F31FA9F2F6002B5F0C /* MapCalendarContainerViewController.swift in Sources */,
 				B58B79241FC742F9007BA1BC /* Move.swift in Sources */,
@@ -804,6 +739,7 @@
 				B51BAFB01FD961E200BE9CAA /* UserLocation.swift in Sources */,
 				B5DA0A772052DEB300EDA570 /* PlacePersonalInformationReviewViewController.swift in Sources */,
 				B5DA0A732051F6BD00EDA570 /* PersonalInformationReviewViewController.swift in Sources */,
+				B54D496C207CF3AC00398138 /* PlacesVisitedListTableViewController.swift in Sources */,
 				B5D63B401FED358700DAB61C /* Extensions.swift in Sources */,
 				B5DA0A792052E2FD00EDA570 /* PlacePersonalInformationReviewCategory.swift in Sources */,
 				B5317A9E203DCE420057B857 /* PersonalInformationChooserViewController.swift in Sources */,
@@ -1036,7 +972,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = E62AN8TV9T;
+				DEVELOPMENT_TEAM = 8UMT23UD55;
 				INFOPLIST_FILE = TrackingAdvisorTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.ben.TrackingAdvisorTests;
@@ -1054,7 +990,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = E62AN8TV9T;
+				DEVELOPMENT_TEAM = 8UMT23UD55;
 				INFOPLIST_FILE = TrackingAdvisorTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.ben.TrackingAdvisorTests;

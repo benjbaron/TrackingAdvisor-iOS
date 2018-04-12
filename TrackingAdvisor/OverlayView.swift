@@ -9,7 +9,13 @@
 import Foundation
 import UIKit
 
+
+protocol OverlayViewDelegate {
+    func overlayViewDismissed()
+}
+
 public class OverlayView {
+    var delegate:OverlayViewDelegate?
     
     var overlayView: UIView? {
         didSet {
@@ -63,6 +69,7 @@ public class OverlayView {
             effectView!.addTapGestureRecognizer { [weak self] in
                 self?.effectView?.removeFromSuperview()
                 self?.bgView?.removeFromSuperview()
+                self?.delegate?.overlayViewDismissed()
             }
             
             window.addSubview(bgView)
@@ -74,5 +81,6 @@ public class OverlayView {
         effectView?.removeFromSuperview()
         bgView?.removeFromSuperview()
         overlayView?.removeFromSuperview()
+        delegate?.overlayViewDismissed()
     }
 }

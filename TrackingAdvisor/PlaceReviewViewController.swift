@@ -7,7 +7,7 @@
 //
 
 import UIKit
-import FloatRatingView
+import Cosmos
 
 protocol PlaceReviewCellDelegate {
     func didEndPlaceReview()
@@ -765,21 +765,24 @@ class QuestionRow : UIView {
 }
 
 
-class QuestionRatingRow : UIView, FloatRatingViewDelegate {
+class QuestionRatingRow : UIView {
     var question: String? {
         didSet {
             questionLabel?.text = question
         }
     }
     var ratingChanged: ((Double) -> ())?
-    var color: UIColor? = Constants.colors.primaryDark {
+    var color: UIColor = Constants.colors.primaryDark {
         didSet {
-            ratingView?.tintColor = color
+            ratingView?.settings.filledColor = color
+            ratingView?.settings.filledBorderColor = color
+            ratingView?.settings.emptyColor = color.withAlphaComponent(0.3)
+            ratingView?.settings.emptyBorderColor = color.withAlphaComponent(0.3)
             questionLabel?.textColor = color
         }
     }
     
-    private var ratingView: FloatRatingView?
+    private var ratingView: CosmosView?
     private var questionLabel: UILabel?
     
     var rating: Float = 1.0 { didSet {
@@ -802,22 +805,27 @@ class QuestionRatingRow : UIView, FloatRatingViewDelegate {
     }
     
     func setupViews() {
-        ratingView = FloatRatingView()
+        ratingView = CosmosView()
         questionLabel = UILabel()
         guard let ratingView = ratingView, let questionLabel = questionLabel else { return }
         
-        ratingView.delegate = self
         ratingView.backgroundColor = UIColor.clear
         ratingView.contentMode = UIViewContentMode.scaleAspectFit
-        ratingView.type = .wholeRatings
-        ratingView.emptyImage = UIImage(named: "star-half")
-        ratingView.fullImage = UIImage(named: "star")
-        ratingView.tintColor = color
-        ratingView.minRating = 1
+        ratingView.settings.fillMode = .full
+        ratingView.settings.totalStars = 3
+        ratingView.settings.filledColor = color
+        ratingView.settings.filledBorderColor = color
+        ratingView.settings.emptyColor = color.withAlphaComponent(0.3)
+        ratingView.settings.emptyBorderColor = color.withAlphaComponent(0.3)
+        ratingView.settings.starSize = 28
+        ratingView.settings.starMargin = 8
         ratingView.rating = 2
-        ratingView.maxRating = 3
         ratingView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(ratingView)
+        
+        ratingView.didFinishTouchingCosmos = { [weak self] rating in
+            self?.ratingChanged?(rating)
+        }
         
         // add constraints
         questionLabel.text = question
@@ -828,17 +836,11 @@ class QuestionRatingRow : UIView, FloatRatingViewDelegate {
         addSubview(questionLabel)
         
         addVisualConstraint("V:|[v0]|", views: ["v0": questionLabel])
-        addVisualConstraint("H:|-14-[v0]-10-[rating(100)]-14-|", views: ["v0": questionLabel, "rating": ratingView])
+        addVisualConstraint("H:|-14-[v0]-14-[rating(100)]-14-|", views: ["v0": questionLabel, "rating": ratingView])
         ratingView.centerYAnchor.constraint(equalTo: questionLabel.centerYAnchor).isActive = true
-        ratingView.heightAnchor.constraint(equalToConstant: 25).isActive = true
+        ratingView.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
         translatesAutoresizingMaskIntoConstraints = false
-    }
-    
-    // MARK: - FloatRatingViewDelegate methods
-    
-    func floatRatingView(_ ratingView: FloatRatingView, didUpdate rating: Double) {
-        ratingChanged?(rating)
     }
 }
 

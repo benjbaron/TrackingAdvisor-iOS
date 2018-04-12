@@ -282,3 +282,34 @@ extension String {
         return ceil(boundingBox.width)
     }
 }
+
+extension Dictionary {
+    func json() -> String? {
+        let encoder = JSONEncoder()
+        if let jsonData = try? encoder.encode(self) {
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+        }
+        return nil
+    }
+}
+
+class UILabelPadding: UILabel {
+    
+    let padding = UIEdgeInsets(top: 2, left: 8, bottom: 0, right: 8)
+    override func drawText(in rect: CGRect) {
+        super.drawText(in: UIEdgeInsetsInsetRect(rect, padding))
+    }
+    
+    override var intrinsicContentSize : CGSize {
+        let superContentSize = super.intrinsicContentSize
+        let width = superContentSize.width + padding.left + padding.right
+        let height = superContentSize.height + padding.top + padding.bottom
+        return CGSize(width: width, height: height)
+    }
+    
+    
+    
+}
+
