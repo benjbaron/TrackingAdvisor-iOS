@@ -25,6 +25,7 @@ struct Constants {
         static let forceUploadLocation = "forceUploadLocation"
         static let currentSessionId = "currentSessionId"
         static let currentAppState = "currentAppState"
+        static let showRawTrace = "showRawTrace"
     }
     
     struct variables {
@@ -81,6 +82,7 @@ struct Constants {
         static let privacyPolicyURL = "https://iss-lab.geog.ucl.ac.uk/semantica/privacypolicy"
         static let optOutURL = "https://iss-lab.geog.ucl.ac.uk/semantica/optout"
         static let consentFormURL = "https://iss-lab.geog.ucl.ac.uk/semantica/consentform"
+        static let authClientURL = "https://iss-lab.geog.ucl.ac.uk/semantica/authclient"
     }
     
 }

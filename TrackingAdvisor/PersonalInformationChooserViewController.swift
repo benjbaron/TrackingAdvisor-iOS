@@ -58,14 +58,12 @@ class PersonalInformationChooserViewController: UIViewController, UICollectionVi
         
         guard let controllers = navigationController?.viewControllers else { return }
         let count = controllers.count
-        if count == 2 {
+        if count >= 2 {
             // get the previous place detail controller
-            if let vc = controllers[0] as? OneTimelinePlaceDetailViewController {
-                vc.visit = visit
-                navigationController?.popToViewController(vc, animated: true)
-                if let view = notificationView {
-                    vc.view.addSubview(view)
-                }
+            let vc = controllers[controllers.count - 2]
+            navigationController?.popToViewController(vc, animated: true)
+            if let view = notificationView {
+                vc.view.addSubview(view)
             }
         } else if count == 1 {
             // return to the timeline
@@ -523,7 +521,7 @@ class PersonalInformationCategoryChooserCell: UICollectionViewCell {
         }
     }
     
-    var color: UIColor? = UIColor.orange {
+    var color: UIColor? = Constants.colors.orange {
         didSet {
             self.bgView.backgroundColor = color!.withAlphaComponent(0.3)
             self.nameLabel.textColor = color!

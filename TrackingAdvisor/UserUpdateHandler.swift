@@ -439,6 +439,7 @@ class UserUpdateHandler {
                         let decoder = JSONDecoder()
                         decoder.dateDecodingStrategy = .secondsSince1970
                         _ = try decoder.decode(UserUpdate.self, from: data)
+                        print("### result - delete visit - response from server")
                         callback?()
                     } catch {
                         print("Error serializing the json", error)
@@ -542,7 +543,6 @@ class UserUpdateHandler {
                 if response.result.isSuccess {
                     guard let data = response.data else { return }
                     do {
-                        print("data")
                         let decoder = JSONDecoder()
                         decoder.dateDecodingStrategy = .secondsSince1970
                         let userUpdate = try decoder.decode(UserUpdate.self, from: data)

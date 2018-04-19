@@ -58,8 +58,8 @@ class PlacePersonalInformationReviewCategory : UICollectionViewCell, UICollectio
         didSet {
             iconView.iconColor = color
             mapView.tintColor = color
-            visitedPlaceButton.backgroundColor = color.withAlphaComponent(0.3)
-            visitedPlaceButton.setTitleColor(color, for: .normal)
+            reviewPlaceButton.backgroundColor = color.withAlphaComponent(0.3)
+            reviewPlaceButton.setTitleColor(color, for: .normal)
         }
     }
     var coordinates: CLLocationCoordinate2D? {
@@ -120,7 +120,7 @@ class PlacePersonalInformationReviewCategory : UICollectionViewCell, UICollectio
     }()
     
     private lazy var mapView: MGLMapView = {
-        let map = MGLMapView(frame: .zero, styleURL: MGLStyle.lightStyleURL())
+        let map = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.lightStyleURL())
         map.delegate = self
         map.tintColor = color
         map.zoomLevel = 14
@@ -138,11 +138,11 @@ class PlacePersonalInformationReviewCategory : UICollectionViewCell, UICollectio
         return map
     }()
     
-    private lazy var visitedPlaceButton: UIButton = {
+    private lazy var reviewPlaceButton: UIButton = {
         let l = UIButton(type: .system)
         l.layer.cornerRadius = 5.0
         l.layer.masksToBounds = true
-        l.setTitle("I visited this place", for: .normal)
+        l.setTitle("Review this place", for: .normal)
         l.titleLabel?.textAlignment = .center
         l.titleLabel?.numberOfLines = 2
         l.titleLabel?.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
@@ -150,21 +150,6 @@ class PlacePersonalInformationReviewCategory : UICollectionViewCell, UICollectio
         l.backgroundColor = color.withAlphaComponent(0.3)
         l.translatesAutoresizingMaskIntoConstraints = false
         l.addTarget(self, action: #selector(tappedVisitedPlaceButton), for: .touchUpInside)
-        return l
-    }()
-    
-    private lazy var notVisitedPlaceButton: UIButton = {
-        let l = UIButton(type: .system)
-        l.layer.cornerRadius = 5.0
-        l.layer.masksToBounds = true
-        l.titleLabel?.textAlignment = .center
-        l.titleLabel?.numberOfLines = 2
-        l.titleLabel?.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
-        l.setTitle("I did not visit\nthis place", for: .normal)
-        l.setTitleColor(.gray, for: .normal)
-        l.backgroundColor = Constants.colors.superLightGray
-        l.translatesAutoresizingMaskIntoConstraints = false
-        l.addTarget(self, action: #selector(tappedNotVisitedPlaceButton), for: .touchUpInside)
         return l
     }()
     
@@ -195,11 +180,6 @@ class PlacePersonalInformationReviewCategory : UICollectionViewCell, UICollectio
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
-    
-    @objc fileprivate func tappedNotVisitedPlaceButton() {
-        // delete the place from the collection view
-        self.delegate?.deletePlaceFromReviews(place: self.place, at: indexPath)
-    }
     
     @objc fileprivate func tappedVisitedPlaceButton() {
         // remove all the subviews from the container view
@@ -275,20 +255,16 @@ class PlacePersonalInformationReviewCategory : UICollectionViewCell, UICollectio
         containerView.subviews.forEach({ $0.removeFromSuperview() })
         
         containerView.addSubview(mapView)
-        containerView.addSubview(visitedPlaceButton)
-        containerView.addSubview(notVisitedPlaceButton)
+        containerView.addSubview(reviewPlaceButton)
         
-        containerView.addVisualConstraint("H:|-14-[v0]-14-[v1]-14-|", views: ["v0": visitedPlaceButton, "v1": notVisitedPlaceButton])
+        containerView.addVisualConstraint("H:|-14-[v0]-14-|", views: ["v0": reviewPlaceButton])
         containerView.addVisualConstraint("H:|-14-[v0]-14-|", views: ["v0": mapView])
         
-        containerView.addVisualConstraint("V:|[v0]-10-[v1(64)]-|", views: ["v0": mapView, "v1": visitedPlaceButton])
-        containerView.addVisualConstraint("V:|[v0]-10-[v1(64)]-|", views: ["v0": mapView, "v1": notVisitedPlaceButton])
+        containerView.addVisualConstraint("V:|[v0]-10-[v1(64)]-|", views: ["v0": mapView, "v1": reviewPlaceButton])
         
         containerView.layoutIfNeeded()
         
         mapView.heightAnchor.constraint(greaterThanOrEqualToConstant: 100.0).isActive = true
-        visitedPlaceButton.widthAnchor.constraint(equalToConstant: mapView.frame.width/2.0 - 7.0).isActive = true
-        notVisitedPlaceButton.widthAnchor.constraint(equalToConstant: mapView.frame.width/2.0 - 7.0).isActive = true
     }
     
     func setupEndContainerView() {

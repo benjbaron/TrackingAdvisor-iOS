@@ -18,7 +18,11 @@ class PlaceHeader: UIView {
     internal let placeNameLabel: UILabel = {
         let label = UILabel()
         label.text = "place name"
-        label.font = UIFont.systemFont(ofSize: 25, weight: .heavy)
+        if AppDelegate.isIPhone5() {
+            label.font = UIFont.systemFont(ofSize: 20, weight: .heavy)
+        } else {
+            label.font = UIFont.systemFont(ofSize: 25, weight: .heavy)
+        }
         label.textColor = Constants.colors.white
         label.lineBreakMode = .byWordWrapping
         label.numberOfLines = 2
@@ -46,11 +50,10 @@ class PlaceHeader: UIView {
         // add constraints
         addVisualConstraint("V:|-(28@750)-[title]-(14@750)-|", views: ["title": placeNameLabel])
         
-        addVisualConstraint("H:|-75-[title]-75-|", views: ["title": placeNameLabel])
+        addVisualConstraint("H:|-60-[title]-60-|", views: ["title": placeNameLabel])
         
         translatesAutoresizingMaskIntoConstraints = false
     }
-
 }
 
 class HeaderPlace: UIView {
@@ -68,7 +71,11 @@ class HeaderPlace: UIView {
     internal let placeNameLabel: UILabel = {
         let label = UILabel()
         label.text = "place name"
-        label.font = UIFont.systemFont(ofSize: 25, weight: .heavy)
+        if AppDelegate.isIPhone5() {
+            label.font = UIFont.systemFont(ofSize: 20, weight: .heavy)
+        } else {
+            label.font = UIFont.systemFont(ofSize: 25, weight: .heavy)
+        }
         label.textColor = Constants.colors.white
         label.lineBreakMode = .byWordWrapping
         label.numberOfLines = 2
@@ -114,28 +121,12 @@ class HeaderPlace: UIView {
     }
 }
 
-class HeaderPlaceDetail : HeaderPlace {
-    var placeCity: String? {
-        didSet {
-            placeCityLabel.text = placeCity
-        }
-    }
-    
+class HeaderPlaceDetail : HeaderPlace {    
     var placeTimes: String? {
         didSet {
             placeTimesLabel.text = placeTimes
         }
     }
-    
-    internal let placeCityLabel: UILabel = {
-        let label = UILabel()
-        label.text = "place city"
-        label.font = UIFont.systemFont(ofSize: 14.0)
-        label.textColor = Constants.colors.superLightGray
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
     
     internal let placeTimesLabel: UILabel = {
         let label = UILabel()
@@ -152,15 +143,13 @@ class HeaderPlaceDetail : HeaderPlace {
     override func setupViews() {
         addSubview(placeNameLabel)
         addSubview(placeAddressLabel)
-        addSubview(placeCityLabel)
         addSubview(placeTimesLabel)
         
         // add constraints
-        addVisualConstraint("V:|-(35@750)-[title][address][city]-(12@750)-[times]-(18@750)-|", views: ["title": placeNameLabel, "address": placeAddressLabel, "city": placeCityLabel, "times": placeTimesLabel])
+        addVisualConstraint("V:|-(35@750)-[title][address]-(12@750)-[times]-(18@750)-|", views: ["title": placeNameLabel, "address": placeAddressLabel, "times": placeTimesLabel])
         
         addVisualConstraint("H:|-75-[title]-75-|", views: ["title": placeNameLabel])
         addVisualConstraint("H:|-25-[address]-25-|", views: ["address": placeAddressLabel])
-        addVisualConstraint("H:|-25-[city]-25-|", views: ["city": placeCityLabel])
         addVisualConstraint("H:|-25-[times]-25-|", views: ["times": placeTimesLabel])
         
         translatesAutoresizingMaskIntoConstraints = false

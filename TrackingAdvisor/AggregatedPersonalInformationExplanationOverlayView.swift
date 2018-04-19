@@ -91,7 +91,7 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
     lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Personal information"
-        label.font = UIFont.boldSystemFont(ofSize: 20.0)
+        label.font = UIFont.boldSystemFont(ofSize: 18.0)
         label.textColor = .white
         label.numberOfLines = 2
         label.textAlignment = .left
@@ -102,7 +102,11 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
     lazy var subtitleLabel: UILabel = {
         let label = UILabel()
         label.text = "Personal information explanation"
-        label.font = UIFont.italicSystemFont(ofSize: 14.0)
+        if AppDelegate.isIPhone5() {
+            label.font = UIFont.italicSystemFont(ofSize: 12.0)
+        } else {
+            label.font = UIFont.italicSystemFont(ofSize: 14.0)
+        }
         label.textAlignment = .left
         label.numberOfLines = 3
         label.lineBreakMode = .byWordWrapping
@@ -119,8 +123,7 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
     }()
     
     lazy var privacyFeedbackRow: CommentRow = {
-        let row = CommentRow(with: "You can give us some feedback on the explanation", icon: "chevron-right", backgroundColor: .clear, color: color) { [weak self] in
-            print("tapped on privacyFeedbackRow")
+        let row = CommentRow(with: "You can give us a feedback on the explanation", icon: "chevron-right", backgroundColor: .clear, color: color) { [weak self] in
             if let cat = self?.picid, let pi = self?.aggregatedPersonalInformation {
                 self?.delegate?.explanationFeedback(cat: cat, personalInformation: pi)
             }
@@ -130,7 +133,6 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
     
     lazy var explanationRatingView: QuestionRatingRow = {
         let row = QuestionRatingRow(with: "How informative is the explanation?") { [weak self] value in
-            print("explanationRating changed \(value)")
             if let cat = self?.picid, let pi = self?.aggregatedPersonalInformation {
                 pi.reviewExplanation = Int32(value)
                 if let picIdx = self?.picIndexPath, let idx = self?.indexPath {
@@ -197,7 +199,6 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
     
     convenience init() {
         self.init(frame: CGRect.zero)
-        print("setupViews (0)")
         setupViews()
     }
     
@@ -208,7 +209,7 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
     func setupViews() {
         // setup the view itself
         let overlayFrame = OverlayView.frame()
-        self.frame = CGRect(x: 0, y: 0, width: overlayFrame.width - 50, height: overlayFrame.height - 70)
+        self.frame = CGRect(x: 0, y: 0, width: overlayFrame.width - 50, height: overlayFrame.height - 50)
         self.center = CGPoint(x: overlayFrame.width / 2.0, y: overlayFrame.height / 2.0)
         backgroundColor = .white
         clipsToBounds = true
@@ -246,7 +247,11 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
         
         // add constraints
         headerBgView.addVisualConstraint("H:|-14-[title]-14-|", views: ["title": hStackView])
-        headerBgView.addVisualConstraint("V:|-(28@750)-[title]-(18@750)-|", views: ["title": hStackView])
+        if AppDelegate.isIPhone5() {
+            headerBgView.addVisualConstraint("V:|-(14@750)-[title]-(10@750)-|", views: ["title": hStackView])
+        } else {
+            headerBgView.addVisualConstraint("V:|-(28@750)-[title]-(18@750)-|", views: ["title": hStackView])
+        }
         addSubview(headerBgView)
         
         addSubview(dividerLineView)
@@ -265,7 +270,12 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
         addVisualConstraint("H:|[v0]|", views: ["v0": explanationRatingView])
         addVisualConstraint("H:|[v0]|", views: ["v0": privacyFeedbackRow])
         addVisualConstraint("H:|[v0]|", views: ["v0": dismissButton])
-        addVisualConstraint("V:|[header][collection][line(0.5)]-[info(40@750)][privacy(40@750)][rating(40)][feedback(40)]-[dismiss(50)]|", views: ["header": headerBgView, "collection": collectionView, "line": dividerLineView, "info": personalInformationRatingView, "privacy": privacyRatingView, "rating": explanationRatingView, "feedback": privacyFeedbackRow, "dismiss": dismissButton])
+        
+        if AppDelegate.isIPhone5() {
+            addVisualConstraint("V:|[header][collection][line(0.5)]-[info(35@750)][privacy(35@750)][rating(35)][feedback(35)]-[dismiss(45)]|", views: ["header": headerBgView, "collection": collectionView, "line": dividerLineView, "info": personalInformationRatingView, "privacy": privacyRatingView, "rating": explanationRatingView, "feedback": privacyFeedbackRow, "dismiss": dismissButton])
+        } else {
+            addVisualConstraint("V:|[header][collection][line(0.5)]-[info(40@750)][privacy(40@750)][rating(40)][feedback(40)]-[dismiss(50)]|", views: ["header": headerBgView, "collection": collectionView, "line": dividerLineView, "info": personalInformationRatingView, "privacy": privacyRatingView, "rating": explanationRatingView, "feedback": privacyFeedbackRow, "dismiss": dismissButton])
+        }
         
         personalInformationRatingViewHeight = NSLayoutConstraint(item: personalInformationRatingView, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 0.0)
         personalInformationRatingViewHeight?.isActive = true
@@ -347,7 +357,7 @@ class AggregatedPersonalInformationExplanationOverlayCell : UICollectionViewCell
     lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Place"
-        label.font = UIFont.boldSystemFont(ofSize: 18)
+        label.font = UIFont.boldSystemFont(ofSize: 15)
         label.numberOfLines = 0
         label.textColor = .black
         label.textAlignment = .left
@@ -359,7 +369,7 @@ class AggregatedPersonalInformationExplanationOverlayCell : UICollectionViewCell
     lazy var explanationLabel: UILabel = {
         let label = UILabel()
         label.text = "Explanations"
-        label.font = UIFont.italicSystemFont(ofSize: 14)
+        label.font = UIFont.italicSystemFont(ofSize: 13)
         label.textColor = Constants.colors.lightGray
         label.numberOfLines = 0
         label.textAlignment = .left

@@ -51,9 +51,8 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
     var visit: Visit? {
         didSet {
             guard let visit = visit, let place = visit.place else { return }
-            headerView.placeAddress = place.address
             headerView.placeName = place.name
-            headerView.placeCity = place.city
+            headerView.placeAddress = place.formatAddressString()
             headerView.placeTimes = visit.getTimesPhrase()
             
             color = place.getPlaceColor()

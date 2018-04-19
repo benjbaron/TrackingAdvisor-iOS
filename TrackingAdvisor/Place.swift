@@ -8,6 +8,7 @@
 
 import Foundation
 import CoreData
+import CoreLocation
 import UIKit
 
 @objc(Place)
@@ -214,6 +215,10 @@ class Place: NSManagedObject {
         return res
     }
     
+    var coordinates: CLLocation {
+        return CLLocation(latitude: latitude, longitude: longitude)
+    }
+    
     func getPersonalInformationPhrase() -> String {
         let personalInformation = getPersonalInformation()
         var res = ""
@@ -264,5 +269,7 @@ class Place: NSManagedObject {
         }
         return Constants.colors.orange
     }
+    
+    
 
 }

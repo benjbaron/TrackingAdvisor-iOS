@@ -53,7 +53,7 @@ class GetInTouchFormViewController: FormViewController {
             }
             <<< PickerInlineRow<String>(){
                 $0.title = "Reason"
-                $0.options = ["Question about the study", "Feature demand", "Bug report", "Other"]
+                $0.options = ["Question about the study", "Feature request", "Bug report", "Data request", "Other"]
                 $0.value = $0.options[0]
                 self.reason = $0.options[0]
                 $0.onChange { [unowned self] row in

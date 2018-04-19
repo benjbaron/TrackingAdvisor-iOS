@@ -27,6 +27,8 @@ public class OverlayView {
     
     private var effectView: UIView?
     private var bgView: UIView?
+    private var window: UIWindow?
+    private var timer: Timer?
     
     class var shared: OverlayView {
         struct Static {
@@ -46,6 +48,8 @@ public class OverlayView {
     public func showOverlay(with view: UIView? = nil) {
         if  let appDelegate = UIApplication.shared.delegate as? AppDelegate,
             let window = appDelegate.window {
+            
+            self.window = window
             
             bgView = UIView()
             guard let bgView = bgView else { return }
@@ -67,20 +71,28 @@ public class OverlayView {
             
             bgView.addSubview(effectView!)
             effectView!.addTapGestureRecognizer { [weak self] in
-                self?.effectView?.removeFromSuperview()
-                self?.bgView?.removeFromSuperview()
-                self?.delegate?.overlayViewDismissed()
+                self?.hideOverlayView()
             }
             
-            window.addSubview(bgView)
+            self.window?.addSubview(bgView)
             overlayView = view
         }
     }
     
+    public func autoRemove(with delay: TimeInterval, callback: (()->())? = nil) {
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
+            self?.hideOverlayView()
+            callback?()
+        }
+    }
+    
     public func hideOverlayView() {
-        effectView?.removeFromSuperview()
-        bgView?.removeFromSuperview()
-        overlayView?.removeFromSuperview()
-        delegate?.overlayViewDismissed()
+        DispatchQueue.main.async() { [weak self] in
+            self?.overlayView?.removeFromSuperview()
+            self?.effectView?.removeFromSuperview()
+            self?.bgView?.removeFromSuperview()
+            self?.delegate?.overlayViewDismissed()
+        }
     }
 }

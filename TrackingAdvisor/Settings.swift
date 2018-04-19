@@ -29,6 +29,7 @@ open class Settings {
             defaults.set(false, forKey: Constants.defaultsKeys.forceUploadLocation)
             defaults.set(0, forKey: Constants.defaultsKeys.currentSessionId)
             defaults.set(String(), forKey: Constants.defaultsKeys.currentAppState)
+            defaults.set(true, forKey: Constants.defaultsKeys.showRawTrace)
         }
     }
     
@@ -105,6 +106,11 @@ open class Settings {
         return defaults.string(forKey: Constants.defaultsKeys.currentAppState)
     }
     
+    open class func getShowRawTrace() -> Bool {
+        let defaults = UserDefaults.standard
+        return defaults.bool(forKey: Constants.defaultsKeys.showRawTrace)
+    }
+    
     open class func savePushNotificationId(with pnid: String) {
         let defaults = UserDefaults.standard
         defaults.set(pnid, forKey: Constants.defaultsKeys.pushNotificationToken)
@@ -176,4 +182,10 @@ open class Settings {
         let defaults = UserDefaults.standard
         defaults.set(value, forKey: Constants.defaultsKeys.currentAppState)
     }
+    
+    open class func saveShowRawTrace(with value: Bool) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: Constants.defaultsKeys.showRawTrace)
+    }
+    
 }

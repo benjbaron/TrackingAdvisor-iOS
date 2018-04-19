@@ -17,9 +17,9 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.1</string>
+	<string>1.2</string>
 	<key>CFBundleVersion</key>
-	<string>11</string>
+	<string>14</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>MGLMapboxAccessToken</key>
@@ -29,14 +29,16 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>We need camera access to scan QR code</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>To collect your location information</string>
+	<string>We need access to your location to collect your location information and extract the places you visited automatically</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>To collect your location information</string>
+	<string>We need access to your location to collect your location information and extract the places you visited automatically</string>
 	<key>NSLocationUsageDescription</key>
 	<string>To collect your location information</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>To collect your location information</string>
+	<string>We need access to your location to collect your location information and extract the places you visited automatically</string>
 	<key>NSMotionUsageDescription</key>
 	<string>We need to get your motion to increase the performance of the location accuracy and battery</string>
 	<key>UIBackgroundModes</key>

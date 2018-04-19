@@ -28,6 +28,8 @@
 		B53043231FDED92A00DBC7C0 /* UserUpdateHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53043221FDED92A00DBC7C0 /* UserUpdateHandler.swift */; };
 		B530432D1FDEDBD400DBC7C0 /* Networking.swift in Sources */ = {isa = PBXBuildFile; fileRef = B530432C1FDEDBD400DBC7C0 /* Networking.swift */; };
 		B530432F1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B530432E1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift */; };
+		B53118172084E2FD005705EE /* BadgeButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53118162084E2FD005705EE /* BadgeButton.swift */; };
+		B531181B2084F9A6005705EE /* WebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B531181A2084F9A6005705EE /* WebViewController.swift */; };
 		B5317A9E203DCE420057B857 /* PersonalInformationChooserViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5317A9D203DCE420057B857 /* PersonalInformationChooserViewController.swift */; };
 		B539944A207D71BD00737CAF /* PlaceEditViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5399449207D71BD00737CAF /* PlaceEditViewController.swift */; };
 		B53FB6FB1FAB74630000112E /* ActivityServiceOld.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53FB6FA1FAB74630000112E /* ActivityServiceOld.swift */; };
@@ -41,6 +43,7 @@
 		B55B59DC206A37120068BCA0 /* OverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55B59DB206A37120068BCA0 /* OverlayView.swift */; };
 		B55C10101FED736B001EE08D /* PlaceReviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55C100F1FED736B001EE08D /* PlaceReviewViewController.swift */; };
 		B55DE5D41FAB582B00CACB47 /* DataStoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55DE5D31FAB582B00CACB47 /* DataStoreService.swift */; };
+		B567758F2086466F0086D4FA /* CALayerIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = B567758E2086466F0086D4FA /* CALayerIcons.swift */; };
 		B568B3B2202B037F00425A20 /* OnboardingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568B3B1202B037F00425A20 /* OnboardingViewController.swift */; };
 		B568B3BC202B05EC00425A20 /* Onboarding.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B568B3BB202B05EC00425A20 /* Onboarding.storyboard */; };
 		B568D8801FB45D0700E051B1 /* LocationAdaptiveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568D87F1FB45D0700E051B1 /* LocationAdaptiveService.swift */; };
@@ -68,6 +71,9 @@
 		B59E24592028B3B1008C8AC5 /* ReviewVisit.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59E24582028B3B1008C8AC5 /* ReviewVisit.swift */; };
 		B59F64001FE819220025BE06 /* PlaceFinderMapTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59F63FF1FE819220025BE06 /* PlaceFinderMapTableViewController.swift */; };
 		B5A22B882019F33D00B68BD8 /* Review.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A22B872019F33D00B68BD8 /* Review.swift */; };
+		B5BFB3EF207FCF4B00EDE91E /* QRScannerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5BFB3EE207FCF4B00EDE91E /* QRScannerViewController.swift */; };
+		B5BFB3F12080F72200EDE91E /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5BFB3F02080F72200EDE91E /* MapViewController.swift */; };
+		B5BFB3F320835D2F00EDE91E /* WeekCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5BFB3F220835D2F00EDE91E /* WeekCalendarView.swift */; };
 		B5C28A89202E092A00B48017 /* HelperFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C28A88202E092A00B48017 /* HelperFunctions.swift */; };
 		B5C28A8B20321D2700B48017 /* CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C28A8A20321D2700B48017 /* CardView.swift */; };
 		B5C347431FB064D50078C12E /* RawCollectedDataViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C347421FB064D50078C12E /* RawCollectedDataViewController.swift */; };
@@ -142,6 +148,8 @@
 		B53043221FDED92A00DBC7C0 /* UserUpdateHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserUpdateHandler.swift; sourceTree = "<group>"; };
 		B530432C1FDEDBD400DBC7C0 /* Networking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Networking.swift; sourceTree = "<group>"; };
 		B530432E1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OneTimelinePlaceDetailViewController.swift; sourceTree = "<group>"; };
+		B53118162084E2FD005705EE /* BadgeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeButton.swift; sourceTree = "<group>"; };
+		B531181A2084F9A6005705EE /* WebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewController.swift; sourceTree = "<group>"; };
 		B5317A9D203DCE420057B857 /* PersonalInformationChooserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalInformationChooserViewController.swift; sourceTree = "<group>"; };
 		B5399449207D71BD00737CAF /* PlaceEditViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceEditViewController.swift; sourceTree = "<group>"; };
 		B53FB6FA1FAB74630000112E /* ActivityServiceOld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityServiceOld.swift; sourceTree = "<group>"; };
@@ -155,6 +163,7 @@
 		B55B59DB206A37120068BCA0 /* OverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayView.swift; sourceTree = "<group>"; };
 		B55C100F1FED736B001EE08D /* PlaceReviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceReviewViewController.swift; sourceTree = "<group>"; };
 		B55DE5D31FAB582B00CACB47 /* DataStoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataStoreService.swift; sourceTree = "<group>"; };
+		B567758E2086466F0086D4FA /* CALayerIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CALayerIcons.swift; sourceTree = "<group>"; };
 		B568B3B1202B037F00425A20 /* OnboardingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewController.swift; sourceTree = "<group>"; };
 		B568B3BB202B05EC00425A20 /* Onboarding.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Onboarding.storyboard; sourceTree = "<group>"; };
 		B568D87E1FB3827100E051B1 /* TrackingAdvisor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TrackingAdvisor.entitlements; sourceTree = "<group>"; };
@@ -189,6 +198,9 @@
 		B59E24582028B3B1008C8AC5 /* ReviewVisit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewVisit.swift; sourceTree = "<group>"; };
 		B59F63FF1FE819220025BE06 /* PlaceFinderMapTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceFinderMapTableViewController.swift; sourceTree = "<group>"; };
 		B5A22B872019F33D00B68BD8 /* Review.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Review.swift; sourceTree = "<group>"; };
+		B5BFB3EE207FCF4B00EDE91E /* QRScannerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerViewController.swift; sourceTree = "<group>"; };
+		B5BFB3F02080F72200EDE91E /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
+		B5BFB3F220835D2F00EDE91E /* WeekCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekCalendarView.swift; sourceTree = "<group>"; };
 		B5C28A88202E092A00B48017 /* HelperFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperFunctions.swift; sourceTree = "<group>"; };
 		B5C28A8A20321D2700B48017 /* CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardView.swift; sourceTree = "<group>"; };
 		B5C347421FB064D50078C12E /* RawCollectedDataViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RawCollectedDataViewController.swift; sourceTree = "<group>"; };
@@ -252,9 +264,12 @@
 		B54C36A7200EB8550085BFEA /* UIViews */ = {
 			isa = PBXGroup;
 			children = (
+				B5BFB3F220835D2F00EDE91E /* WeekCalendarView.swift */,
 				B577690320164C2B00A0FD1B /* HeaderPlace.swift */,
 				B5C28A8A20321D2700B48017 /* CardView.swift */,
 				B54D4969207CB99800398138 /* RatingView.swift */,
+				B53118162084E2FD005705EE /* BadgeButton.swift */,
+				B567758E2086466F0086D4FA /* CALayerIcons.swift */,
 			);
 			name = UIViews;
 			sourceTree = "<group>";
@@ -363,6 +378,9 @@
 				B517F5B92074D61800507DA5 /* AggregatedPersonalInformationExplanationOverlayView.swift */,
 				B54D496B207CF3AC00398138 /* PlacesVisitedListTableViewController.swift */,
 				B5399449207D71BD00737CAF /* PlaceEditViewController.swift */,
+				B5BFB3EE207FCF4B00EDE91E /* QRScannerViewController.swift */,
+				B5BFB3F02080F72200EDE91E /* MapViewController.swift */,
+				B531181A2084F9A6005705EE /* WebViewController.swift */,
 			);
 			path = TrackingAdvisor;
 			sourceTree = "<group>";
@@ -688,6 +706,7 @@
 				B55DE5D41FAB582B00CACB47 /* DataStoreService.swift in Sources */,
 				B5DA0A752052076500EDA570 /* PersonalInformationReviewCategory.swift in Sources */,
 				B5174B69205723EC0018FB3F /* AggregatedPersonalInformation.swift in Sources */,
+				B53118172084E2FD005705EE /* BadgeButton.swift in Sources */,
 				B59E24572028B0DC008C8AC5 /* ReviewPersonalInformation.swift in Sources */,
 				B5C347431FB064D50078C12E /* RawCollectedDataViewController.swift in Sources */,
 				B5C347461FB0929F0078C12E /* EMPageViewController.swift in Sources */,
@@ -708,6 +727,7 @@
 				B55B59DC206A37120068BCA0 /* OverlayView.swift in Sources */,
 				B52AF1D01FA8C89F00FDDF2A /* ISTimeline.swift in Sources */,
 				B5A22B882019F33D00B68BD8 /* Review.swift in Sources */,
+				B5BFB3F320835D2F00EDE91E /* WeekCalendarView.swift in Sources */,
 				B511C4FF1FD5C039006A312C /* GetInTouchFormViewController.swift in Sources */,
 				B5C347481FB092D40078C12E /* TimelineSwipeViewController.swift in Sources */,
 				B58A6E141FCC4CF9003DA168 /* SettingsTableViewController.swift in Sources */,
@@ -733,11 +753,15 @@
 				B568D8801FB45D0700E051B1 /* LocationAdaptiveService.swift in Sources */,
 				B54D496A207CB99800398138 /* RatingView.swift in Sources */,
 				B517F5B820742A1A00507DA5 /* ReviewsViewController.swift in Sources */,
+				B531181B2084F9A6005705EE /* WebViewController.swift in Sources */,
+				B5BFB3F12080F72200EDE91E /* MapViewController.swift in Sources */,
+				B567758F2086466F0086D4FA /* CALayerIcons.swift in Sources */,
 				B5FE77F31FA9F2F6002B5F0C /* MapCalendarContainerViewController.swift in Sources */,
 				B58B79241FC742F9007BA1BC /* Move.swift in Sources */,
 				B53FB6FD1FAB9A870000112E /* FileService.swift in Sources */,
 				B51BAFB01FD961E200BE9CAA /* UserLocation.swift in Sources */,
 				B5DA0A772052DEB300EDA570 /* PlacePersonalInformationReviewViewController.swift in Sources */,
+				B5BFB3EF207FCF4B00EDE91E /* QRScannerViewController.swift in Sources */,
 				B5DA0A732051F6BD00EDA570 /* PersonalInformationReviewViewController.swift in Sources */,
 				B54D496C207CF3AC00398138 /* PlacesVisitedListTableViewController.swift in Sources */,
 				B5D63B401FED358700DAB61C /* Extensions.swift in Sources */,

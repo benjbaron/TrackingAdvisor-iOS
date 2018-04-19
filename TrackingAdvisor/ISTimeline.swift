@@ -344,15 +344,27 @@ open class ISTimeline: UIScrollView {
             timelineSubtitleLabel.text = timelineSubtitle
         }
     }
+    open var numberOfVisitsToReview: Int = 0 { didSet {
+        if numberOfVisitsToReview > 0 {
+            timelineSubSubtitle = "You have \(numberOfVisitsToReview) visit\(numberOfVisitsToReview > 1 ? "s" : "") to review."
+        } else {
+             timelineSubSubtitle = nil
+        }
+    }}
+    fileprivate var timelineSubSubtitle: String? { didSet {
+            timelineSubSubtitleLabel.text = timelineSubSubtitle
+        }
+    }
     open var timelineUpdateTouchAction: ((_ sender: UIButton)->Void)?
     open var timelimeAddPlaceFirstTouchAction: ((_ pt1:ISPoint?, _ pt2:ISPoint?)->Void)?
     open var timelimeAddPlaceLastTouchAction: ((_ pt1:ISPoint?, _ pt2:ISPoint?)->Void)?
     open var timelineValidatedPlaceTouchAction: ((_ pt:ISPoint?)->Void)?
     open var timelineRemovedPlaceTouchAction: ((_ pt:ISPoint?)->Void)?
     
-    fileprivate let timelineTitleOffset:CGFloat = 160.0
+    fileprivate var timelineTitleOffset:CGFloat = 175.0
     fileprivate var timelineTitleLabel: UILabel!
     fileprivate var timelineSubtitleLabel: UILabel!
+    fileprivate var timelineSubSubtitleLabel: UILabel!
     fileprivate var timelineEditButton: UIButton!
     fileprivate var timelineUpdateButton: UIButton!
     fileprivate let screenSize:CGRect = UIScreen.main.bounds
@@ -388,6 +400,7 @@ open class ISTimeline: UIScrollView {
         self.showsVerticalScrollIndicator = false
         buildTimelineTitleLabel()
         buildTimelineSubtitleLabel()
+        buildTimelineSubSubtitleLabel()
     }
     
     @objc fileprivate func updateTimeline(sender: UIButton!) {
@@ -504,8 +517,11 @@ open class ISTimeline: UIScrollView {
         // Place the timeline title label
         timelineTitleLabel.frame = CGRect(x: 1.0, y: 69.0, width: rect.width-1.0, height: 40)
         timelineSubtitleLabel.frame = CGRect(x: 1.0, y: 115.0, width: rect.width-1.0, height: 20)
+        timelineSubSubtitleLabel.frame = CGRect(x: 1.0, y: 141.0, width: rect.width-1.0, height: 15)
+
         self.addSubview(timelineTitleLabel)
         self.addSubview(timelineSubtitleLabel)
+        self.addSubview(timelineSubSubtitleLabel)
         
         // Place the timeline edit button
         timelineEditButton = UIButton(type: UIButtonType.system)
@@ -792,13 +808,30 @@ open class ISTimeline: UIScrollView {
         timelineSubtitleLabel.preferredMaxLayoutWidth = calcWidth()
     }
     
+    fileprivate func buildTimelineSubSubtitleLabel() {
+        timelineSubSubtitleLabel = UILabel()
+        timelineSubSubtitleLabel.text = timelineSubSubtitle
+        timelineSubSubtitleLabel.textColor = Constants.colors.descriptionColor
+        
+        var fnt = UIFont.systemFont(ofSize: 16.0, weight: .light)
+        if let dsc = fnt.fontDescriptor.withSymbolicTraits(.traitItalic) {
+            fnt = UIFont(descriptor: dsc, size: 0)
+        }
+        timelineSubSubtitleLabel.font = fnt
+        timelineSubSubtitleLabel.preferredMaxLayoutWidth = calcWidth()
+    }
+    
     fileprivate func buildTitleLabel(_ index:Int) -> UILabel {
         let titleLabel = UILabel()
         titleLabel.text = points[index].title
-        titleLabel.font = UIFont.boldSystemFont(ofSize: 20.0)
+        if AppDelegate.isIPhone5() {
+            titleLabel.font = UIFont.boldSystemFont(ofSize: 18.0)
+        } else {
+            titleLabel.font = UIFont.boldSystemFont(ofSize: 20.0)
+        }
         titleLabel.lineBreakMode = .byWordWrapping
         titleLabel.numberOfLines = 0
-        titleLabel.preferredMaxLayoutWidth = calcWidth()
+        titleLabel.preferredMaxLayoutWidth = calcWidth() - 20
         return titleLabel
     }
     
@@ -811,7 +844,11 @@ open class ISTimeline: UIScrollView {
             label.textColor = .white
             label.layer.cornerRadius = 5.0
             label.layer.masksToBounds = true
-            label.font = UIFont.systemFont(ofSize: 18.0, weight: .bold)
+            if AppDelegate.isIPhone5() {
+                label.font = UIFont.systemFont(ofSize: 18.0, weight: .bold)
+            } else {
+                label.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
+            }
             label.lineBreakMode = .byWordWrapping
             label.backgroundColor = color
             label.numberOfLines = 1
@@ -987,6 +1024,7 @@ open class ISTimeline: UIScrollView {
             
             // Adjust the indexes for all the visit blocks
             for i in 0..<strongSelf.layers.count {
+                print("index: \(i)")
                 if i > index {
                     if let subviews = strongSelf.layers[i].feedbackView?.view?.subviews {
                         for case let btn as UIButton in subviews {
@@ -1081,7 +1119,7 @@ open class ISTimeline: UIScrollView {
     
     @objc func feedbackButtonTappedOther(sender: UIButton) {
         if !isEditing {
-            points[sender.tag].feedbackTouchUpInside?(points[sender.tag])
+            _points[sender.tag].feedbackTouchUpInside?(_points[sender.tag])
         }
     }
     
@@ -1112,10 +1150,10 @@ open class ISTimeline: UIScrollView {
     }
     
     fileprivate func calcWidth() -> CGFloat {
-        return self.bounds.width - (self.contentInset.left + self.contentInset.right) - pointDiameter - lineWidth - ISTimeline.gap * 1.5
+        return self.bounds.width - (self.contentInset.left + self.contentInset.right) - pointDiameter - lineWidth - ISTimeline.gap * 1.2
     }
     
-    fileprivate func drawLine(_ start:CGPoint, end:CGPoint, color:CGColor, cap:Int, offset:CGFloat = 0.0, layer:MovableLineLayer) -> CAShapeLayer {
+    fileprivate func drawLine(_ start: CGPoint, end: CGPoint, color: CGColor, cap: Int, offset: CGFloat = 0.0, layer: MovableLineLayer) -> CAShapeLayer {
         var startPoint = start
         startPoint.y -= offset
         

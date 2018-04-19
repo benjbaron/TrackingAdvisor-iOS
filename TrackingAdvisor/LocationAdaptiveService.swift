@@ -183,13 +183,7 @@ class LocationAdaptiveService: NSObject, CLLocationManagerDelegate {
         
         // if the timer is still valid, the code below is not executed
         if timer.isValid { return }
-                
-        // determine the new timeout
-    //        if self.isStationary {
-    //            self.timeout = min(self.timeout+self.minTimeout, self.maxTimeout)
-    //            self.accuracy = kCLLocationAccuracyThreeKilometers
-    //        }
-        
+                        
         // Restart the locationManager after "timeout" seconds
         timer = Timer.scheduledTimer(timeInterval: timeout,
                                      target: self,

@@ -49,8 +49,10 @@ class LogService : NSObject {
         static let serverResponse = "server-response"
         static let tabTimeline = "tab-timeline"
         static let tabReviews = "tab-reviews"
+        static let tabMap = "tab-map"
         static let tabProfile = "tab-profile"
         static let tabSettings = "tab-settings"
+        static let timelineNotification = "timeline-notification"
         static let timelineDay = "timeline-day"
         static let timelineUpdate = "timeline-update"
         static let timelineMap = "timeline-map"
@@ -73,6 +75,7 @@ class LogService : NSObject {
         static let personalInfoBack = "personal-info-back"
         static let personalInfoSaved = "personal-info-saved"
         static let placeEditSaved = "place-edit-saved"
+        static let reviewNotification = "review-notification"
         static let reviewPlaces = "review-places"
         static let reviewPi = "review-pi"
         static let reviewPlacesVisited = "review-places-visited"
@@ -98,6 +101,8 @@ class LogService : NSObject {
         static let settingsDataFile = "settings-data-file"
         static let settingsDataFileDelete = "settings-data-file-delete"
         static let settingsDataFileMap = "settings-data-file-map"
+        static let webView = "web-view"
+        static let mapReview = "map-review"
     }
     
     struct args {

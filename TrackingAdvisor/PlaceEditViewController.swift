@@ -44,17 +44,22 @@ class PlaceEditViewController: UIViewController {
         
         if let pid = place?.id, let placeName = nameTextView.text,
            let placeAddress = addressTextView.text, let placeCity = cityTextView.text {
+            place?.name = placeName
+            place?.address = placeAddress
+            place?.city = placeCity
             
             self.goBack(notificationView)
             notificationView?.autoRemove(with: 15, text: "Failed, try again")
             
             UserUpdateHandler.placeEdit(for: pid, placeName: placeName, placeAddress: placeAddress, placeCity: placeCity) {
                 notificationView?.text = "Done"
-                UIView.animate(withDuration: 1.0, animations: {
-                    notificationView?.alpha = 0
-                }, completion: { success in
-                    notificationView?.remove()
-                })
+                if notificationView != nil {
+                    UIView.animate(withDuration: 1.0, animations: {
+                        notificationView?.alpha = 0
+                    }, completion: { success in
+                        notificationView?.remove()
+                    })
+                }
             }
         }
     }
@@ -89,7 +94,7 @@ class PlaceEditViewController: UIViewController {
         tv.font = UIFont.systemFont(ofSize: 16)
         tv.textContainer.maximumNumberOfLines = 2
         tv.isScrollEnabled = false
-        tv.text = "Place name"
+        tv.text = ""
         tv.translatesAutoresizingMaskIntoConstraints = false
         return tv
     }()
@@ -123,7 +128,7 @@ class PlaceEditViewController: UIViewController {
         tv.font = UIFont.systemFont(ofSize: 16)
         tv.textContainer.maximumNumberOfLines = 2
         tv.isScrollEnabled = false
-        tv.text = "Place address"
+        tv.text = ""
         tv.translatesAutoresizingMaskIntoConstraints = false
         return tv
     }()
@@ -149,7 +154,7 @@ class PlaceEditViewController: UIViewController {
         tv.font = UIFont.systemFont(ofSize: 16)
         tv.textContainer.maximumNumberOfLines = 2
         tv.isScrollEnabled = false
-        tv.text = "Place city"
+        tv.text = ""
         tv.translatesAutoresizingMaskIntoConstraints = false
         return tv
     }()
@@ -168,11 +173,16 @@ class PlaceEditViewController: UIViewController {
     }}
     
     var place: Place? { didSet {
-        if let placeName = place?.name, let placeAddress = place?.address,
-            let placeCity = place?.city, let color = place?.getPlaceColor() {
+        if let placeName = place?.name {
             nameTextView.text = placeName
-            addressTextView.text = placeAddress
+        }
+        if let placeCity = place?.city {
             cityTextView.text = placeCity
+        }
+        if let placeAddress = place?.address {
+            addressTextView.text = placeAddress
+        }
+        if let color = place?.getPlaceColor() {
             self.color = color
         }
     }}
@@ -181,10 +191,7 @@ class PlaceEditViewController: UIViewController {
         super.viewWillAppear(animated)
         self.tabBarController?.tabBar.isHidden = false
         
-        //        DataStoreService.shared.delegate = self
-        
         setupNavBarButtons()
-        
     }
 
     override func viewDidLoad() {

@@ -37,7 +37,13 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
         }
         
         UserUpdateHandler.sendReviewUpdate(reviews: updatedReviews)
-        presentingViewController?.dismiss(animated: true)
+        guard let controllers = navigationController?.viewControllers else { return }
+        if controllers.count == 2 {
+            let vc = controllers[0]
+            navigationController?.popToViewController(vc, animated: true)
+        } else {
+            presentingViewController?.dismiss(animated: true)
+        }
     }
     
     var collectionView: UICollectionView!
@@ -51,9 +57,8 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     var visit: Visit? {
         didSet {
             guard let visit = visit, let place = visit.place else { return }
-            headerView.placeAddress = place.address
             headerView.placeName = place.name
-            headerView.placeCity = place.city
+            headerView.placeAddress = place.formatAddressString()
             headerView.placeTimes = visit.getTimesPhrase()
             color = place.getPlaceColor()
             headerView.backgroundColor = color
@@ -71,7 +76,7 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.tabBarController?.tabBar.isHidden = false
+        self.tabBarController?.tabBar.isHidden = true
         
         DataStoreService.shared.delegate = self
         
@@ -91,7 +96,7 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
         self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
         self.navigationController?.navigationBar.shadowImage = UIImage()
         self.navigationController?.navigationBar.isTranslucent = true
-        self.navigationController?.view.backgroundColor = UIColor.clear
+        self.navigationController?.view.backgroundColor = .white
         self.navigationController?.navigationBar.barStyle = .blackOpaque
         
         let layout = UICollectionViewFlowLayout()
@@ -222,15 +227,12 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     
     // MARK: - PersonalInformationCategoryCellDelegate method    
     func reviewPersonalInformation(cat: String, personalInformation: PersonalInformation, answer: FeedbackType) {
-        print("feedback from personal information \(personalInformation.name!): \(answer)")
         
         // save the feedback in the database
         personalInformation.rating = answer.rawValue
         if let piid = personalInformation.id {
             updatedReviews[piid] = answer.rawValue
-            DataStoreService.shared.updatePersonalInformationRating(with: piid, rating: answer.rawValue) {
-                print("reviewPersonalInformation for personal information \(personalInformation.name!) and rating \(answer)")
-            }
+            DataStoreService.shared.updatePersonalInformationRating(with: piid, rating: answer.rawValue)
         }
     }
     
@@ -273,7 +275,8 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     
     func dataStoreDidUpdate(for day: String?) {
         if let vid = visit?.id {
-            visit = DataStoreService.shared.getVisit(for: vid)
+            print("dataStoreDidUpdate")
+            visit = DataStoreService.shared.getVisit(for: vid, ctxt: nil)
         }
     }
 }
@@ -392,11 +395,13 @@ class HeaderPersonalInformationCell : UICollectionViewCell, MGLMapViewDelegate {
     }()
     
     private lazy var mapView: MGLMapView = {
-        let map = MGLMapView(frame: .zero, styleURL: MGLStyle.lightStyleURL())
+        let map = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.lightStyleURL())
         map.delegate = self
         map.tintColor = color
         map.zoomLevel = 14
         map.attributionButton.alpha = 0
+        map.allowsRotating = false
+        map.allowsTilting = false
         map.layer.cornerRadius = 5.0
         map.backgroundColor = .white
         map.clipsToBounds = true

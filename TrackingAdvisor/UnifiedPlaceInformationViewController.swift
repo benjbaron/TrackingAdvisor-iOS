@@ -48,9 +48,8 @@ class UnifiedPlaceInformationViewController: UIViewController, UICollectionViewD
     var visit: Visit? {
         didSet {
             guard let visit = visit, let place = visit.place else { return }
-            headerView.placeAddress = place.formatAddressString()
             headerView.placeName = place.name
-            headerView.placeCity = nil
+            headerView.placeAddress = place.formatAddressString()
             headerView.placeTimes = visit.getTimesPhrase()
             color = place.getPlaceColor()
             headerView.backgroundColor = color
@@ -243,7 +242,7 @@ class UnifiedPlaceInformationViewController: UIViewController, UICollectionViewD
         print("dataStoreDidUpdate -> reload data")
         
         if let vid = visit?.id {
-            visit = DataStoreService.shared.getVisit(for: vid)
+            visit = DataStoreService.shared.getVisit(for: vid, ctxt: nil)
         }
     }
 }
@@ -331,7 +330,7 @@ fileprivate class UnifiedPlaceInformationHeaderCell : UICollectionViewCell, MGLM
     }()
     
     private lazy var mapView: MGLMapView = {
-        let map = MGLMapView(frame: .zero, styleURL: MGLStyle.lightStyleURL())
+        let map = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.lightStyleURL())
         map.delegate = self
         map.tintColor = color
         map.zoomLevel = 14

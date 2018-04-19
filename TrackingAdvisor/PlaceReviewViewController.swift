@@ -49,7 +49,7 @@ class PlaceReviewViewController: UIViewController, UICollectionViewDataSource, P
         fullScreenView?.removeFromSuperview()
         
         DataStoreService.shared.delegate = self
-        reviewChallenges = DataStoreService.shared.getLatestReviewChallenge()
+        reviewChallenges = DataStoreService.shared.getLatestReviewChallenge(ctxt: nil)
         if reviewChallenges.count == 0 { // no challenges are available
             fullScreenView = FullScreenView(frame: view.frame)
             fullScreenView!.icon = "rocket"
@@ -181,7 +181,7 @@ class PlaceReviewViewController: UIViewController, UICollectionViewDataSource, P
     }
     
     func dataStoreDidAddReviewChallenge(for rcid: String?) {
-        reviewChallenges = DataStoreService.shared.getLatestReviewChallenge()
+        reviewChallenges = DataStoreService.shared.getLatestReviewChallenge(ctxt: nil)
     }
     
     private func setTabBarCount(with count: Int?) {
@@ -817,8 +817,13 @@ class QuestionRatingRow : UIView {
         ratingView.settings.filledBorderColor = color
         ratingView.settings.emptyColor = color.withAlphaComponent(0.3)
         ratingView.settings.emptyBorderColor = color.withAlphaComponent(0.3)
-        ratingView.settings.starSize = 28
-        ratingView.settings.starMargin = 8
+        if AppDelegate.isIPhone5() {
+            ratingView.settings.starSize = 24
+            ratingView.settings.starMargin = 6
+        } else {
+            ratingView.settings.starSize = 28
+            ratingView.settings.starMargin = 8
+        }
         ratingView.rating = 2
         ratingView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(ratingView)
@@ -829,16 +834,25 @@ class QuestionRatingRow : UIView {
         
         // add constraints
         questionLabel.text = question
-        questionLabel.font = UIFont.boldSystemFont(ofSize: 14)
+        if AppDelegate.isIPhone5() {
+            questionLabel.font = UIFont.boldSystemFont(ofSize: 12)
+        } else {
+            questionLabel.font = UIFont.boldSystemFont(ofSize: 14)
+        }
         questionLabel.numberOfLines = 0
         questionLabel.textAlignment = .left
         questionLabel.translatesAutoresizingMaskIntoConstraints = false
         addSubview(questionLabel)
         
         addVisualConstraint("V:|[v0]|", views: ["v0": questionLabel])
-        addVisualConstraint("H:|-14-[v0]-14-[rating(100)]-14-|", views: ["v0": questionLabel, "rating": ratingView])
+        addVisualConstraint("H:|-14-[v0]-10-[rating]-14-|", views: ["v0": questionLabel, "rating": ratingView])
         ratingView.centerYAnchor.constraint(equalTo: questionLabel.centerYAnchor).isActive = true
         ratingView.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        if AppDelegate.isIPhone5() {
+            ratingView.widthAnchor.constraint(equalToConstant: 84).isActive = true
+        } else {
+            ratingView.widthAnchor.constraint(equalToConstant: 100).isActive = true
+        }
         
         translatesAutoresizingMaskIntoConstraints = false
     }
@@ -854,47 +868,62 @@ enum FeedbackType : Int32 {
 class FeedbackRow : UIView {
     var feedbackChanged: ((FeedbackType) -> ())?
     let iconDiameter:CGFloat = 35.0
-    var color: UIColor! = Constants.colors.primaryDark {
+    var selectedColor: UIColor! = Constants.colors.primaryDark {
+        didSet {
+            resetColors()
+        }
+    }
+    var unselectedColor: UIColor! = Constants.colors.primaryLight {
         didSet {
             resetColors()
         }
     }
     var selectedFeedback: FeedbackType = .meh {
         didSet {
-            resetColors()
+            unselectAll()
             switch selectedFeedback {
             case .yes:
-                yesView.color = color
-                yesView.imageColor = color
-                yesLabel.textColor = color
+                yesLabel.textColor = selectedColor
+                yesView.isSelected = true
             case .no:
-                noView.color = color
-                noView.imageColor = color
-                noLabel.textColor = color
+                noLabel.textColor = selectedColor
+                noView.isSelected = true
             case .meh:
-                mehView.color = color
-                mehView.imageColor = color
-                mehLabel.textColor = color
+                mehLabel.textColor = selectedColor
+                mehView.isSelected = true
             case .none:
                 break
             }
         }
     }
     
-    private func resetColors() {
-        yesView.color = color.withAlphaComponent(0.3)
-        yesView.imageColor = color.withAlphaComponent(0.3)
-        yesLabel.textColor = color.withAlphaComponent(0.3)
-        noView.color = color.withAlphaComponent(0.3)
-        noView.imageColor = color.withAlphaComponent(0.3)
-        noLabel.textColor = color.withAlphaComponent(0.3)
-        mehView.color = color.withAlphaComponent(0.3)
-        mehView.imageColor = color.withAlphaComponent(0.3)
-        mehLabel.textColor = color.withAlphaComponent(0.3)
+    private func unselectAll() {
+        yesLabel.textColor = unselectedColor
+        yesView.isSelected = false
+        noLabel.textColor = unselectedColor
+        noView.isSelected = false
+        mehLabel.textColor = unselectedColor
+        mehView.isSelected = false
     }
     
-    private lazy var yesView: RoundIconView = {
-        return RoundIconView(image: UIImage(named: "check")!, color: color, imageColor: color, diameter: iconDiameter, scale: 0.6, fill: false)
+    private func resetColors() {
+        yesLabel.textColor = unselectedColor
+        yesView.selectedColor = selectedColor
+        yesView.unselectedColor = unselectedColor
+        noLabel.textColor = unselectedColor
+        noView.selectedColor = selectedColor
+        noView.unselectedColor = unselectedColor
+        mehLabel.textColor = unselectedColor
+        mehView.selectedColor = selectedColor
+        mehView.unselectedColor = unselectedColor
+
+    }
+    
+    private lazy var yesView: CircleCheckView = {
+        let view = CircleCheckView(frame: CGRect(x: 0, y: 0, width: iconDiameter, height: iconDiameter))
+        view.selectedColor = selectedColor
+        view.unselectedColor = unselectedColor
+        return view
     }()
     
     private lazy var yesLabel: UILabel = {
@@ -904,8 +933,11 @@ class FeedbackRow : UIView {
         return label
     }()
     
-    private lazy var mehView: RoundIconView = {
-        return RoundIconView(image: UIImage(named: "meh")!, color: color, imageColor: color, diameter: iconDiameter, scale: 0.6, fill: false)
+    private lazy var mehView: MehView = {
+        let view = MehView(frame: CGRect(x: 0, y: 0, width: iconDiameter, height: iconDiameter))
+        view.selectedColor = selectedColor
+        view.unselectedColor = unselectedColor
+        return view
     }()
     
     private lazy var mehLabel: UILabel = {
@@ -915,8 +947,11 @@ class FeedbackRow : UIView {
         return label
     }()
     
-    private lazy var noView: RoundIconView = {
-        return RoundIconView(image: UIImage(named: "times")!, color: color, imageColor: color, diameter: iconDiameter,  scale: 0.6, fill: false)
+    private lazy var noView: TimesView = {
+        let view = TimesView(frame: CGRect(x: 0, y: 0, width: iconDiameter, height: iconDiameter))
+        view.selectedColor = selectedColor
+        view.unselectedColor = unselectedColor
+        return view
     }()
     
     private lazy var noLabel: UILabel = {
@@ -1017,7 +1052,11 @@ class CommentRow : UIView {
         label.text = text
         label.numberOfLines = 2
         label.textColor = color
-        label.font = UIFont.italicSystemFont(ofSize: 14.0)
+        if AppDelegate.isIPhone5() {
+            label.font = UIFont.italicSystemFont(ofSize: 12.0)
+        } else {
+            label.font = UIFont.italicSystemFont(ofSize: 14.0)
+        }
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()

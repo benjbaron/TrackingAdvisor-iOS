@@ -236,6 +236,12 @@ class FullScreenView: UIView {
                 headerImage.animationDuration = 1.0
                 headerImage.animationRepeatCount = 0
                 headerImage.startAnimating()
+            } else if icon == "path" {
+                let array = getImageArray(icon: icon, numberOfImages: 11, color: nil)
+                headerImage.animationImages = array
+                headerImage.animationDuration = 1.5
+                headerImage.animationRepeatCount = 0
+                headerImage.startAnimating()
             } else {
                 headerImage.image = UIImage(named: icon)!.withRenderingMode(.alwaysTemplate)
             }
@@ -309,12 +315,16 @@ class FullScreenView: UIView {
         buttonConstraint?.isActive = true
     }
     
-    private func getImageArray(icon: String, numberOfImages: Int, color: UIColor) -> [UIImage] {
+    private func getImageArray(icon: String, numberOfImages: Int, color: UIColor?) -> [UIImage] {
         var imageArray:[UIImage] = []
         for i in 1..<numberOfImages {
             let imageName = "\(icon)-\(i)"
             let image = UIImage(named: imageName)!.withRenderingMode(.alwaysTemplate)
-            imageArray.append(image.imageWithTint(tint: color))
+            if let color = color {
+                imageArray.append(image.imageWithTint(tint: color))
+            } else {
+                imageArray.append(image)
+            }
         }
         return imageArray
     }
@@ -484,4 +494,21 @@ func matches(for regex: String, in text: String) -> [String] {
         print("invalid regex: \(error.localizedDescription)")
         return []
     }
+}
+
+func setMask(with hole: CGRect, in view: UIView){
+    
+    // Create a mutable path and add a rectangle that will be h
+    let mutablePath = CGMutablePath()
+    mutablePath.addRect(view.bounds)
+    mutablePath.addRect(hole)
+    
+    // Create a shape layer and cut out the intersection
+    let mask = CAShapeLayer()
+    mask.path = mutablePath
+    mask.fillRule = kCAFillRuleEvenOdd
+    
+    // Add the mask to the view
+    view.layer.mask = mask
+    
 }

@@ -61,7 +61,7 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
         self.navigationController?.isNavigationBarHidden = true
         self.tabBarController?.tabBar.isHidden = false
         
-        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationToReview(sameContext: false)
+        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationToReview(ctxt: nil)
         
         DataStoreService.shared.delegate = self
         
@@ -166,8 +166,11 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
         
-        // 4 - return the correct size
-        return CGSize(width: collectionView.frame.width, height: 175)
+        var height: CGFloat = 175.0
+        if AppDelegate.isIPhone5() {
+            height = 200.0
+        }
+        return CGSize(width: collectionView.frame.width, height: height)
     }
 
     
@@ -282,7 +285,7 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
     // MARK: - DataStoreUpdateProtocol methods
     func dataStoreDidUpdateAggregatedPersonalInformation() {
         // get the latest aggregatedPersonalInformation
-        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationToReview(sameContext: false)
+        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationToReview(ctxt: nil)
     }
 }
 

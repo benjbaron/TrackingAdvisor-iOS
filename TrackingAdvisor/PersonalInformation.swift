@@ -113,8 +113,6 @@ class PersonalInformation : NSManagedObject {
                    let pid = managedObject.place?.id, nbPI == 0 {
                     try? Place.updatePlaceReviewed(for: pid, reviewed: true, in: context)
                 }
-                
-                
             }
         } catch {
             throw error

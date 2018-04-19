@@ -41,7 +41,7 @@ class ExplanationFeedbackViewController: UIViewController {
     lazy var headerView: PlaceHeader = {
         let header = PlaceHeader()
         header.backgroundColor = color
-        header.placeName = "Give a feedback on an explanation"
+        header.placeName = "Give a feedback for an explanation"
         return header
     }()
     
@@ -136,7 +136,7 @@ class ExplanationFeedbackViewController: UIViewController {
         self.view.addVisualConstraint("H:|[v0]-|", views: ["v0": explanationRow])
         self.view.addVisualConstraint("H:|-[v0]-|", views: ["v0": textView])
         
-        self.view.addVisualConstraint("V:|[header(120)][pi]-[ex]-[text]|", views: ["header": headerView, "pi": piRow, "ex": explanationRow, "text": textView])
+        self.view.addVisualConstraint("V:|[header][pi]-[ex]-[text]|", views: ["header": headerView, "pi": piRow, "ex": explanationRow, "text": textView])
     }
     
 }
@@ -153,7 +153,7 @@ fileprivate class ElementRowView: UIView {
     
     lazy var descriptionLabel: UILabel = {
         let label = UILabel()
-        label.textColor = Constants.colors.lightGray
+        label.textColor = .gray
         label.font = UIFont.systemFont(ofSize: 14.0, weight: .light)
         label.text = descriptionText
         label.textAlignment = .left

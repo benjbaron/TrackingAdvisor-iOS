@@ -41,7 +41,11 @@ class InfoCardView: UIView {
         label.text = descriptionText
         label.textAlignment = .left
         label.numberOfLines = 0
-        label.font = UIFont.systemFont(ofSize: 18, weight: .bold)
+        if AppDelegate.isIPhone5() {
+            label.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+        } else {
+            label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        }
         label.textColor = descriptionTextColor
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -79,16 +83,16 @@ class InfoCardView: UIView {
     func setupViews() {
         addSubview(bigTextLabel)
         addSubview(descriptionTextLabel)
-        
+                
         // set content compression resistance
         // see: https://krakendev.io/blog/autolayout-magic-like-harry-potter-but-real
-        bigTextLabel.setContentCompressionResistancePriority(UILayoutPriority(rawValue: 1000), for: .horizontal)
-        descriptionTextLabel.setContentCompressionResistancePriority(UILayoutPriority(rawValue: 250), for: .horizontal)
+//        bigTextLabel.setContentHuggingPriority(UILayoutPriority(rawValue: 200), for: .horizontal)
+        descriptionTextLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         
         // setup contraints
         addVisualConstraint("V:|-[v0]-12-|", views: ["v0": bigTextLabel])
         addVisualConstraint("V:|-[v0]-12-|", views: ["v0": descriptionTextLabel])
-        addVisualConstraint("H:|-16-[v0]-12-[v1]-16-|", views: ["v0": bigTextLabel, "v1": descriptionTextLabel])
+        addVisualConstraint("H:|-16-[v0(>=60)]-12-[v1]-16-|", views: ["v0": bigTextLabel, "v1": descriptionTextLabel])
         
         translatesAutoresizingMaskIntoConstraints = false
     }
@@ -485,7 +489,11 @@ class BigLabel: UIView {
         bigTextLabel = UILabel()
         bigTextLabel.text = bigText.bigText
         bigTextLabel.textAlignment = .left
-        bigTextLabel.font = UIFont.systemFont(ofSize: 36, weight: .heavy)
+        if AppDelegate.isIPhone5() {
+            bigTextLabel.font = UIFont.systemFont(ofSize: 30, weight: .heavy)
+        } else {
+            bigTextLabel.font = UIFont.systemFont(ofSize: 36, weight: .heavy)
+        }
         bigTextLabel.textColor = color
         bigTextLabel.sizeToFit()
         bigTextLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -502,12 +510,15 @@ class BigLabel: UIView {
         smallBottomTextLabel = UILabel()
         smallBottomTextLabel!.text = bigText.smallBottomText ?? ""
         smallBottomTextLabel!.textAlignment = .left
-        smallBottomTextLabel!.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+        if AppDelegate.isIPhone5() {
+            smallBottomTextLabel!.font = UIFont.systemFont(ofSize: 12, weight: .bold)
+        } else {
+            smallBottomTextLabel!.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+        }
         smallBottomTextLabel!.textColor = color.withAlphaComponent(0.7)
         smallBottomTextLabel.numberOfLines = 0
         smallBottomTextLabel!.sizeToFit()
         smallBottomTextLabel!.translatesAutoresizingMaskIntoConstraints = false
-        
         
         let hstackView = UIStackView(arrangedSubviews: [bigTextLabel,topExponentLabel])
         hstackView.axis = .horizontal
@@ -527,13 +538,6 @@ class BigLabel: UIView {
         // set up the constraints
         addVisualConstraint("V:|[v0]|", views: ["v0": vstackView])
         addVisualConstraint("H:|[v0]|", views: ["v0": vstackView])
-
-//        addVisualConstraint("V:|[v0]", views: ["v0": bigTextLabel])
-//        addVisualConstraint("H:|[v0][v1]|", views: ["v0": bigTextLabel, "v1": topExponentLabel!])
-//        addVisualConstraint("V:|-7-[v0]", views: ["v0": topExponentLabel!])
-//        addVisualConstraint("H:|[v0]", views: ["v0": smallBottomTextLabel!])
-//        addVisualConstraint("V:|[v0]-(==-5)-[v1]|", views: ["v0": bigTextLabel, "v1": smallBottomTextLabel!])
-
         
         translatesAutoresizingMaskIntoConstraints = false
     }

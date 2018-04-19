@@ -51,7 +51,7 @@ class DataStoreService: NSObject {
             if let visits = userUpdate.v, let days = userUpdate.days {
                 var savedVisits: Set<String> = Set()
                 for day in days {
-                    for v in strongSelf.getVisits(for: day, sameContext: true) {
+                    for v in strongSelf.getVisits(for: day, ctxt: context) {
                         if let vid = v.id {
                             savedVisits.insert(vid)
                         }
@@ -182,12 +182,9 @@ class DataStoreService: NSObject {
     }
     
     
-    func getPersonalInformation(with piid: String, sameContext:Bool = false) throws -> PersonalInformation? {
-        print("getpersonalinformation - \(sameContext)")
+    func getPersonalInformation(with piid: String) throws -> PersonalInformation? {
+        print("getpersonalinformation")
         let context = container.viewContext
-        if !sameContext {
-            context.reset()
-        }
         
         do {
             return try PersonalInformation.findPersonalInformation(matching: piid, in: context)
@@ -204,7 +201,7 @@ class DataStoreService: NSObject {
             guard let strongSelf = self else { return }
             
             var savedPI: Set<String> = Set()
-            for pi in strongSelf.getAllAggregatedPersonalInformation(sameContext: true) {
+            for pi in strongSelf.getAllAggregatedPersonalInformation(ctxt: context) {
                 if let pid = pi.id {
                     savedPI.insert(pid)
                 }
@@ -324,13 +321,10 @@ class DataStoreService: NSObject {
         }
     }
     
-    func getUniqueVisitDays(sameContext: Bool = false) -> [String] {
-//        guard let context = container?.viewContext else { return [] }
-        let context = container.viewContext
-        print("getUniqueVisitDays - \(sameContext)")
-        if !sameContext {
-            context.reset()
-        }
+    func getUniqueVisitDays(ctxt: NSManagedObjectContext?) -> [String] {
+        print("getUniqueVisitDays")
+        
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
         
         // create the fetch request
         let request: NSFetchRequest<Visit> = Visit.fetchRequest()
@@ -351,13 +345,10 @@ class DataStoreService: NSObject {
         return []
     }
     
-    func getVisits(for day: String, sameContext: Bool = false) -> [Visit] {
-        let context = container.viewContext
-        print("getVisits for day - \(sameContext)")
+    func getVisits(for day: String, ctxt: NSManagedObjectContext?) -> [Visit] {
+        print("getVisits for day")
         
-        if !sameContext {
-            context.reset()
-        }
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
         
         // create the fetch request
         let request: NSFetchRequest<Visit> = Visit.fetchRequest()
@@ -379,13 +370,35 @@ class DataStoreService: NSObject {
         return []
     }
     
-    func getVisit(for vid: String, sameContext: Bool = false) -> Visit? {
-//        guard let context = container.viewContext else { return nil }
-        let context = container.viewContext
-        print("getvisit for vid - \(sameContext)")
-        if !sameContext {
-            context.reset()
+    func getNumberOfVisitsToReview(for day: String, ctxt: NSManagedObjectContext?) -> Int {
+        print("getNumberOfVisitsToReview for day")
+        
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
+        
+        // create the fetch request
+        let request: NSFetchRequest<Visit> = Visit.fetchRequest()
+        
+        // Add Sort Descriptor
+        let sortDescriptor = NSSortDescriptor(key: "arrival", ascending: true)
+        request.sortDescriptors = [sortDescriptor]
+        
+        // Add a predicate
+        request.predicate = NSPredicate(format: "day = %@ AND visited = 0", day)
+        
+        do {
+            let matches = try context.fetch(request)
+            return matches.count
+        } catch {
+            print("Could not fetch visits. \(error)")
         }
+        
+        return 0
+    }
+    
+    func getVisit(for vid: String, ctxt: NSManagedObjectContext?) -> Visit? {
+        print("getvisit for vid")
+        
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
         
         // create the fetch request
         let request: NSFetchRequest<Visit> = Visit.fetchRequest()
@@ -403,13 +416,10 @@ class DataStoreService: NSObject {
         return nil
     }
     
-    func getAllVisits(sameContext: Bool = false) -> [Visit] {
-//        guard let context = container?.viewContext else { return [] }
-        let context = container.viewContext
-        print("getallvisits - \(sameContext)")
-        if !sameContext {
-            context.reset()
-        }
+    func getAllVisits(ctxt: NSManagedObjectContext?) -> [Visit] {
+        print("getallvisits")
+        
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
         
         // create the fetch request
         let request: NSFetchRequest<Visit> = Visit.fetchRequest()
@@ -428,12 +438,10 @@ class DataStoreService: NSObject {
         return []
     }
     
-    func getAllVisitsConfirmed(sameContext: Bool = false) -> [Visit] {
-        let context = container.viewContext
-        print("getallvisitsConfirmed - \(sameContext)")
-        if !sameContext {
-            context.reset()
-        }
+    func getAllVisitsConfirmed(ctxt: NSManagedObjectContext?) -> [Visit] {
+        print("getallvisitsConfirmed")
+        
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
         
         // create the fetch request
         let request: NSFetchRequest<Visit> = Visit.fetchRequest()
@@ -455,13 +463,10 @@ class DataStoreService: NSObject {
         return []
     }
     
-    func getAllPlaces(sameContext: Bool = false) -> [Place] {
-        print("getallplaces - \(sameContext)")
-//        guard let context = container?.viewContext else { return [] }
-        let context = container.viewContext
-        if !sameContext {
-            context.reset()
-        }
+    func getAllPlaces(ctxt: NSManagedObjectContext?) -> [Place] {
+        print("getallplaces")
+        
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
         
         // create the fetch request
         let request: NSFetchRequest<Place> = Place.fetchRequest()
@@ -480,13 +485,10 @@ class DataStoreService: NSObject {
         return []
     }
     
-    func getAllPlacesReviewed(sameContext: Bool = false) -> [Place] {
-        print("getAllPlacesReviewed - \(sameContext)")
+    func getAllPlacesReviewed(ctxt: NSManagedObjectContext?) -> [Place] {
+        print("getAllPlacesReviewed")
         
-        let context = container.viewContext
-        if !sameContext {
-            context.reset()
-        }
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
         
         // create the fetch request
         let request: NSFetchRequest<Place> = Place.fetchRequest()
@@ -500,7 +502,6 @@ class DataStoreService: NSObject {
         
         do {
             let matches = try context.fetch(request)
-            print("return \(matches.count) matches")
             return matches
         } catch {
             print("Could not fetch all places reviewed. \(error)")
@@ -509,13 +510,10 @@ class DataStoreService: NSObject {
         return []
     }
 
-    func getAllPlacesToReview(sameContext: Bool = false) -> [Place] {
+    func getAllPlacesToReview(ctxt: NSManagedObjectContext?) -> [Place] {
         print("getAllPlacesToReview")
         
-        let context = container.viewContext
-        if !sameContext {
-            context.reset()
-        }
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
         
         // create the fetch request
         let request: NSFetchRequest<Place> = Place.fetchRequest()
@@ -539,13 +537,10 @@ class DataStoreService: NSObject {
         return []
     }
     
-    func getAllAggregatedPersonalInformation(sameContext: Bool = false) -> [AggregatedPersonalInformation] {
-        print("getallaggregatedpersonalinformation - \(sameContext)")
-//        guard let context = container?.viewContext else { return [] }
-        let context = container.viewContext
-        if !sameContext {
-            context.reset()
-        }
+    func getAllAggregatedPersonalInformation(ctxt: NSManagedObjectContext?) -> [AggregatedPersonalInformation] {
+        print("getallaggregatedpersonalinformation")
+        
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
         
         // create the fetch request
         let request: NSFetchRequest<AggregatedPersonalInformation> = AggregatedPersonalInformation.fetchRequest()
@@ -564,13 +559,10 @@ class DataStoreService: NSObject {
         return []
     }
     
-    func getAggregatedPersonalInformationToReview(sameContext: Bool = false) -> [AggregatedPersonalInformation] {
-        print("getAggregatedPersonalInformationToReview - \(sameContext)")
-        //        guard let context = container?.viewContext else { return [] }
-        let context = container.viewContext
-        if !sameContext {
-            context.reset()
-        }
+    func getAggregatedPersonalInformationToReview(ctxt: NSManagedObjectContext?) -> [AggregatedPersonalInformation] {
+        print("getAggregatedPersonalInformationToReview")
+        
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
         
         // create the fetch request
         let request: NSFetchRequest<AggregatedPersonalInformation> = AggregatedPersonalInformation.fetchRequest()
@@ -592,13 +584,10 @@ class DataStoreService: NSObject {
         return []
     }
     
-    func getAggregatedPersonalInformationReviewed(sameContext: Bool = false) -> [AggregatedPersonalInformation] {
-        print("getAggregatedPersonalInformationReviewed - \(sameContext)")
-        //        guard let context = container?.viewContext else { return [] }
-        let context = container.viewContext
-        if !sameContext {
-            context.reset()
-        }
+    func getAggregatedPersonalInformationReviewed(ctxt: NSManagedObjectContext?) -> [AggregatedPersonalInformation] {
+        print("getAggregatedPersonalInformationReviewed")
+        
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
         
         // create the fetch request
         let request: NSFetchRequest<AggregatedPersonalInformation> = AggregatedPersonalInformation.fetchRequest()
@@ -620,9 +609,9 @@ class DataStoreService: NSObject {
         return []
     }
     
-    func deleteAllReviewChallenges() {
-//        guard let context = container?.viewContext else { return }
-        let context = container.viewContext
+    func deleteAllReviewChallenges(ctxt: NSManagedObjectContext?) {
+
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
         
         // deleting personal information
         let fetch = NSFetchRequest<NSFetchRequestResult>(entityName: "ReviewChallenge")
@@ -635,9 +624,9 @@ class DataStoreService: NSObject {
         }
     }
     
-    func deleteAllAggregatedPersonalInformation() {
-//        guard let context = container?.viewContext else { return }
-        let context = container.viewContext
+    func deleteAllAggregatedPersonalInformation(ctxt: NSManagedObjectContext?) {
+        
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
         
         // deleting personal information
         let fetch = NSFetchRequest<NSFetchRequestResult>(entityName: "AggregatedPersonalInformation")
@@ -650,9 +639,9 @@ class DataStoreService: NSObject {
         }
     }
     
-    func deleteAll() {
-//        guard let context = container?.viewContext else { return }
-        let context = container.viewContext
+    func deleteAll(ctxt: NSManagedObjectContext?) {
+        
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
         
         // deleting review personal information
         var fetch = NSFetchRequest<NSFetchRequestResult>(entityName: "ReviewPersonalInformation")
@@ -725,16 +714,11 @@ class DataStoreService: NSObject {
         }
     }
     
-    func deleteVisit(vid: String, callback:(()->Void)? = nil) {
-//        guard let context = container?.viewContext else { return }
-        let context = container.viewContext
+    func deleteVisit(vid: String, ctxt: NSManagedObjectContext?, callback:(()->Void)? = nil) {
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
+        context.mergePolicy = NSMergePolicy(merge: .mergeByPropertyObjectTrumpMergePolicyType)
         
         if let visit = try! Visit.findVisit(matching: vid, in: context) {
-            
-            // delete the review associated to it
-            if let review = visit.review {
-                context.delete(review)
-            }
             
             context.delete(visit)
             
@@ -747,9 +731,9 @@ class DataStoreService: NSObject {
         }
     }
     
-    func getLatestReviewChallenge() -> [ReviewChallenge] {
-//        guard let context = container?.viewContext else { return [] }
-        let context = container.viewContext
+    func getLatestReviewChallenge(ctxt: NSManagedObjectContext?) -> [ReviewChallenge] {
+        
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
         
         // create the fetch request
         let request: NSFetchRequest<ReviewChallenge> = ReviewChallenge.fetchRequest()
@@ -789,15 +773,13 @@ class DataStoreService: NSObject {
             let lastUpdateStr = DateHandler.dateToDayString(from: lastUpdate.startOfDay)
             let todayStr = DateHandler.dateToDayString(from: Date())
             if force || todayStr != lastUpdateStr {
-                let days = getUniqueVisitDays()
+                let days = getUniqueVisitDays(ctxt: nil)
                 for day in days {
                     if day == todayStr { continue }
-                    let lastVisit = getVisits(for: day, sameContext: true).last
+                    let lastVisit = getVisits(for: day, ctxt: nil).last
                     if let vid = lastVisit?.id, let lastVisitDeparture = lastVisit?.departure {
                         let endOfDay = lastVisitDeparture.endOfDay
-                        updateVisit(with: vid, departure: endOfDay) {
-                            print("Updated visit \(vid) with \(endOfDay)")
-                        }
+                        updateVisit(with: vid, departure: endOfDay)
                     }
                 }
             }

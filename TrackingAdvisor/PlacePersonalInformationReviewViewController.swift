@@ -41,7 +41,7 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
         
         DataStoreService.shared.delegate = self
         
-        places = DataStoreService.shared.getAllPlacesToReview()
+        places = DataStoreService.shared.getAllPlacesToReview(ctxt: nil)
         updatedReviews.removeAll()
         if collectionView != nil {
             collectionView.reloadData()
@@ -61,7 +61,7 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
         
         LogService.shared.log(LogService.types.reviewPlaces)
         
-        places = DataStoreService.shared.getAllPlacesToReview()
+        places = DataStoreService.shared.getAllPlacesToReview(ctxt: nil)
         
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
@@ -227,7 +227,7 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
     // MARK: - DataStoreUpdateProtocol methods
     func dataStoreDidUpdateAggregatedPersonalInformation() {
         // get the latest aggregatedPersonalInformation
-        places = DataStoreService.shared.getAllPlacesToReview()
+        places = DataStoreService.shared.getAllPlacesToReview(ctxt: nil)
     }
 }
 

@@ -35,7 +35,11 @@ class TimelineSwipeViewController: UIViewController, EMPageViewControllerDataSou
     private func setChildController() {
         let currentViewController = self.pageViewController?.selectedViewController
         if currentViewController == nil {
-            days = DataStoreService.shared.getUniqueVisitDays()
+            days = DataStoreService.shared.getUniqueVisitDays(ctxt: nil)
+            let today = DateHandler.dateToDayString(from: Date())
+            if !days.contains(today) {
+                days.insert(today, at: 0)
+            }
             
             if days.count == 0 && fullScreenView == nil {
                 // the user just installed the app, show an animation

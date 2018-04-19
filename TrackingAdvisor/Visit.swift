@@ -131,4 +131,11 @@ class Visit: NSManagedObject {
         let timeDiff = departure.timeIntervalSince(arrival)
         return "You were at this place on \(DateHandler.dateToDayLetterString(from: arrival)) for \(timeDiff.timeIntervalToString()) from \(DateHandler.dateToTimePeriodString(from: arrival)) to \(DateHandler.dateToTimePeriodString(from: departure))"
     }
+    
+    func getShortDescription() -> String {
+        guard let arrival = arrival, let departure = departure else { return "" }
+        let timeDiff = departure.timeIntervalSince(arrival)
+        return "You were at this place for \((timeDiff.timeIntervalToString())) from \(DateHandler.dateToTimePeriodString(from: arrival)) to \(DateHandler.dateToTimePeriodString(from: departure))"
+        
+    }
 }

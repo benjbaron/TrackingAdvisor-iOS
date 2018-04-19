@@ -28,8 +28,8 @@ struct PlaceSearchResultDetail: Codable {
     let placeid: String
     let venueid: String
     let category: String
-    let city: String
-    let address: String
+    let city: String?
+    let address: String?
     let checkins: Int
     let score: Float
     let distance: Float
@@ -103,14 +103,13 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         
         guard let controllers = navigationController?.viewControllers else { return }
         let count = controllers.count
-        if count == 2 {
+        if count >= 2 {
             // get the previous place detail controller
-            if let vc = controllers[0] as? OneTimelinePlaceDetailViewController {
-                vc.visit = visit
-                navigationController?.popToViewController(vc, animated: true)
-            }
+            let vc = controllers[controllers.count - 2]
+            navigationController?.popToViewController(vc, animated: true)
+            
         } else if count == 1 {
-            // return to the timeline
+            // return to the timelinez
             presentingViewController?.dismiss(animated: true)
         }
     }
@@ -122,13 +121,18 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         let deletePlaceAction = UIAlertAction(title: "Delete this place",
                                             style: UIAlertActionStyle.destructive) {
             [weak self] result in
-            if let vid = self?.visit?.id {
+            if let visit = self?.visit, let vid = visit.id {
+                
+                print("is mainThread: \(Thread.isMainThread)")
+                
                 LogService.shared.log(LogService.types.visitEditDelete,
                                       args: [LogService.args.visitId: vid,
                                              LogService.args.userChoice: "delete"])
                 
+                print("call UserUpdateHandler delete place")
                 UserUpdateHandler.deleteVisit(for: vid) { [weak self] in
-                    DataStoreService.shared.deleteVisit(vid: vid)
+                    print("call DataStoreService delete visit")
+                    DataStoreService.shared.deleteVisit(vid: vid, ctxt: nil)
                     self?.presentingViewController?.dismiss(animated: true)
                 }
             }
@@ -291,12 +295,14 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     var searchActive = false
     var marker = UIImageView()
     var isFetchingFromServer = false
+    var hasExactMatch = false
+    
     var searchResult:PlaceSearchResult? = nil
     var selectedPlace: PlaceSearchResultDetail? = nil
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.tabBarController?.tabBar.isHidden = false
+        self.tabBarController?.tabBar.isHidden = true
     }
     
     override func viewDidLoad() {
@@ -338,6 +344,8 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         mapView.tintColor = color
         mapView.delegate = self
         mapView.zoomLevel = 15
+        mapView.allowsRotating = false
+        mapView.allowsTilting = false
         mapView.translatesAutoresizingMaskIntoConstraints = false
         
         // Center the map on the visit coordinates
@@ -510,9 +518,9 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     // MARK: - UITableViewDataSource delegate
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        let offset = (searchbarView.text ?? "") == "" ? 0 : 1
+        let offset = showAddOption(for: searchbarView.text) ? 1 : 0
         if let places = searchResult?.places {
-            return places.count+offset
+            return places.count + offset
         } else {
             return offset
         }
@@ -520,8 +528,10 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: cellId, for: indexPath) as! PlaceFinderTableViewCell
-        let offset = (searchbarView.text ?? "") == "" ? 0 : 1
         guard let searchResult = searchResult else { return cell }
+        
+        let offset = showAddOption(for: searchbarView.text) ? 1 : 0
+        
         if let searchText = searchbarView.text, offset == 1 && indexPath.row == 0  {
             // this is a user-custom place
             let formattedString = NSMutableAttributedString()
@@ -598,11 +608,10 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                 }
             }
             tableView.deselectRow(at: indexPath, animated: true)
-            if isFolded {
-                unfoldMapView()
-            }
         }
-            
+        if isFolded {
+            unfoldMapView()
+        }
     }
     
     // MARK: - UISearchBarDelegate Delegate
@@ -618,9 +627,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
         searchActive = false
-        if isFolded {
-            unfoldMapView()
-        }
+        unfoldMapView()
     }
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
@@ -637,7 +644,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         if let oldText = searchBar.text {
             let newText = (searchBar.text ?? "").replacingCharacters(in: Range(range, in: oldText)!, with: text)
             if oldText.count > newText.count && newText.count < 3 {
-                getPlaces(matching: newText)
+                getPlaces(matching: "")
             }
         }
         return true
@@ -653,6 +660,13 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
     }
     
     // MARK: - fetch search result from server
+    private func showAddOption(for searchText: String?) -> Bool {
+        guard let searchText = searchText else { return false }
+        if searchText == "" { return false }
+        if hasExactMatch { return false }
+        return true
+    }
+    
     private func getPlaces(matching searchText: String) {
         if isFetchingFromServer ||
             (self.mapView.centerCoordinate.longitude == 0 && self.mapView.centerCoordinate.latitude == 0) {
@@ -676,6 +690,13 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                     do {
                         let decoder = JSONDecoder()
                         strongSelf.searchResult = try decoder.decode(PlaceSearchResult.self, from: data)
+                        strongSelf.hasExactMatch = false
+                        for place in strongSelf.searchResult!.places {
+                            if place.name.lowercased().hasPrefix(searchText.lowercased()) {
+                                strongSelf.hasExactMatch = true
+                                break
+                            }
+                        }
                         strongSelf.tableView.reloadData()
                     } catch {
                         print("Error serializing the json", error)
@@ -745,7 +766,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
                             decoder.dateDecodingStrategy = .secondsSince1970
                             let userUpdate = try decoder.decode(UserUpdate.self, from: data)
                             if self?.type == .edit, let vid = visitid {
-                                DataStoreService.shared.deleteVisit(vid: vid) {
+                                DataStoreService.shared.deleteVisit(vid: vid, ctxt: nil) {
                                     DataStoreService.shared.updateDatabase(with: userUpdate) {
                                         callback?()
                                     }
@@ -1063,6 +1084,7 @@ class CustomPointAnnotation: NSObject, MGLAnnotation {
     var coordinate: CLLocationCoordinate2D
     var title: String?
     var subtitle: String?
+    var type: String?
     
     // Custom properties that we will use to customize the annotation's image.
     var image: UIImage?

@@ -20,7 +20,7 @@ class PlacesVisitedListTableViewController: UITableViewController, DataStoreUpda
         
         DataStoreService.shared.delegate = self
         
-        places = DataStoreService.shared.getAllPlaces().filter({ $0.numberOfVisitsConfirmed > 0 }).sorted(by: { $0.numberOfVisitsConfirmed > $1.numberOfVisitsConfirmed })
+        places = DataStoreService.shared.getAllPlaces(ctxt: nil).filter({ $0.numberOfVisitsConfirmed > 0 }).sorted(by: { $0.numberOfVisitsConfirmed > $1.numberOfVisitsConfirmed })
         
         tableView.reloadData()
     }
@@ -59,7 +59,7 @@ class PlacesVisitedListTableViewController: UITableViewController, DataStoreUpda
     
     // MARK: - DataStoreUpdateProtocol methods
     func dataStoreDidUpdate(for day: String?) {
-        places = DataStoreService.shared.getAllPlaces().filter({ $0.numberOfVisitsConfirmed > 0 }).sorted(by: { $0.numberOfVisitsConfirmed > $1.numberOfVisitsConfirmed })
+        places = DataStoreService.shared.getAllPlaces(ctxt: nil).filter({ $0.numberOfVisitsConfirmed > 0 }).sorted(by: { $0.numberOfVisitsConfirmed > $1.numberOfVisitsConfirmed })
     }
     
 }

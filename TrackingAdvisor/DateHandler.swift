@@ -58,6 +58,11 @@ extension Formatter {
         formatter.dateFormat = "ccc d MMMM yyyy"
         return formatter
     }()
+    static let fullDateLetter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "cccc d MMMM yyyy"
+        return formatter
+    }()
     static let time:DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm"
@@ -78,6 +83,10 @@ extension Formatter {
         formatter.dateFormat = "LLLL"
         return formatter
     }()
+}
+
+extension Calendar {
+    static let gregorian = Calendar(identifier: .gregorian)
 }
 
 extension Date {
@@ -103,6 +112,11 @@ extension Date {
         let calendar = Calendar.current
         let date = calendar.startOfDay(for: self)
         return calendar.component(.weekday, from: date)
+    }
+    var dayOfWeekName: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE"
+        return formatter.string(for: self) ?? ""
     }
     // the same for your local time
     var localTime: String {
@@ -134,6 +148,10 @@ extension Date {
     
     public func earlier(_ date:Date) -> Date{
         return (self.timeIntervalSince1970 <= date.timeIntervalSince1970) ? self : date
+    }
+    
+    var startOfWeek: Date? {
+        return Calendar.gregorian.date(from: Calendar.gregorian.dateComponents([.yearForWeekOfYear, .weekOfYear], from: self))
     }
     
     public func timeAgo(since date:Date, numericDates: Bool = false, numericTimes: Bool = false) -> String {

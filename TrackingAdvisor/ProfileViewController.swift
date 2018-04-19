@@ -68,7 +68,7 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
         self.navigationController?.isNavigationBarHidden = true
         self.tabBarController?.tabBar.isHidden = false
         
-        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationReviewed(sameContext: false)
+        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationReviewed(ctxt: nil)
         
         DataStoreService.shared.delegate = self
         
@@ -184,9 +184,7 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let picid = pics[indexPath.section-1]
         if let pi = personalInformation[picid]?[indexPath.item] {
-            print("overlayView (1)")
             let overlayView = AggregatedPersonalInformationExplanationOverlayView()
-            print("overlayView (2)")
             overlayView.color = color
             overlayView.picIndexPath = indexPath
             overlayView.indexPath = indexPath
@@ -195,18 +193,13 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
             overlayView.aggregatedPersonalInformation = pi
             overlayView.showAllQuestions = true
             
-            print("overlayView (3)")
-            
             if let piid = pi.id {
                 LogService.shared.log(LogService.types.profilePiOverlay,
                                       args: [LogService.args.piId: piid])
-                print("LogService")
             }
             
-            print("overlayView (4)")
             OverlayView.shared.delegate = self
             OverlayView.shared.showOverlay(with: overlayView)
-            print("overlayView (5)")
         }
     }
     
@@ -251,16 +244,16 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
     // MARK: - DataStoreUpdateProtocol methods
     func dataStoreDidUpdateAggregatedPersonalInformation() {
         // get the latest aggregatedPersonalInformation
-        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationReviewed(sameContext: false)
+        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationReviewed(ctxt: nil)
     }
     
     func dataStoreDidUpdate(for day: String?) {
-        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationReviewed(sameContext: false)
+        aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationReviewed(ctxt: nil)
     }
     
     func computeData() {
         // get all visits
-        let allVisits = DataStoreService.shared.getAllVisitsConfirmed(sameContext: true)
+        let allVisits = DataStoreService.shared.getAllVisitsConfirmed(ctxt: nil)
         let today = Date()
         
         // compute the number of days since the start of the study
@@ -278,7 +271,7 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
         let uniquePlaceIds = Array(Set(placeIds))
         numberofPlacesVisited = uniquePlaceIds.count
         
-        let placesToReview = DataStoreService.shared.getAllPlacesToReview(sameContext: true)
+        let placesToReview = DataStoreService.shared.getAllPlacesToReview(ctxt: nil)
         numberOfPlacesToReviewTotal = placesToReview.count
         
         numberOfAggregatedPersonalInformation = aggregatedPersonalInformation.count
@@ -406,7 +399,7 @@ class ProfileHeaderCell: UICollectionViewCell, MGLMapViewDelegate {
     }()
     
     var mapView: MGLMapView = {
-        let map = MGLMapView(frame: CGRect(), styleURL: MGLStyle.lightStyleURL())
+        let map = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.lightStyleURL())
         map.zoomLevel = 15
         map.translatesAutoresizingMaskIntoConstraints = false
         map.layer.cornerRadius = 5.0
@@ -432,7 +425,7 @@ class ProfileHeaderCell: UICollectionViewCell, MGLMapViewDelegate {
     }()
     
     var zoomMapView: MGLMapView = {
-        let map = MGLMapView(frame: CGRect(), styleURL: MGLStyle.lightStyleURL())
+        let map = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.lightStyleURL())
         map.zoomLevel = 15
         map.backgroundColor = Constants.colors.superLightGray
         map.attributionButton.alpha = 0

@@ -205,7 +205,6 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
         
         if !ProcessInfo.processInfo.isLowPowerModeEnabled {
             DispatchQueue.global(qos: .background).async {
-                NSLog("loclog locationManager didUpdateLocations, no low power")
                 self.updateRegions(for: location)
             }
         } else {

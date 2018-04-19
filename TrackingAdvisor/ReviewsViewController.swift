@@ -17,11 +17,15 @@ class ReviewsViewController: UIViewController, UIScrollViewDelegate {
     
     var numberOfPlacesToReview: Int? { didSet {
         if numberOfPlacesToReview! > 0 {
-            placesToReviewButton.setTitle("You have places to review", for: .normal)
-            placesToReviewButton.setBackgroundColor(Constants.colors.midPurple, for: .normal)
+            placesToReviewButton.setTitle("Review places", for: .normal)
+            placesToReviewButton.subviews.first?.backgroundColor = Constants.colors.midPurple
+            placesToReviewButton.layoutIfNeeded()
+            print("set badge")
+            placesToReviewButton.badge = "\(numberOfPlacesToReview!)"
         } else {
-            placesToReviewButton.setBackgroundColor(Constants.colors.midPurple.withAlphaComponent(0.5), for: .normal)
-            placesToReviewButton.setTitle("You have no places to review", for: .normal)
+            placesToReviewButton.subviews.first?.backgroundColor = Constants.colors.midPurple.withAlphaComponent(0.5)
+            placesToReviewButton.setTitle("No places to review", for: .normal)
+            placesToReviewButton.badge = nil
         }
     }}
     
@@ -43,11 +47,14 @@ class ReviewsViewController: UIViewController, UIScrollViewDelegate {
     
     var numberOfPersonalInformationToReview: Int? { didSet {
         if numberOfPersonalInformationToReview! > 0 {
-            personalInformationToReviewButton.setTitle("You have personal information to review", for: .normal)
-            personalInformationToReviewButton.setBackgroundColor(Constants.colors.orange, for: .normal)
+            personalInformationToReviewButton.setTitle("Review\npersonal information", for: .normal)
+            personalInformationToReviewButton.subviews.first?.backgroundColor = Constants.colors.orange
+            personalInformationToReviewButton.layoutIfNeeded()
+            personalInformationToReviewButton.badge = "\(numberOfPersonalInformationToReview!)"
         } else {
-            personalInformationToReviewButton.setBackgroundColor(Constants.colors.orange.withAlphaComponent(0.5), for: .normal)
-            personalInformationToReviewButton.setTitle("You have no\npersonal information to review", for: .normal)
+            personalInformationToReviewButton.setTitle("No personal information\nto review", for: .normal)
+            personalInformationToReviewButton.subviews.first?.backgroundColor = Constants.colors.orange.withAlphaComponent(0.5)
+            personalInformationToReviewButton.badge = nil
         }
     }}
     
@@ -78,42 +85,64 @@ class ReviewsViewController: UIViewController, UIScrollViewDelegate {
         return label
     }()
     
-    private lazy var placesToReviewButton: UIButton = {
-        let l = UIButton(type: .system)
-        l.layer.cornerRadius = 5.0
-        l.layer.masksToBounds = true
+    private lazy var placesToReviewButton: BadgeButton = {
+        let l = BadgeButton(type: .system)
         l.setTitle("You have places to review", for: .normal)
         l.titleLabel?.textAlignment = .center
         l.titleLabel?.numberOfLines = 2
         l.titleLabel?.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
         l.setTitleColor(.white, for: .normal)
-        l.setTitleColor(Constants.colors.midPurple, for: .highlighted)
-        l.setBackgroundColor(Constants.colors.midPurple, for: .normal)
+        l.badge = nil
         l.translatesAutoresizingMaskIntoConstraints = false
         l.addTarget(self, action: #selector(tappedPlacesToReview), for: .touchUpInside)
+        
+        let view = UIView()
+        view.layer.cornerRadius = 5.0
+        view.layer.masksToBounds = true
+        view.backgroundColor = Constants.colors.midPurple
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.isUserInteractionEnabled = false
+        view.isExclusiveTouch = false
+        
+        l.addSubview(view)
+        l.sendSubview(toBack: view)
+        l.addVisualConstraint("H:|[v0]|", views: ["v0": view])
+        l.addVisualConstraint("V:|[v0]|", views: ["v0": view])
+
         return l
     }()
     
     @objc fileprivate func tappedPlacesToReview() {
+        print("tappedPlacesToReview")
         if numberOfPlacesToReview != nil && numberOfPlacesToReview! > 0 {
             let viewController = PlacePersonalInformationReviewViewController()
             navigationController?.pushViewController(viewController, animated: true)
         }
     }
     
-    private lazy var personalInformationToReviewButton: UIButton = {
-        let l = UIButton(type: .system)
-        l.layer.cornerRadius = 5.0
-        l.layer.masksToBounds = true
+    private lazy var personalInformationToReviewButton: BadgeButton = {
+        let l = BadgeButton(type: .system)
         l.setTitle("You have personal information to review", for: .normal)
         l.titleLabel?.textAlignment = .center
         l.titleLabel?.numberOfLines = 2
         l.titleLabel?.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
         l.setTitleColor(.white, for: .normal)
-        l.setTitleColor(Constants.colors.orange, for: .highlighted)
-        l.setBackgroundColor(Constants.colors.orange, for: .normal)
+        l.badge = nil
         l.translatesAutoresizingMaskIntoConstraints = false
         l.addTarget(self, action: #selector(tappedPersonalInformationToReview), for: .touchUpInside)
+        
+        let view = UIView()
+        view.layer.cornerRadius = 5.0
+        view.layer.masksToBounds = true
+        view.backgroundColor = Constants.colors.orange
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.isUserInteractionEnabled = false
+        view.isExclusiveTouch = false
+        
+        l.addSubview(view)
+        l.sendSubview(toBack: view)
+        l.addVisualConstraint("H:|[v0]|", views: ["v0": view])
+        l.addVisualConstraint("V:|[v0]|", views: ["v0": view])
         return l
     }()
     
@@ -129,6 +158,15 @@ class ReviewsViewController: UIViewController, UIScrollViewDelegate {
         view.backgroundColor = UIColor(white: 0.4, alpha: 0.4)
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
+    }()
+    
+    var yourReviewsTitle: UILabel = {
+        let label = UILabel()
+        label.text = "Your reviews"
+        label.textAlignment = .left
+        label.font = UIFont.systemFont(ofSize: 28, weight: .bold)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }()
     
     lazy var placeReviewsSummary: InfoCardView = {
@@ -156,7 +194,7 @@ class ReviewsViewController: UIViewController, UIScrollViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let days = DataStoreService.shared.getUniqueVisitDays()
+        let days = DataStoreService.shared.getUniqueVisitDays(ctxt: nil)
         if days.count == 0 {
             fullScreenView = FullScreenView(frame: view.frame)
             fullScreenView!.icon = "rocket"
@@ -170,6 +208,7 @@ class ReviewsViewController: UIViewController, UIScrollViewDelegate {
             
             // update with the latest aggregated personal information
             UserUpdateHandler.retrieveLatestAggregatedPersonalInformation { [weak self] in
+                print("retrieved latest aggregated personal information")
                 self?.computeData()
             }
         }
@@ -220,31 +259,30 @@ class ReviewsViewController: UIViewController, UIScrollViewDelegate {
         contentView.addSubview(dividerLineView)
         contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0": dividerLineView])
         
+        contentView.addSubview(yourReviewsTitle)
+        
+        contentView.addVisualConstraint("H:|-16-[v0]-|", views: ["v0": yourReviewsTitle])
+        
         contentView.addSubview(placesToReviewButton)
         contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0": placesToReviewButton])
         
         contentView.addSubview(personalInformationToReviewButton)
         contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0": personalInformationToReviewButton])
         
-        contentView.addVisualConstraint("V:|-48-[title(40)]-16-[statsPlaces]-16-[statsPI]-16-[line(0.5)]-16-[placesBtn(64)]-16-[piBtn(64)]|", views: ["title": mainTitle, "statsPlaces": placeReviewsSummary, "statsPI": personalInformationReviewsSummary, "line": dividerLineView, "placesBtn": placesToReviewButton, "piBtn": personalInformationToReviewButton])
-        
-        computeData()
+        contentView.addVisualConstraint("V:|-48-[title(40)]-16-[statsPlaces]-16-[statsPI]-16-[line(0.5)]-16-[subtitle]-16-[placesBtn(64)]-16-[piBtn(64)]-16-|", views: ["title": mainTitle, "statsPlaces": placeReviewsSummary, "statsPI": personalInformationReviewsSummary, "line": dividerLineView, "subtitle": yourReviewsTitle, "placesBtn": placesToReviewButton, "piBtn": personalInformationToReviewButton])
     }
     
     func computeData() {
-        let placesReviewed = DataStoreService.shared.getAllPlacesReviewed()
-        let placesToReview = DataStoreService.shared.getAllPlacesToReview()
+        let placesReviewed = DataStoreService.shared.getAllPlacesReviewed(ctxt: nil)
+        let placesToReview = DataStoreService.shared.getAllPlacesToReview(ctxt: nil)
+
         numberOfPlacesReviewed = placesReviewed.count
         numberOfPlacesToReview = placesToReview.count
         
-        let personalInformationReviewed = DataStoreService.shared.getAggregatedPersonalInformationReviewed()
-        let personalInformationToReview = DataStoreService.shared.getAggregatedPersonalInformationToReview()
-        numberOfPersonalInformationReviewed = personalInformationReviewed.count
-        numberOfPersonalInformationToReview = personalInformationToReview.count
+        let personalInformationReviewed = DataStoreService.shared.getAggregatedPersonalInformationReviewed(ctxt: nil)
+        let personalInformationToReview = DataStoreService.shared.getAggregatedPersonalInformationToReview(ctxt: nil)
         
-        let allPersonalInformation = DataStoreService.shared.getAllAggregatedPersonalInformation()
-        print("allPersonalInformation: \(allPersonalInformation.count)")
-        print("personalInformationReviewed: \(personalInformationReviewed.count)")
-        print("personalInformationToReview: \(personalInformationToReview.count)")
+        numberOfPersonalInformationReviewed = personalInformationReviewed.count
+        numberOfPersonalInformationToReview = personalInformationToReview.count        
     }
 }

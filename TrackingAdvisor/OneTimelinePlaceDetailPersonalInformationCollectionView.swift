@@ -178,7 +178,8 @@ class PersonalInformationCell: UICollectionViewCell {
             bgView.backgroundColor = color.withAlphaComponent(0.3)
             nameLabel.textColor = color
             categoryLabel.textColor = color
-            feedbackView.color = color
+            feedbackView.selectedColor = color
+            feedbackView.unselectedColor = color.withAlphaComponent(0.3)
             iconView.iconColor = color
         }
     }
@@ -235,7 +236,8 @@ class PersonalInformationCell: UICollectionViewCell {
     
     lazy var descriptionLabel: UILabel = {
         let label = UILabel()
-        label.text = "Is this personal information relevant?"
+        label.text = "Do you feel that this information is relevant to this place?"
+        label.numberOfLines = 2
         label.font = UIFont.italicSystemFont(ofSize: 14.0)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -255,7 +257,8 @@ class PersonalInformationCell: UICollectionViewCell {
             strongSelf.delegate?.didPressPersonalInformationReview(personalInformation: strongSelf.personalInformation, answer: feedback, indexPath: strongSelf.indexPath)
         })
         row.selectedFeedback = feedback
-        row.color = color
+        row.selectedColor = color
+        row.unselectedColor = color.withAlphaComponent(0.3)
         return row
     }()
     

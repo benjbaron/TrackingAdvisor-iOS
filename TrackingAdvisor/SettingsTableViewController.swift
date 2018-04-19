@@ -37,7 +37,7 @@ class SettingsTableTableViewController: UITableViewController {
                                                     style: UIAlertActionStyle.destructive) {
                     (result : UIAlertAction) -> Void in
                     LogService.shared.log(LogService.types.settingsDelete, args: [LogService.args.userChoice: "delete"])
-                    DataStoreService.shared.deleteAll()
+                    DataStoreService.shared.deleteAll(ctxt: nil)
                 }
                 
                 let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel) {
@@ -80,6 +80,15 @@ class SettingsTableTableViewController: UITableViewController {
                 alertController.addAction(deleteAllAction)
                 alertController.addAction(cancelAction)
                 self.present(alertController, animated: true, completion: nil)
+                tableView.deselectRow(at: indexPath, animated: true)
+            } else if id == "showRawTrace" {
+                if cell.accessoryType == .checkmark {
+                    cell.accessoryType = .none
+                    Settings.saveShowRawTrace(with: false)
+                } else {
+                    cell.accessoryType = .checkmark
+                    Settings.saveShowRawTrace(with: true)
+                }
                 tableView.deselectRow(at: indexPath, animated: true)
             }
         }

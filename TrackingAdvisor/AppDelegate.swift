@@ -273,47 +273,92 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                           args: [LogService.args.launchType: "content-available"])
                 } else  {
                     // get the notification type
-                    print("user notification: \(userInfo)")
                     if let notificationType = userInfo["type"] as? String {
+                        
                         if notificationType == "timeline" {
+                            LogService.shared.log(LogService.types.notificationOpen,
+                                                  args: [LogService.args.launchType: "timeline"])
+                            
                             if let day = userInfo["day"] as? String {
-                                DispatchQueue.main.async { () -> Void in
-                                    // show the timeline tab
-                                    if let tabController = self?.window?.rootViewController as? UITabBarController {
-                                        tabController.selectedIndex = 0
-                                        
-                                        if let vc = tabController.viewControllers?[0] {
-                                            if let timelineVC = vc.childViewControllers[0] as? TimelineSwipeViewController {
-                                                
-                                                if let index = timelineVC.days.index(of: day) {
-                                                    if let newCurrentViewController = timelineVC.viewController(at: index) {
-                                                    timelineVC.pageViewController?.selectViewController(newCurrentViewController, direction: .forward, animated: false, completion: nil)
-                                                    }
-                                                }
-                                                
-                                            }
-                                        } else {
-                                            print("Could not get the first controller")
+                                DispatchQueue.main.async { [weak self] () -> Void in
+                                    guard let strongSelf = self else { return }
+                                    
+                                    let action = {
+                                        // show the timeline tab
+                                        AppDelegate.showTimeline(for: day)
+                                    }
+                                    
+                                    if UIApplication.shared.applicationState == .active {
+                                        if let title = userInfo["title"] as? String, let message = userInfo["message"] as? String {
+                                            let alertController = AppDelegate.createAlertController(title: title, message: message, yesAction: {
+                                                LogService.shared.log(LogService.types.timelineNotification, args: [LogService.args.userChoice: "accept"])
+                                                action()
+                                            }, noAction: {
+                                                LogService.shared.log(LogService.types.timelineNotification, args: [LogService.args.userChoice: "cancel"])
+                                            })
+                                            strongSelf.window?.rootViewController?.present(alertController, animated: true, completion: nil)
                                         }
-                                        
-                                        // get today's  udpate
-                                        UserUpdateHandler.retrieveLatestUserUpdates(for: day)
-                                        
-                                        LogService.shared.log(LogService.types.notificationOpen,
-                                                              args: [LogService.args.launchType: "timeline"])
+                                    } else {
+                                        action()
                                     }
                                 }
                             }
                         } else if notificationType == "review" {
-                            DispatchQueue.main.async { () -> Void in
-                                // get latest aggregated personal information
-                                UserUpdateHandler.retrieveLatestAggregatedPersonalInformation() {
-                                    // show the review tab
+                            LogService.shared.log(LogService.types.notificationOpen,
+                                                  args: [LogService.args.launchType: "review"])
+                            
+                            DispatchQueue.main.async { [weak self] () -> Void in
+                                guard let strongSelf = self else { return }
+                                
+                                let action = {
                                     if let tabController = self?.window?.rootViewController as? UITabBarController {
                                         tabController.selectedIndex = 1
+                                    }
+                                    // get latest aggregated personal information
+                                    UserUpdateHandler.retrieveLatestAggregatedPersonalInformation()
+                                }
+                                
+                                if UIApplication.shared.applicationState == .active {
+                                    if let title = userInfo["title"] as? String, let message = userInfo["message"] as? String {
+                                        let alertController = AppDelegate.createAlertController(title: title, message: message, yesAction: {
+                                            LogService.shared.log(LogService.types.reviewNotification, args: [LogService.args.userChoice: "accept"])
+                                            action()
+                                        }, noAction: {
+                                            LogService.shared.log(LogService.types.reviewNotification, args: [LogService.args.userChoice: "cancel"])
+                                        })
+                                        strongSelf.window?.rootViewController?.present(alertController, animated: true, completion: nil)
+                                    }
+                                } else {
+                                    action()
+                                }
+                            }
+                        } else if notificationType == "web" {
+                            LogService.shared.log(LogService.types.notificationOpen,
+                                                  args: [LogService.args.launchType: "web"])
+
+                            DispatchQueue.main.async { [weak self] () -> Void in
+                                guard let strongSelf = self else { return }
+                                
+                                if let url = userInfo["url"] as? String, let title = userInfo["title"] as? String, let message = userInfo["message"] as? String {
+                                    
+                                    let action = {
+                                        let controller = WebViewController()
+                                        controller.url = url
+                                        let navController = UINavigationController(rootViewController: controller)
+                                        strongSelf.window?.rootViewController?.present(navController, animated: true, completion: nil)
+                                    }
+                                    
+                                    if UIApplication.shared.applicationState == .active {
+                                        let alertController = AppDelegate.createAlertController(title: title, message: message, yesAction: {
+                                                LogService.shared.log(LogService.types.webView, args: [LogService.args.userChoice: "accept"])
+                                                action()
+                                            }, noAction: {
+                                                LogService.shared.log(LogService.types.webView, args: [LogService.args.userChoice: "cancel"])
+                                        })
                                         
-                                        LogService.shared.log(LogService.types.notificationOpen,
-                                                              args: [LogService.args.launchType: "review"])
+                                        strongSelf.window?.rootViewController?.present(alertController, animated: true, completion: nil)
+                                    } else {
+                                        action()
                                     }
                                 }
                             }
@@ -357,21 +402,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             if type == nil || type == "visits" {
                 // get the number of visits to confirm
                 let today = DateHandler.dateToDayString(from: Date())
-                let numberOfVisitsToConfirm = DataStoreService.shared.getVisits(for: today, sameContext: true).filter({ $0.visited == 0 }).count
+                let numberOfVisitsToReview = DataStoreService.shared.getNumberOfVisitsToReview(for: today, ctxt: nil)
                                 
-                if numberOfVisitsToConfirm == 0 {
+                if numberOfVisitsToReview == 0 {
                     tabController.tabBar.items?[0].badgeValue = nil
+                    UIApplication.shared.applicationIconBadgeNumber = 0
                 } else {
-                    tabController.tabBar.items?[0].badgeValue = String(numberOfVisitsToConfirm)
+                    tabController.tabBar.items?[0].badgeValue = String(numberOfVisitsToReview)
                 }
             }
             
             if type == nil || type == "reviews" {
                 // get the number of places to review
-                let numberOfPlacesToReview = DataStoreService.shared.getAllPlacesToReview(sameContext: true).count
+                let numberOfPlacesToReview = DataStoreService.shared.getAllPlacesToReview(ctxt: nil).count
                 
                 // get the number of personal information to review
-                let numberOfAggregatePersonalInformationToReview = DataStoreService.shared.getAggregatedPersonalInformationToReview(sameContext: true).count
+                let numberOfAggregatePersonalInformationToReview = DataStoreService.shared.getAggregatedPersonalInformationToReview(ctxt: nil).count
                 
                 let sum = numberOfPlacesToReview + numberOfAggregatePersonalInformationToReview
                 if sum == 0 {
@@ -382,6 +428,53 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
             
         }
+    }
+    
+    class func createAlertController(title: String, message: String, yesAction: @escaping ()->(), noAction: @escaping ()->()) -> UIAlertController {
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.alert)
+        
+        let yAction = UIAlertAction(title: "Yes", style: UIAlertActionStyle.default) { _ in
+            yesAction()
+        }
+        
+        let nAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel) { _ in
+            noAction()
+        }
+        
+        alertController.addAction(yAction)
+        alertController.addAction(nAction)
+        return alertController
+    }
+    
+    class func showTimeline(for day: String) {
+        let appDelegate = UIApplication.shared.delegate as? AppDelegate
+        if let tabController = appDelegate?.window?.rootViewController as? UITabBarController {
+            tabController.selectedIndex = 0
+            
+            if let vc = tabController.viewControllers?[0] {
+                if let timelineVC = vc.childViewControllers[0] as? TimelineSwipeViewController {
+                    
+                    if let index = timelineVC.days.index(of: day) {
+                        if let newCurrentViewController = timelineVC.viewController(at: index) {
+                            timelineVC.pageViewController?.selectViewController(newCurrentViewController, direction: .forward, animated: false, completion: nil)
+                        }
+                    }
+                }
+            }
+            UserUpdateHandler.retrieveLatestUserUpdates(for: day) // get today's  udpate
+        }
+    }
+    
+    class func isIPhone5 () -> Bool {
+        return max(UIScreen.main.bounds.width, UIScreen.main.bounds.height) == 568.0
+    }
+    
+    class func isIPhone6 () -> Bool {
+        return max(UIScreen.main.bounds.width, UIScreen.main.bounds.height) == 667.0
+    }
+    
+    class func isIPhone6Plus () -> Bool {
+        return max(UIScreen.main.bounds.width, UIScreen.main.bounds.height) == 736.0
     }
 }
 

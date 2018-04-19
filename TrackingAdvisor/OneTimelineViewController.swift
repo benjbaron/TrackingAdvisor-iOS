@@ -38,7 +38,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
     var canUpdate: Bool = true
     var isAnimating = false
     var isFolded = true
-    var annotations: [PointAnnotation] = []
+    var annotations: [CustomPointAnnotation] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -50,6 +50,9 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         timeline.contentInset = UIEdgeInsetsMake(20.0, 20.0, 20.0, 20.0)
         mapView?.zoomLevel = 15
         mapView?.centerCoordinate = CLLocationCoordinate2D(latitude: 51.524543, longitude: -0.132176)
+        mapView?.maximumZoomLevel = 15.0
+        mapView?.allowsRotating = false
+        mapView?.allowsTilting = false
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -63,7 +66,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
     func reload() {
         guard let timeline = self.timeline else { return }
         
-        let visits = DataStoreService.shared.getVisits(for: timelineDay, sameContext: false)
+        let visits = DataStoreService.shared.getVisits(for: timelineDay, ctxt: nil)
         updateLastVisit(from: visits)
         annotations.removeAll()
         
@@ -110,8 +113,8 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
                                              LogService.args.visitId: vid,
                                              LogService.args.value: "yes"])
                 UserUpdateHandler.visitedVisit(for: vid) {
-                    print("timeline - updateVisit \(vid)")
                     DataStoreService.shared.updateVisit(with: vid, visited: 1)
+                    timeline.numberOfVisitsToReview = DataStoreService.shared.getNumberOfVisitsToReview(for: strongSelf.timelineDay, ctxt: nil)
                 }
                 
             }
@@ -126,7 +129,8 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
                                              LogService.args.visitId: vid,
                                              LogService.args.value: "delete"])
                 UserUpdateHandler.deleteVisit(for: vid) {
-                    DataStoreService.shared.deleteVisit(vid: vid)
+                    DataStoreService.shared.deleteVisit(vid: vid, ctxt: nil)
+                    timeline.numberOfVisitsToReview = DataStoreService.shared.getNumberOfVisitsToReview(for: strongSelf.timelineDay, ctxt: nil)
                 }
                 
             }
@@ -190,18 +194,20 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
                 self?.canUpdate = true
             }
             UserUpdateHandler.retrieveLatestUserUpdates(for: strongSelf.timelineDay, force: true) {
+                DataStoreService.shared.resetContext()
                 strongSelf.reload()
             }
         }
         
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "hh:mm a"
+        dateFormatter.dateFormat = "H:mm"
         
         var timelinePoints: [ISPoint] = []
+        var placeSet: Set<String> = Set<String>()
         var count = 0
         for visit in visits {
             guard let arrival = visit.arrival, let departure = visit.departure,
-                  let placeName = visit.place?.name else { continue }
+                  let placeName = visit.place?.name, let pid = visit.place?.id else { continue }
             
             let arrivalTime = dateFormatter.string(from: arrival)
             let departureTime = dateFormatter.string(from: departure)
@@ -253,11 +259,14 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             point.visit = visit
             timelinePoints.append(point)
             
-            let matchedAnnotation = PointAnnotation()
-            matchedAnnotation.coordinate = CLLocationCoordinate2D(latitude: (visit.place?.latitude) ?? 0.0, longitude: (visit.place?.longitude) ?? 0.0)
-            matchedAnnotation.title = title
-            matchedAnnotation.annotationType = .matched
-            annotations.append(matchedAnnotation)
+            if !placeSet.contains(pid) {
+                let coordinate = CLLocationCoordinate2D(latitude: (visit.place?.latitude) ?? 0.0, longitude: (visit.place?.longitude) ?? 0.0)
+                let annotation = CustomPointAnnotation(coordinate: coordinate, title: placeName, subtitle: nil)
+                annotation.image = icon
+                annotation.reuseIdentifier = pid
+                annotations.append(annotation)
+                placeSet.insert(pid)
+            }
             
             count += 1
         }
@@ -271,6 +280,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         timeline.timelimeAddPlaceLastTouchAction = addPlaceTouchAction
         timeline.timelineValidatedPlaceTouchAction = visitValidatedTouchAction
         timeline.timelineRemovedPlaceTouchAction = visitRemovedTouchAction
+        timeline.numberOfVisitsToReview = DataStoreService.shared.getNumberOfVisitsToReview(for: timelineDay, ctxt: nil)
     }
     
     private func updateLastVisit(from visits: [Visit]) {
@@ -294,10 +304,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
     
     private func showAnnotations() {
         mapView?.addAnnotations(annotations)
-        mapView?.showAnnotations(annotations, animated: false)
-        if let zoomLevel = mapView?.zoomLevel {
-            mapView?.setZoomLevel(min(zoomLevel, 15), animated: true)
-        }
+        mapView?.showAnnotations(annotations, animated: true)
     }
     
     private func hideAnnotations() {
@@ -369,27 +376,22 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
     // MARK: -  MGLMapViewDelegate methods
     
     func mapView(_ mapView: MGLMapView, viewFor annotation: MGLAnnotation) -> MGLAnnotationView? {
-        guard let pointAnnotation = annotation as? PointAnnotation else {
-            return nil
+        
+        guard let point = annotation as? CustomPointAnnotation,
+            let image = point.image,
+            let reuseIdentifier = point.reuseIdentifier else {
+                return nil
         }
         
-        // Use the point annotation’s longitude value (as a string) as the reuse identifier for its view.
-        let reuseIdentifier = "\(pointAnnotation.coordinate.longitude)"
-        
-        // For better performance, always try to reuse existing annotations.
         var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier)
         
-        // If there’s no reusable annotation view available, initialize a new one.
         if annotationView == nil {
-            annotationView = CustomAnnotationView(reuseIdentifier: reuseIdentifier)
-            annotationView!.frame = CGRect(x: 0, y: 0, width: 15, height: 15)
+            let av = CustomAnnotationView(reuseIdentifier: reuseIdentifier)
+            av.frame = CGRect(x: 0, y: 0, width: 25, height: 25)
+            av.image = image
+            av.backgroundColor = Constants.colors.midPurple
             
-            // Set the annotation view’s background color to a value determined by its longitude.
-            var color = Constants.colors.primaryDark
-            if pointAnnotation.annotationType == .matched {
-                color = Constants.colors.primaryLight
-            }
-            annotationView!.backgroundColor = color
+            annotationView = av
         }
         
         return annotationView
@@ -414,6 +416,9 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
 
 // MGLAnnotationView subclass
 class CustomAnnotationView: MGLAnnotationView {
+    var image: UIImage?
+    var wasSelected = false
+    
     override func layoutSubviews() {
         super.layoutSubviews()
         
@@ -424,15 +429,32 @@ class CustomAnnotationView: MGLAnnotationView {
         layer.cornerRadius = frame.width / 2
         layer.borderWidth = 2
         layer.borderColor = UIColor.white.cgColor
+        layer.contentsScale = UIScreen.main.scale
+        
+        if let image = image {
+            let imageView = UIImageView(image: image)
+            imageView.tintColor = .white
+            imageView.contentMode = .scaleAspectFit
+            imageView.frame = CGRect(x: 5, y: 5, width: frame.width-10, height: frame.height-10)
+            
+            addSubview(imageView)
+        }
     }
     
     override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
         
-        // Animate the border width in/out, creating an iris effect.
-        let animation = CABasicAnimation(keyPath: "borderWidth")
-        animation.duration = 0.1
-        layer.borderWidth = selected ? frame.width / 4 : 2
-        layer.add(animation, forKey: "borderWidth")
+        if !selected && !wasSelected {
+            return
+        }
+        
+        let scaleAnimate = CABasicAnimation(keyPath: "transform.scale")
+        scaleAnimate.fromValue = selected ? 1 : 1.25
+        scaleAnimate.toValue = selected ? 1.25 : 1
+        scaleAnimate.duration = 0.2
+        scaleAnimate.isRemovedOnCompletion = false
+        scaleAnimate.fillMode = kCAFillModeForwards
+        layer.add(scaleAnimate, forKey: "transform.scale")
+        wasSelected = true
     }
 }
