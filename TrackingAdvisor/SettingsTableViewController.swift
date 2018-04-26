@@ -90,6 +90,15 @@ class SettingsTableTableViewController: UITableViewController {
                     Settings.saveShowRawTrace(with: true)
                 }
                 tableView.deselectRow(at: indexPath, animated: true)
+            } else if id == "showActivityRings" {
+                if cell.accessoryType == .checkmark {
+                    cell.accessoryType = .none
+                    Settings.saveShowActivityRings(with: false)
+                } else {
+                    cell.accessoryType = .checkmark
+                    Settings.saveShowActivityRings(with: true)
+                }
+                tableView.deselectRow(at: indexPath, animated: true)
             }
         }
     }

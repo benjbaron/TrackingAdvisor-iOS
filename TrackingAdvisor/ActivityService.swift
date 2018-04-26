@@ -18,6 +18,14 @@ enum ActivityType {
     case walking
 }
 
+struct PedometerData : Codable {
+    let start: Date
+    let end: Date
+    let numberOfSteps: Int
+    let distance: Double
+    let day: String
+}
+
 class ActivityService {
     static let shared = ActivityService()
     
@@ -34,6 +42,38 @@ class ActivityService {
             }
         }
     }
+    
+    func getAllSteps(from start: Date, to end: Date, interval: TimeInterval, callback: @escaping ([PedometerData]) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            var res:[PedometerData] = []
+            let group = DispatchGroup()
+            
+            let numberOfIntervals = Int(ceil(end.timeIntervalSince(start) / interval))
+            for i in 0..<numberOfIntervals {
+                let from = start.addingTimeInterval(Double(i) * interval)
+                let to = start.addingTimeInterval(Double(i+1) * interval)
+                group.enter()
+                self.pedometer.queryPedometerData(from: from, to: to) { (data, error) in
+                    if let data = data {
+                        let numberOfSteps = Int(truncating: data.numberOfSteps)
+                        let pd = PedometerData(start: from,
+                                               end: to,
+                                               numberOfSteps: numberOfSteps,
+                                               distance: data.distance as! Double,
+                                               day: DateHandler.dateToDayString(from: to))
+                        res.append(pd)
+                        group.leave()
+                    }
+                }
+            }
+            group.wait()
+            
+            DispatchQueue.main.sync {
+                callback(res)
+            }
+        }
+    }
+    
     
     func getActivity(from start: Date, to end: Date, callback: @escaping ([ActivityType:Int]?) -> Void) {
         activityManager.queryActivityStarting(from: start, to: end, to: OperationQueue.main) {
@@ -57,7 +97,7 @@ class ActivityService {
                         callback(false)
                         return
                     }
-                    let (activity, confidence) = ActivityService.mostLikelyActivity(activities: activities)
+                    let (activity, _) = ActivityService.mostLikelyActivity(activities: activities)
                     if activity != .stationary {
                         callback(true)
                     } else {

@@ -17,6 +17,7 @@ open class Settings {
         // Install defaults
         if (!defaults.bool(forKey: "DEFAULTS_INSTALLED")) {
             defaults.set(true, forKey: "DEFAULTS_INSTALLED")
+            defaults.set(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String, forKey: Constants.defaultsKeys.versionOfLastRun)
             defaults.set(Date(), forKey: Constants.defaultsKeys.lastFileUpdate)
             defaults.set(Date(), forKey: Constants.defaultsKeys.lastLocationUpdate)
             defaults.set(Date(), forKey: Constants.defaultsKeys.lastUserUpdate)
@@ -30,12 +31,24 @@ open class Settings {
             defaults.set(0, forKey: Constants.defaultsKeys.currentSessionId)
             defaults.set(String(), forKey: Constants.defaultsKeys.currentAppState)
             defaults.set(true, forKey: Constants.defaultsKeys.showRawTrace)
+        } else if !defaults.bool(forKey: "DEFAULTS_PEDOMETER_INSTALLED") {
+            defaults.set(true, forKey: "DEFAULTS_PEDOMETER_INSTALLED")
+            defaults.set(10000, forKey: Constants.defaultsKeys.pedometerStepsGoal)
+            defaults.set(1.0, forKey: Constants.defaultsKeys.pedometerDistanceGoal)
+            defaults.set(60, forKey: Constants.defaultsKeys.pedometerTimeGoal)
+            defaults.set("miles", forKey: Constants.defaultsKeys.pedometerUnit)
+            defaults.set(false, forKey: Constants.defaultsKeys.showActivityRings)
         }
+    }
+    
+    open class func getVersionOfLastRun() -> String? {
+        let defaults = UserDefaults.standard
+        return defaults.string(forKey: Constants.defaultsKeys.versionOfLastRun)
     }
     
     open class func getUserId() -> String? {
         let defaults = UserDefaults.standard
-//        return "fcf538a1-f9d3-4935-a746-b4cd9ade6577"
+//        return "fcf538a1-f9d3-4935-a746-b4cd9ade6577" // for screenshots
         return defaults.string(forKey: Constants.defaultsKeys.userid) ?? nil
     }
     
@@ -109,6 +122,36 @@ open class Settings {
     open class func getShowRawTrace() -> Bool {
         let defaults = UserDefaults.standard
         return defaults.bool(forKey: Constants.defaultsKeys.showRawTrace)
+    }
+    
+    open class func getPedometerStepsGoal() -> Int {
+        let defaults = UserDefaults.standard
+        return defaults.integer(forKey: Constants.defaultsKeys.pedometerStepsGoal)
+    }
+    
+    open class func getPedometerDistanceGoal() -> Double {
+        let defaults = UserDefaults.standard
+        return defaults.double(forKey: Constants.defaultsKeys.pedometerDistanceGoal)
+    }
+    
+    open class func getPedometerTimeGoal() -> Int {
+        let defaults = UserDefaults.standard
+        return defaults.integer(forKey: Constants.defaultsKeys.pedometerTimeGoal)
+    }
+    
+    open class func getPedometerUnit() -> String? {
+        let defaults = UserDefaults.standard
+        return defaults.string(forKey: Constants.defaultsKeys.pedometerUnit)
+    }
+    
+    open class func getShowActivityRings() -> Bool {
+        let defaults = UserDefaults.standard
+        return defaults.bool(forKey: Constants.defaultsKeys.showActivityRings)
+    }
+    
+    open class func saveVersionOfLastRun() {
+        let defautls = UserDefaults.standard
+        defautls.set(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String, forKey: Constants.defaultsKeys.versionOfLastRun)
     }
     
     open class func savePushNotificationId(with pnid: String) {
@@ -186,6 +229,31 @@ open class Settings {
     open class func saveShowRawTrace(with value: Bool) {
         let defaults = UserDefaults.standard
         defaults.set(value, forKey: Constants.defaultsKeys.showRawTrace)
+    }
+    
+    open class func saveShowActivityRings(with value: Bool) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: Constants.defaultsKeys.showActivityRings)
+    }
+    
+    open class func savePedometerStepsGoal(with value: Int) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: Constants.defaultsKeys.pedometerStepsGoal)
+    }
+    
+    open class func savePedometerDistanceGoal(with value: Double) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: Constants.defaultsKeys.pedometerDistanceGoal)
+    }
+    
+    open class func savePedometerTimeGoal(with value: Int) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: Constants.defaultsKeys.pedometerTimeGoal)
+    }
+    
+    open class func savePedometerUnit(with value: String) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: Constants.defaultsKeys.pedometerUnit)
     }
     
 }

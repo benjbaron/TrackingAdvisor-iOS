@@ -117,7 +117,6 @@ class FileService : NSObject {
     }
     
     class func upload(file: URL, callback: @escaping (DataResponse<Any>) -> Void) {
-        NSLog("upload file \(file)")
         let id: String = Settings.getUserId() ?? ""
         Alamofire.upload(
             multipartFormData: { multipartFormData in
@@ -137,6 +136,30 @@ class FileService : NSObject {
                     print(encodingError)
                 }
             })
+    }
+    
+    func upload(filename: String, name: String, url: String, callback: @escaping (DataResponse<Any>) -> Void) {
+        guard let dir = dir else { return }
+        let path = dir.appendingPathComponent(filename)
+        let id: String = Settings.getUserId() ?? ""
+        Alamofire.upload(
+            multipartFormData: { multipartFormData in
+                multipartFormData.append(path,
+                                         withName: name,
+                                         fileName: "\(id)_\(path.lastPathComponent)",
+                    mimeType: "text/csv")
+        },
+            to: url,
+            encodingCompletion: { encodingResult in
+                switch encodingResult {
+                case .success(let upload, _, _):
+                    upload.responseJSON { response in
+                        callback(response)
+                    }
+                case .failure(let encodingError):
+                    print(encodingError)
+                }
+        })
     }
     
     func log(_ text: String, classname: String) {

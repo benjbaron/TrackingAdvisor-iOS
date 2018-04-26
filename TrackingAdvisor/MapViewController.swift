@@ -167,6 +167,28 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
         self.navigationController?.navigationBar.barStyle = .default
         self.tabBarController?.tabBar.isHidden = false
         
+        days = DataStoreService.shared.getUniqueVisitDays(ctxt: nil)
+        
+        if fullScreenView == nil && days.count == 0 {
+            // the user just installed the app, show an animation
+            fullScreenView = FullScreenView(frame: view.frame)
+            fullScreenView!.icon = "path"
+            fullScreenView!.iconColor = Constants.colors.primaryLight
+            fullScreenView!.headerTitle = "Your map, here"
+            fullScreenView!.subheaderTitle = "After moving to a few places, you will find a map with the places that you visited here."
+            view.addSubview(fullScreenView!)
+        } else {
+            weekCalendarView = WeekCalendarView()
+            weekCalendarView.delegate = self
+            
+            setupCollectionView()
+            setupMapView()
+            setupViews()
+            
+            weekCalendarView.setToday()
+            dayLabel.text = DateHandler.dateToDayLetterString(from: Date())
+        }
+        
         if let date = dateSelected {
             selectedDate(date: date)
         } else {
@@ -192,28 +214,6 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
         self.navigationItem.rightBarButtonItem = rightBarButton
         
         self.title = "My Map"
-        
-        days = DataStoreService.shared.getUniqueVisitDays(ctxt: nil)
-        
-        if fullScreenView == nil && days.count == 0 {
-            // the user just installed the app, show an animation
-            fullScreenView = FullScreenView(frame: view.frame)
-            fullScreenView!.icon = "path"
-            fullScreenView!.iconColor = Constants.colors.primaryLight
-            fullScreenView!.headerTitle = "Your map, here"
-            fullScreenView!.subheaderTitle = "After moving to a few places, you will find a map with the places that you visited here."
-            view.addSubview(fullScreenView!)
-        } else {
-            weekCalendarView = WeekCalendarView()
-            weekCalendarView.delegate = self
-            
-            setupCollectionView()
-            setupMapView()
-            setupViews()
-            
-            weekCalendarView.setToday()
-            dayLabel.text = DateHandler.dateToDayLetterString(from: Date())
-        }
     }
     
     func setupCollectionView() {
@@ -332,7 +332,7 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let visit = visits[indexPath.item]
         let controller = OneTimelinePlaceDetailViewController()
-        controller.visit = visit
+        controller.vid = visit.id
         self.navigationController?.pushViewController(controller, animated: true)
     }
     
@@ -411,6 +411,9 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
         let day = DateHandler.dateToDayString(from: date)
         
         let allVisits = DataStoreService.shared.getVisits(for: day, ctxt: nil)
+        
+        if allVisits.count == 0 { return }
+        
         visits = allVisits.filter({ $0.visited == 1 })
         let visitsToReview = allVisits.filter({ $0.visited == 0 })
         
@@ -450,7 +453,9 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
         } else {
             alertView?.removeFromSuperview()
             alertView = nil
-            collectionView.alpha = 1
+            if collectionView != nil {
+                collectionView.alpha = 1
+            }
         }
         
         if let annotations = mapView.annotations {

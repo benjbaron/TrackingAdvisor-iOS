@@ -198,6 +198,19 @@ class AggregatedPersonalInformation : PersonalInformation {
         return resSet.count
     }
     
+    var score: Double {
+        var res: Double = 0.0
+        if reviewPersonalInformation == 1 {
+            res = 1.0
+        } else if reviewPersonalInformation == 2 {
+            res = 25.0
+        } else if reviewPersonalInformation == 3 {
+            res = 100.0
+        }
+        
+        return res * sqrt(Double(numberOfVisits * numberOfPlacesVisited))
+    }
+    
     func getExplanation() -> String {
         let nop = numberOfPlacesVisited
         let nov = numberOfVisits
@@ -206,4 +219,6 @@ class AggregatedPersonalInformation : PersonalInformation {
         
         return "You visited \(nop) \(placeStr) \(visitStr) with this personal information."
     }
+    
+    
 }

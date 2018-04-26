@@ -103,6 +103,7 @@ class LogService : NSObject {
         static let settingsDataFileMap = "settings-data-file-map"
         static let webView = "web-view"
         static let mapReview = "map-review"
+        static let settingsPedometer = "settings-pedometer"
     }
     
     struct args {
@@ -147,6 +148,10 @@ class LogService : NSObject {
         static let storyboard = "storyboard"
         static let reviewType = "review-type"
         static let total = "total"
+        static let pedometerSteps = "pedometer-steps"
+        static let pedometerTime = "pedometer-time"
+        static let pedometerDistance = "pedometer-distance"
+        static let pedometerUnit = "pedometer-unit"
     }
     
     func determineBatteryState() -> BatteryState {

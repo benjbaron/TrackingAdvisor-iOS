@@ -371,6 +371,7 @@ class UserUpdateHandler {
                         let decoder = JSONDecoder()
                         let userUpdate = try decoder.decode(UserUpdate.self, from: data)
                         DataStoreService.shared.updateDatabase(with: userUpdate) {
+                            DataStoreService.shared.resetContext()
                             callback?()
                         }
                     } catch {
@@ -439,7 +440,6 @@ class UserUpdateHandler {
                         let decoder = JSONDecoder()
                         decoder.dateDecodingStrategy = .secondsSince1970
                         _ = try decoder.decode(UserUpdate.self, from: data)
-                        print("### result - delete visit - response from server")
                         callback?()
                     } catch {
                         print("Error serializing the json", error)

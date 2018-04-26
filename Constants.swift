@@ -12,6 +12,7 @@ import UIKit
 struct Constants {
     
     struct defaultsKeys {
+        static let versionOfLastRun = "versionOfLastRun"
         static let lastLocationUpdate = "lastLocationUpdate"
         static let lastFileUpdate = "lastFileUpdate"
         static let lastUserUpdate = "lastUserUpdate"
@@ -26,6 +27,11 @@ struct Constants {
         static let currentSessionId = "currentSessionId"
         static let currentAppState = "currentAppState"
         static let showRawTrace = "showRawTrace"
+        static let pedometerStepsGoal = "pedometerStepsGoal"
+        static let pedometerDistanceGoal = "pedometerDistanceGoal"
+        static let pedometerTimeGoal = "pedometerTimeGoal"
+        static let pedometerUnit = "pedometerUnit"
+        static let showActivityRings = "showActivityRings"
     }
     
     struct variables {
@@ -83,6 +89,7 @@ struct Constants {
         static let optOutURL = "https://iss-lab.geog.ucl.ac.uk/semantica/optout"
         static let consentFormURL = "https://iss-lab.geog.ucl.ac.uk/semantica/consentform"
         static let authClientURL = "https://iss-lab.geog.ucl.ac.uk/semantica/authclient"
+        static let uploadPedometerDataURL = "https://iss-lab.geog.ucl.ac.uk/semantica/uploadpedometerdata"
     }
     
 }

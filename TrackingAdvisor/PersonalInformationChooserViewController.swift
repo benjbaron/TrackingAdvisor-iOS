@@ -91,7 +91,7 @@ class PersonalInformationChooserViewController: UIViewController, UICollectionVi
             
             self.goBack(notificationView)
             
-            notificationView?.autoRemove(with: 15, text: "Failed, try again")
+            notificationView?.autoRemove(with: 10, text: "Failed, try again")
             
             UserUpdateHandler.addNewPersonalInformation(for: pid, name: selectedPersonalInformation, picid: picid) {
                 notificationView?.text = "Done"

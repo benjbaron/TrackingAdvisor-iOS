@@ -569,7 +569,7 @@ class OnboardingPermissionsViewController: UIViewController, CLLocationManagerDe
                 
                 let items = [
                     OnboardingItem(icon: "location-arrow", text: "Enable always-on location so that we automatically collect your location data, necessary for the purpose of this study.", color: Constants.colors.lightPurple),
-                    OnboardingItem(icon: "running", text: "(Optional) Enable fitness and activity so that we fine-tune our place matching algorithm.", color: Constants.colors.lightPurple),
+                    OnboardingItem(icon: "running", text: "(Optional) Enable fitness and activity to give you a summary of your past activity and so that we fine-tune our place matching algorithm.", color: Constants.colors.lightPurple),
                     OnboardingItem(icon: "notification", text: "(Optional) Enable your iPhone to receive notifications so that we can ask you feedback.", color: Constants.colors.lightPurple)
                 ]
                 dest.items = items
@@ -584,8 +584,10 @@ class OnboardingPermissionsViewController: UIViewController, CLLocationManagerDe
             locationManager?.requestAlwaysAuthorization()
         case .authorizedAlways, .authorizedWhenInUse:
             // activity and motion permission
-            ActivityService.shared.getSteps(from: Date(), to: Date(), callback: {_ in
+            ActivityService.shared.getSteps(from: Date(), to: Date(), callback: { _ in
+                Settings.saveShowActivityRings(with: true)
                 // notification permission
+                
                 UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge]) {
                     [weak self] (granted, error) in
                     

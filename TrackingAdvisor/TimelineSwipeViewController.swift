@@ -104,7 +104,7 @@ class TimelineSwipeViewController: UIViewController, EMPageViewControllerDataSou
             return nil
         }
         
-        let viewController = self.storyboard!.instantiateViewController(withIdentifier: "OneTimelineViewController") as! OneTimelineViewController
+        let viewController = OneTimelineViewController()
         
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"

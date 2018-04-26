@@ -222,7 +222,8 @@ class QRScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsD
             if metadataObj.stringValue != nil {
                 qrCodeDetected = true
                 if let qrCodeText = metadataObj.stringValue {
-                    messageLabel.text = "Authenticating..."
+                    messageLabel.text = qrCodeText // "Authenticating..."
+                    
                     sendAuthenticationRequestToServer(with: qrCodeText, with: "QR") { [weak self] res in
                         
                         guard let strongSelf = self else { return }

@@ -19,7 +19,7 @@ class PlacePersonalInformationController: UIViewController, UICollectionViewData
         if count == 2 {
             // get the previous place detail controller
             if let vc = controllers[0] as? OneTimelinePlaceDetailViewController {
-                vc.visit = visit
+                vc.vid = visit?.id
                 navigationController?.popToViewController(vc, animated: true)
             }
         } else if count == 1 {

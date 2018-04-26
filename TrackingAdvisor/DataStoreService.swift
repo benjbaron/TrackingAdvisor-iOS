@@ -21,6 +21,8 @@ import UIKit
     @objc optional func dataStoreDidUpdatePlaceReviewed(for pid: String, with reviewed: Bool)
     @objc optional func dataStoreDidUpdatePersonalInformationRating(for piid: String, with rating: Int32)
     @objc optional func dataStoreDidUpdateAggregatedPersonalInformation()
+    @objc optional func dataStoreDidUpdatePedometerData()
+    @objc optional func dataStoreDidResetContext()
 }
 
 
@@ -37,6 +39,7 @@ class DataStoreService: NSObject {
         let context = container.viewContext
         print("resetContext")
         context.reset()
+        self.delegate?.dataStoreDidResetContext?()
     }
     
     func updateDatabase(with userUpdate: UserUpdate, delete: Bool = false, callback:(()->Void)? = nil) {
@@ -175,7 +178,7 @@ class DataStoreService: NSObject {
                     callback?(allRatings)
                     self?.delegate?.dataStoreDidUpdatePersonalInformationReview?(for: piid, type: type, with: rating, allRatings: allRatings)
                     let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                    appDelegate.updateTabBadges(type: "reviews")
+                    appDelegate.updateTabBadges()
                 }
             }
         }
@@ -230,7 +233,7 @@ class DataStoreService: NSObject {
                 callback?()
                 self?.delegate?.dataStoreDidUpdateAggregatedPersonalInformation?()
                 let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                appDelegate.updateTabBadges(type: "reviews")
+                appDelegate.updateTabBadges()
             }
         }
     }
@@ -245,10 +248,6 @@ class DataStoreService: NSObject {
             }
             
             DispatchQueue.main.async { () -> Void in
-                let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                print("call udpateTabBadges")
-                appDelegate.updateTabBadges()
-                
                 callback?()
                 self?.delegate?.dataStoreDidUpdateVisit?(for: vid, with: visited)
             }
@@ -285,7 +284,7 @@ class DataStoreService: NSObject {
                 callback?()
                 self?.delegate?.dataStoreDidUpdatePlaceReviewed?(for: pid, with: reviewed)
                 let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                appDelegate.updateTabBadges(type: "reviews")
+                appDelegate.updateTabBadges()
             }
         }
     }
@@ -770,10 +769,14 @@ class DataStoreService: NSObject {
     
     func updateIfNeeded(force: Bool = false) {
         if let lastUpdate = Settings.getLastDatabaseUpdate() {
+            print("lastUpdate: \(lastUpdate)")
             let lastUpdateStr = DateHandler.dateToDayString(from: lastUpdate.startOfDay)
+            print("lastUpdateStr: \(lastUpdateStr)")
             let todayStr = DateHandler.dateToDayString(from: Date())
+            print("force: \(force)")
             if force || todayStr != lastUpdateStr {
                 let days = getUniqueVisitDays(ctxt: nil)
+                print("days: \(days)")
                 for day in days {
                     if day == todayStr { continue }
                     let lastVisit = getVisits(for: day, ctxt: nil).last
@@ -782,6 +785,78 @@ class DataStoreService: NSObject {
                         updateVisit(with: vid, departure: endOfDay)
                     }
                 }
+            }
+        }
+    }
+    
+    func updatePedometerData(callback:(()->Void)? = nil) {
+        
+        // get the pedometer data from the last 6 days (max 7 in the doc)
+        var components = DateComponents()
+        components.day = -6
+        var from = Calendar.current.date(byAdding: components, to: Date().startOfDay) ?? Date().startOfDay
+        if let lastUpdateDate = Settings.getLastFileUpdate() {
+            from = lastUpdateDate.startOfDay
+        }
+        
+        container.performBackgroundTask { context in
+            let to = Date()
+            let fname = "pedometer.csv"
+            ActivityService.shared.getAllSteps(from: from, to: to, interval: 900) { res in
+                if res.count == 0 { return }
+                let userId = Settings.getUserId() ?? ""
+                FileService.shared.write("userid,day,start,end,numberofsteps,distance\n", in: fname)
+                for pd in res {
+                    _ = try? Pedometer.findOrCreatePedometer(matching: pd, in: context)
+                    FileService.shared.append("\(userId),\(pd.day),\(pd.start.localTime),\(pd.end.localTime),\(pd.numberOfSteps),\(pd.distance)\n", in: fname)
+                }
+                
+                do {
+                    try context.save()
+                } catch {
+                    print("updatePedometerData -- error saving the database")
+                }
+                
+                DispatchQueue.main.async { [weak self] () -> Void in
+                    FileService.shared.upload(filename: fname, name: "pedometer", url: Constants.urls.locationUploadURL) { (response) in
+                        FileService.shared.delete(file: fname)
+                    }
+                    self?.delegate?.dataStoreDidUpdatePedometerData?()
+                    callback?()
+                }
+            }
+        }
+    }
+    
+    func getPedometerData(for day: String, ctxt: NSManagedObjectContext?) -> [Pedometer] {
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
+        
+        // create the fetch request
+        let request: NSFetchRequest<Pedometer> = Pedometer.fetchRequest()
+        
+        // Add Sort Descriptor
+        let sortDescriptor = NSSortDescriptor(key: "start", ascending: true)
+        request.sortDescriptors = [sortDescriptor]
+
+        // Add a predicate
+        print("predicate: \(day)")
+        request.predicate = NSPredicate(format: "day = %@", day)
+        
+        do {
+            let matches = try context.fetch(request)
+            return matches
+        } catch {
+            print("Could not fetch pedometer data for day \(day). \(error)")
+        }
+        
+        return []
+    }
+    
+    func getPedometerDataStats() {
+        let context = container.viewContext
+        context.perform {
+            if let pdCount = try? context.count(for: Pedometer.fetchRequest()) {
+                print("\(pdCount) pedometer data")
             }
         }
     }

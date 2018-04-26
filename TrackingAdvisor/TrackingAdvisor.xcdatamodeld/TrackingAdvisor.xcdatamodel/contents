@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="13772" systemVersion="16G1114" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="13772" systemVersion="16G1314" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="AggregatedPersonalInformation" representedClassName="AggregatedPersonalInformation" parentEntity="PersonalInformation" syncable="YES" codeGenerationType="category">
         <attribute name="comment" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="reviewed" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES" syncable="YES"/>
@@ -16,6 +16,13 @@
         <attribute name="id" optional="YES" attributeType="String" syncable="YES"/>
         <relationship name="arrivalPlace" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Place" syncable="YES"/>
         <relationship name="departurePlace" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Place" syncable="YES"/>
+    </entity>
+    <entity name="Pedometer" representedClassName="Pedometer" syncable="YES" codeGenerationType="category">
+        <attribute name="day" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="distance" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES" syncable="YES"/>
+        <attribute name="end" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="numberOfSteps" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
+        <attribute name="start" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
     </entity>
     <entity name="PersonalInformation" representedClassName="PersonalInformation" syncable="YES" codeGenerationType="category">
         <attribute name="category" optional="YES" attributeType="String" syncable="YES"/>
@@ -94,5 +101,6 @@
         <element name="ReviewPersonalInformation" positionX="-288" positionY="-171" width="128" height="75"/>
         <element name="ReviewVisit" positionX="-396" positionY="-258" width="128" height="60"/>
         <element name="Visit" positionX="-137" positionY="-9" width="128" height="180"/>
+        <element name="Pedometer" positionX="-297" positionY="-180" width="128" height="120"/>
     </elements>
 </model>

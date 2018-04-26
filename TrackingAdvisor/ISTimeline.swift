@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import MKRingProgressView
 
 struct TimelineBlock {
     var iconView: MoveableView? = nil
@@ -351,6 +352,46 @@ open class ISTimeline: UIScrollView {
              timelineSubSubtitle = nil
         }
     }}
+    open var showRings: Bool = false { didSet {
+        if showRings {
+            timelineTitleOffset = 175.0 + 140.0
+        } else {
+            timelineTitleOffset = 175.0
+        }
+    }}
+    open var ringSteps: Int = 0 { didSet {
+        ringStepsLabel.text = "\(ringSteps)"
+    }}
+    open var ringStepsProgress: Double = 0.0 { didSet {
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(1.0)
+        ringStepsView.progress = ringStepsProgress
+        CATransaction.commit()
+    }}
+    
+    open var ringTime: Int = 0 { didSet {
+        ringTimeLabel.text = "\(ringTime)"
+    }}
+    open var ringTimeProgress: Double = 0.0 { didSet {
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(1.0)
+        ringTimeView.progress = ringTimeProgress
+        CATransaction.commit()
+    }}
+    
+    open var ringDistance: Double = 0.0 { didSet {
+        ringDistanceLabel.text = String(format: "%.02f", ringDistance)
+    }}
+    open var ringDistanceProgress: Double = 0.0 { didSet {
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(1.0)
+        ringDistanceView.progress = ringDistanceProgress
+        CATransaction.commit()
+    }}
+    open var ringDistanceUnit: String = "Miles" { didSet {
+        ringDistanceBottomLabel.text = "Walk distance in \(ringDistanceUnit.lowercased())"
+    }}
+    
     fileprivate var timelineSubSubtitle: String? { didSet {
             timelineSubSubtitleLabel.text = timelineSubSubtitle
         }
@@ -367,6 +408,16 @@ open class ISTimeline: UIScrollView {
     fileprivate var timelineSubSubtitleLabel: UILabel!
     fileprivate var timelineEditButton: UIButton!
     fileprivate var timelineUpdateButton: UIButton!
+    fileprivate var ringStepsView: MKRingProgressView!
+    fileprivate var ringStepsLabel: UILabel!
+    fileprivate var ringStepsBottomLabel: UILabel!
+    fileprivate var ringTimeView: MKRingProgressView!
+    fileprivate var ringTimeLabel: UILabel!
+    fileprivate var ringTimeBottomLabel: UILabel!
+    fileprivate var ringDistanceView: MKRingProgressView!
+    fileprivate var ringDistanceLabel: UILabel!
+    fileprivate var ringDistanceBottomLabel: UILabel!
+    
     fileprivate let screenSize:CGRect = UIScreen.main.bounds
     fileprivate var isEditing = false { didSet {
             if isEditing {
@@ -387,12 +438,24 @@ open class ISTimeline: UIScrollView {
     
     override public init(frame: CGRect) {
         super.init(frame: frame)
+        self.backgroundColor = .white
         initialize()
     }
     
     required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
+        self.backgroundColor = .white
         initialize()
+    }
+    
+    convenience public init(frame: CGRect, showRings: Bool) {
+        self.init(frame: frame)
+        self.showRings = showRings
+        if showRings {
+            timelineTitleOffset = 175.0 + 140.0
+        } else {
+            timelineTitleOffset = 175.0
+        }
     }
     
     fileprivate func initialize() {
@@ -401,6 +464,7 @@ open class ISTimeline: UIScrollView {
         buildTimelineTitleLabel()
         buildTimelineSubtitleLabel()
         buildTimelineSubSubtitleLabel()
+        buildRings()
     }
     
     @objc fileprivate func updateTimeline(sender: UIButton!) {
@@ -531,6 +595,31 @@ open class ISTimeline: UIScrollView {
         timelineEditButton.setTitle("Add places", for: .normal)
         timelineEditButton.addTarget(self, action: #selector(ISTimeline.editTimeline), for: .touchUpInside)
         self.addSubview(timelineEditButton)
+        
+        // Place the rings if they are showing
+        if showRings {
+            ringStepsView.frame = CGRect(x: 1.0, y: 220, width: 75.0, height: 75.0)
+            ringStepsLabel.center = ringStepsView.center
+            ringStepsBottomLabel.center = CGPoint(x: ringStepsView.center.x, y: 195)
+            
+            ringTimeView.frame = CGRect(x: 1.0 + (rect.width-10.0) / 3, y: 220, width: 75.0, height: 75.0)
+            ringTimeLabel.center = ringTimeView.center
+            ringTimeBottomLabel.center = CGPoint(x: ringTimeView.center.x, y: 195)
+            
+            ringDistanceView.frame = CGRect(x: 1.0 + 2 * (rect.width-10.0) / 3, y: 220, width: 75.0, height: 75.0)
+            ringDistanceLabel.center = ringDistanceView.center
+            ringDistanceBottomLabel.center = CGPoint(x: ringDistanceView.center.x, y: 195)
+            
+            self.addSubview(ringStepsView)
+            self.addSubview(ringStepsLabel)
+            self.addSubview(ringStepsBottomLabel)
+            self.addSubview(ringTimeView)
+            self.addSubview(ringTimeLabel)
+            self.addSubview(ringTimeBottomLabel)
+            self.addSubview(ringDistanceView)
+            self.addSubview(ringDistanceLabel)
+            self.addSubview(ringDistanceBottomLabel)
+        }
         
         if sections.count == 0 { return }
         
@@ -819,6 +908,95 @@ open class ISTimeline: UIScrollView {
         }
         timelineSubSubtitleLabel.font = fnt
         timelineSubSubtitleLabel.preferredMaxLayoutWidth = calcWidth()
+    }
+    
+    fileprivate func buildRings() {
+        ringStepsView = MKRingProgressView()
+        ringStepsView.startColor = Constants.colors.primaryLight
+        ringStepsView.endColor = Constants.colors.primaryDark
+        ringStepsView.ringWidth = 10
+        ringStepsView.progress = self.ringStepsProgress
+        
+        ringStepsLabel = UILabel()
+        ringStepsLabel.font = UIFont.systemFont(ofSize: 30.0, weight: .bold)
+        ringStepsLabel.textColor = Constants.colors.primaryLight
+        ringStepsLabel.text = "2340"
+        ringStepsLabel.adjustsFontSizeToFitWidth = true
+        ringStepsLabel.minimumScaleFactor = 0.2
+        ringStepsLabel.baselineAdjustment = .alignCenters
+        ringStepsLabel.textAlignment = .center
+        ringStepsLabel.numberOfLines = 1
+        ringStepsLabel.frame.size = CGSize(width: 45, height: 30)
+        
+        ringStepsBottomLabel = UILabel()
+        if AppDelegate.isIPhone5() {
+            ringStepsBottomLabel.font = UIFont.systemFont(ofSize: 13.0, weight: .bold)
+        } else {
+            ringStepsBottomLabel.font = UIFont.systemFont(ofSize: 15.0, weight: .bold)
+        }
+        ringStepsBottomLabel.textColor = Constants.colors.primaryLight
+        ringStepsBottomLabel.numberOfLines = 2
+        ringStepsBottomLabel.textAlignment = .center
+        ringStepsBottomLabel.text = "Number of\nsteps"
+        ringStepsBottomLabel.sizeToFit()
+        
+        ringTimeView = MKRingProgressView()
+        ringTimeView.startColor = Constants.colors.lightPurple
+        ringTimeView.endColor = Constants.colors.midPurple
+        ringTimeView.ringWidth = 10
+        ringTimeView.progress = self.ringTimeProgress
+        
+        ringTimeLabel = UILabel()
+        ringTimeLabel.font = UIFont.systemFont(ofSize: 30.0, weight: .bold)
+        ringTimeLabel.textColor = Constants.colors.lightPurple
+        ringTimeLabel.text = "245"
+        ringTimeLabel.adjustsFontSizeToFitWidth = true
+        ringTimeLabel.minimumScaleFactor = 0.2
+        ringTimeLabel.baselineAdjustment = .alignCenters
+        ringTimeLabel.textAlignment = .center
+        ringTimeLabel.numberOfLines = 1
+        ringTimeLabel.frame.size = CGSize(width: 45, height: 30)
+        
+        ringTimeBottomLabel = UILabel()
+        if AppDelegate.isIPhone5() {
+            ringTimeBottomLabel.font = UIFont.systemFont(ofSize: 13.0, weight: .bold)
+        } else {
+            ringTimeBottomLabel.font = UIFont.systemFont(ofSize: 15.0, weight: .bold)
+        }
+        ringTimeBottomLabel.textColor = Constants.colors.lightPurple
+        ringTimeBottomLabel.numberOfLines = 2
+        ringTimeBottomLabel.textAlignment = .center
+        ringTimeBottomLabel.text = "Walk duration\nin minutes"
+        ringTimeBottomLabel.sizeToFit()
+        
+        ringDistanceView = MKRingProgressView()
+        ringDistanceView.startColor = Constants.colors.lightOrange
+        ringDistanceView.endColor = Constants.colors.orange
+        ringDistanceView.ringWidth = 10
+        ringDistanceView.progress = self.ringDistanceProgress
+        
+        ringDistanceLabel = UILabel()
+        ringDistanceLabel.font = UIFont.systemFont(ofSize: 30.0, weight: .bold)
+        ringDistanceLabel.textColor = Constants.colors.lightOrange
+        ringDistanceLabel.text = "1.34"
+        ringDistanceLabel.adjustsFontSizeToFitWidth = true
+        ringDistanceLabel.minimumScaleFactor = 0.2
+        ringDistanceLabel.baselineAdjustment = .alignCenters
+        ringDistanceLabel.textAlignment = .center
+        ringDistanceLabel.numberOfLines = 1
+        ringDistanceLabel.frame.size = CGSize(width: 45, height: 30)
+        
+        ringDistanceBottomLabel = UILabel()
+        if AppDelegate.isIPhone5() {
+            ringDistanceBottomLabel.font = UIFont.systemFont(ofSize: 13.0, weight: .bold)
+        } else {
+            ringDistanceBottomLabel.font = UIFont.systemFont(ofSize: 15.0, weight: .bold)
+        }
+        ringDistanceBottomLabel.textColor = Constants.colors.lightOrange
+        ringDistanceBottomLabel.numberOfLines = 2
+        ringDistanceBottomLabel.textAlignment = .center
+        ringDistanceBottomLabel.text = "Walk distance\nin \(Settings.getPedometerUnit()?.lowercased() ?? "kilometers")"
+        ringDistanceBottomLabel.sizeToFit()
     }
     
     fileprivate func buildTitleLabel(_ index:Int) -> UILabel {

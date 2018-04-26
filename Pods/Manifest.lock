@@ -4,6 +4,7 @@ PODS:
   - Eureka (4.1.1)
   - Fuse (1.1.0)
   - Mapbox-iOS-SDK (3.7.6)
+  - MKRingProgressView (1.2)
 
 DEPENDENCIES:
   - Alamofire (~> 4.6)
@@ -11,6 +12,7 @@ DEPENDENCIES:
   - Eureka (~> 4.0)
   - Fuse
   - Mapbox-iOS-SDK (~> 3.7)
+  - MKRingProgressView
 
 SPEC REPOS:
   https://github.com/CocoaPods/Specs.git:
@@ -19,6 +21,7 @@ SPEC REPOS:
     - Eureka
     - Fuse
     - Mapbox-iOS-SDK
+    - MKRingProgressView
 
 SPEC CHECKSUMS:
   Alamofire: 68d7d521118d49c615a8d2214d87cdf525599d30
@@ -26,7 +29,8 @@ SPEC CHECKSUMS:
   Eureka: b88fb930e42c79f8c03c373d0fcdc28c1d6c50ed
   Fuse: 34e3968a93e77b774af6b8b631fcfb61bf829c98
   Mapbox-iOS-SDK: 23ececda1d90c3b436b45e2c88e9677f025303c0
+  MKRingProgressView: 023e2241d1ef23b05cb9893aa4878395861e3902
 
-PODFILE CHECKSUM: 48fee7375f48d73364cde2def898f5a847923e71
+PODFILE CHECKSUM: dd094baa01d9d44fa148a23f545c848f4000b16f
 
 COCOAPODS: 1.5.0

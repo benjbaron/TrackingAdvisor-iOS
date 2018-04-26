@@ -51,6 +51,8 @@
 		B574986B207B700B001C4B54 /* LogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B574986A207B700B001C4B54 /* LogService.swift */; };
 		B57768FA2016027900A0FD1B /* PlacePersonalInformationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57768F92016027900A0FD1B /* PlacePersonalInformationController.swift */; };
 		B577690420164C2B00A0FD1B /* HeaderPlace.swift in Sources */ = {isa = PBXBuildFile; fileRef = B577690320164C2B00A0FD1B /* HeaderPlace.swift */; };
+		B57BB82C208FA0560046284C /* PedometerSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57BB82B208FA0560046284C /* PedometerSettingsViewController.swift */; };
+		B57BB82E209008660046284C /* Pedometer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57BB82D209008660046284C /* Pedometer.swift */; };
 		B57F514E1FD55A5B0018B416 /* NetworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57F514D1FD55A5B0018B416 /* NetworkService.swift */; };
 		B584C21F1FA0F16B002582D1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B584C21E1FA0F16B002582D1 /* Assets.xcassets */; };
 		B58612751FB0D9C700480DD4 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58612741FB0D9C700480DD4 /* NotificationService.swift */; };
@@ -172,6 +174,8 @@
 		B574986A207B700B001C4B54 /* LogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogService.swift; sourceTree = "<group>"; };
 		B57768F92016027900A0FD1B /* PlacePersonalInformationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlacePersonalInformationController.swift; sourceTree = "<group>"; };
 		B577690320164C2B00A0FD1B /* HeaderPlace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderPlace.swift; sourceTree = "<group>"; };
+		B57BB82B208FA0560046284C /* PedometerSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PedometerSettingsViewController.swift; sourceTree = "<group>"; };
+		B57BB82D209008660046284C /* Pedometer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pedometer.swift; sourceTree = "<group>"; };
 		B57F514D1FD55A5B0018B416 /* NetworkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkService.swift; sourceTree = "<group>"; };
 		B584C21E1FA0F16B002582D1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B58612741FB0D9C700480DD4 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
@@ -307,6 +311,7 @@
 				B5F20A7F201BF0A700D24A70 /* ReviewChallenge.swift */,
 				B59E24562028B0DC008C8AC5 /* ReviewPersonalInformation.swift */,
 				B59E24582028B3B1008C8AC5 /* ReviewVisit.swift */,
+				B57BB82D209008660046284C /* Pedometer.swift */,
 			);
 			name = "CoreData Models";
 			sourceTree = "<group>";
@@ -358,6 +363,7 @@
 				B5C347491FB093F50078C12E /* OneTimelineViewController.swift */,
 				B58A6E131FCC4CF9003DA168 /* SettingsTableViewController.swift */,
 				B511C4FE1FD5C039006A312C /* GetInTouchFormViewController.swift */,
+				B57BB82B208FA0560046284C /* PedometerSettingsViewController.swift */,
 				B568B3B1202B037F00425A20 /* OnboardingViewController.swift */,
 				B59ABF671FDAADA300A60066 /* PositionMapModalViewController.swift */,
 				B530432E1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift */,
@@ -676,6 +682,7 @@
 				"${BUILT_PRODUCTS_DIR}/Cosmos/Cosmos.framework",
 				"${BUILT_PRODUCTS_DIR}/Eureka/Eureka.framework",
 				"${BUILT_PRODUCTS_DIR}/Fuse/Fuse.framework",
+				"${BUILT_PRODUCTS_DIR}/MKRingProgressView/MKRingProgressView.framework",
 				"${PODS_ROOT}/Mapbox-iOS-SDK/dynamic/Mapbox.framework",
 				"${PODS_ROOT}/Mapbox-iOS-SDK/dynamic/Mapbox.framework.dSYM",
 			);
@@ -685,6 +692,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Cosmos.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Eureka.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Fuse.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MKRingProgressView.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Mapbox.framework",
 				"${DWARF_DSYM_FOLDER_PATH}/Mapbox.framework.dSYM",
 			);
@@ -769,6 +777,8 @@
 				B5317A9E203DCE420057B857 /* PersonalInformationChooserViewController.swift in Sources */,
 				B568B3B2202B037F00425A20 /* OnboardingViewController.swift in Sources */,
 				B52AF1CE1FA8C87D00FDDF2A /* ISPoint.swift in Sources */,
+				B57BB82C208FA0560046284C /* PedometerSettingsViewController.swift in Sources */,
+				B57BB82E209008660046284C /* Pedometer.swift in Sources */,
 				B57768FA2016027900A0FD1B /* PlacePersonalInformationController.swift in Sources */,
 				B5883BD51FA3274200EA8A02 /* TrackingAdvisor.xcdatamodeld in Sources */,
 			);

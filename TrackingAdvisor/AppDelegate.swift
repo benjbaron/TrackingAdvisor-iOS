@@ -379,6 +379,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // update the dates from the database
         DataStoreService.shared.updateIfNeeded()
         
+        // update the pedometer count
+        DataStoreService.shared.updatePedometerData()
+        
         // update tab badges
         updateTabBadges()
         
@@ -396,37 +399,43 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
     
-    func updateTabBadges(type: String? = nil) {
+    func updateTimelineBadge(with numberOfVisitsToReview: Int) {
+        if let tabController = self.window?.rootViewController as? UITabBarController {
+            if numberOfVisitsToReview == 0 {
+                tabController.tabBar.items?[0].badgeValue = nil
+                UIApplication.shared.applicationIconBadgeNumber = 0
+            } else {
+                tabController.tabBar.items?[0].badgeValue = String(numberOfVisitsToReview)
+            }
+        }
+    }
+    
+    func updateTabBadges() {
         if let tabController = self.window?.rootViewController as? UITabBarController {
             
-            if type == nil || type == "visits" {
-                // get the number of visits to confirm
-                let today = DateHandler.dateToDayString(from: Date())
-                let numberOfVisitsToReview = DataStoreService.shared.getNumberOfVisitsToReview(for: today, ctxt: nil)
-                                
-                if numberOfVisitsToReview == 0 {
-                    tabController.tabBar.items?[0].badgeValue = nil
-                    UIApplication.shared.applicationIconBadgeNumber = 0
-                } else {
-                    tabController.tabBar.items?[0].badgeValue = String(numberOfVisitsToReview)
-                }
+            // get the number of visits to confirm
+            let today = DateHandler.dateToDayString(from: Date())
+            let numberOfVisitsToReview = DataStoreService.shared.getNumberOfVisitsToReview(for: today, ctxt: nil)
+            
+            if numberOfVisitsToReview == 0 {
+                tabController.tabBar.items?[0].badgeValue = nil
+                UIApplication.shared.applicationIconBadgeNumber = 0
+            } else {
+                tabController.tabBar.items?[0].badgeValue = String(numberOfVisitsToReview)
             }
             
-            if type == nil || type == "reviews" {
-                // get the number of places to review
-                let numberOfPlacesToReview = DataStoreService.shared.getAllPlacesToReview(ctxt: nil).count
-                
-                // get the number of personal information to review
-                let numberOfAggregatePersonalInformationToReview = DataStoreService.shared.getAggregatedPersonalInformationToReview(ctxt: nil).count
-                
-                let sum = numberOfPlacesToReview + numberOfAggregatePersonalInformationToReview
-                if sum == 0 {
-                    tabController.tabBar.items?[1].badgeValue = nil
-                } else {
-                    tabController.tabBar.items?[1].badgeValue = String(sum)
-                }
-            }
+            // get the number of places to review
+            let numberOfPlacesToReview = DataStoreService.shared.getAllPlacesToReview(ctxt: nil).count
             
+            // get the number of personal information to review
+            let numberOfAggregatePersonalInformationToReview = DataStoreService.shared.getAggregatedPersonalInformationToReview(ctxt: nil).count
+            
+            let sum = numberOfPlacesToReview + numberOfAggregatePersonalInformationToReview
+            if sum == 0 {
+                tabController.tabBar.items?[1].badgeValue = nil
+            } else {
+                tabController.tabBar.items?[1].badgeValue = String(sum)
+            }
         }
     }
     

@@ -54,6 +54,11 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     let headerCellId = "HeaderCellId"
     var color = Constants.colors.orange
     
+    var vid: String! {
+        didSet {
+            visit = DataStoreService.shared.getVisit(for: vid, ctxt: nil)
+        }
+    }
     var visit: Visit? {
         didSet {
             guard let visit = visit, let place = visit.place else { return }
@@ -79,6 +84,8 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
         self.tabBarController?.tabBar.isHidden = true
         
         DataStoreService.shared.delegate = self
+        
+        visit = DataStoreService.shared.getVisit(for: vid, ctxt: nil)
         
         setupNavBarButtons()
         updatedReviews.removeAll()
@@ -274,8 +281,15 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     }
     
     func dataStoreDidUpdate(for day: String?) {
-        if let vid = visit?.id {
+        if let vid = vid {
             print("dataStoreDidUpdate")
+            visit = DataStoreService.shared.getVisit(for: vid, ctxt: nil)
+        }
+    }
+    
+    func dataStoreDidResetContext() {
+        if let vid = vid {
+            print("didResetContext")
             visit = DataStoreService.shared.getVisit(for: vid, ctxt: nil)
         }
     }
@@ -464,7 +478,12 @@ class HeaderPersonalInformationCell : UICollectionViewCell, MGLMapViewDelegate {
     }
     
     func height() -> CGFloat {
-        var height = 14 + mapView.bounds.height + 14 + visitReviewView.height()  + 14 + titleLabel.bounds.height + instructionsLabel.bounds.height + 14 + addPersonalInformationLabel.bounds.height + 14
+        var height = 14 + mapView.bounds.height + 14 + visitReviewView.height()  + 14 + titleLabel.bounds.height + 14 + addPersonalInformationLabel.bounds.height + 28
+        
+        if let instructionText = instructionsLabel.text {
+            height += instructionText.height(withConstrainedWidth: frame.width - 28,
+                                                           font: instructionsLabel.font)
+        }
         
         if placeType == 1 || placeType == 3 {
             height += 50 + 14 // add the placeTypeView

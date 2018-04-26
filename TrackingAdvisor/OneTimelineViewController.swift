@@ -25,10 +25,10 @@ class PointAnnotation: MGLPointAnnotation {
 }
 
 class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapViewDelegate {
-
-    @IBOutlet weak var mapView: MGLMapView?
-    @IBOutlet weak var mapViewHeight: NSLayoutConstraint!
-    @IBOutlet weak var timeline: ISTimeline!
+    
+    var mapView: MGLMapView!
+    var mapViewHeight: NSLayoutConstraint!
+    var timeline: ISTimeline!
     
     var mapCloseView: CloseView!
     
@@ -43,16 +43,32 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        self.view.backgroundColor = .white
+        
+        timeline = ISTimeline(frame: .zero, showRings: Settings.getShowActivityRings())
         timeline.delegate = self
         timeline.alwaysBounceVertical = true
-        mapView?.delegate = self
-        
+        timeline.translatesAutoresizingMaskIntoConstraints = false
         timeline.contentInset = UIEdgeInsetsMake(20.0, 20.0, 20.0, 20.0)
-        mapView?.zoomLevel = 15
-        mapView?.centerCoordinate = CLLocationCoordinate2D(latitude: 51.524543, longitude: -0.132176)
-        mapView?.maximumZoomLevel = 15.0
-        mapView?.allowsRotating = false
-        mapView?.allowsTilting = false
+        
+        mapView = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.streetsStyleURL())
+        mapView.zoomLevel = 15
+        mapView.centerCoordinate = CLLocationCoordinate2D(latitude: 51.524543, longitude: -0.132176)
+        mapView.maximumZoomLevel = 15.0
+        mapView.allowsRotating = false
+        mapView.allowsTilting = false
+        mapView.delegate = self
+        mapView.translatesAutoresizingMaskIntoConstraints = false
+        
+        // setup views
+        self.view.addSubview(timeline)
+        self.view.addSubview(mapView)
+        
+        self.view.addVisualConstraint("H:|[timeline]|", views: ["timeline": timeline])
+        self.view.addVisualConstraint("H:|[map]|", views: ["map": mapView])
+        self.view.addVisualConstraint("V:|[map][timeline]|", views: ["map": mapView, "timeline": timeline])
+        mapViewHeight = NSLayoutConstraint(item: mapView, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 0)
+        mapViewHeight.isActive = true
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -60,11 +76,18 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         
         LogService.shared.log(LogService.types.timelineDay,
                               args: [LogService.args.day: timelineDay])
+        
+        let numberOfVisitsToReview = DataStoreService.shared.getNumberOfVisitsToReview(for: timelineDay, ctxt: nil)
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        appDelegate.updateTimelineBadge(with: numberOfVisitsToReview)
+        
         reload()
     }
     
     func reload() {
         guard let timeline = self.timeline else { return }
+        
+        print("reload timeline")
         
         let visits = DataStoreService.shared.getVisits(for: timelineDay, ctxt: nil)
         updateLastVisit(from: visits)
@@ -75,7 +98,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             
             // Load the place detail view and the navigation controller
             let controller = OneTimelinePlaceDetailViewController()
-            controller.visit = point.visit
+            controller.vid = point.visit?.id
             
             let controllerNavigation = UINavigationController(rootViewController: controller)
             controllerNavigation.modalTransitionStyle = .crossDissolve
@@ -114,7 +137,10 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
                                              LogService.args.value: "yes"])
                 UserUpdateHandler.visitedVisit(for: vid) {
                     DataStoreService.shared.updateVisit(with: vid, visited: 1)
-                    timeline.numberOfVisitsToReview = DataStoreService.shared.getNumberOfVisitsToReview(for: strongSelf.timelineDay, ctxt: nil)
+                    let numberOfVisitsToReview = DataStoreService.shared.getNumberOfVisitsToReview(for: strongSelf.timelineDay, ctxt: nil)
+                    timeline.numberOfVisitsToReview = numberOfVisitsToReview
+                    let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                    appDelegate.updateTimelineBadge(with: numberOfVisitsToReview)
                 }
                 
             }
@@ -130,7 +156,10 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
                                              LogService.args.value: "delete"])
                 UserUpdateHandler.deleteVisit(for: vid) {
                     DataStoreService.shared.deleteVisit(vid: vid, ctxt: nil)
-                    timeline.numberOfVisitsToReview = DataStoreService.shared.getNumberOfVisitsToReview(for: strongSelf.timelineDay, ctxt: nil)
+                    let numberOfVisitsToReview = DataStoreService.shared.getNumberOfVisitsToReview(for: strongSelf.timelineDay, ctxt: nil)
+                    timeline.numberOfVisitsToReview = numberOfVisitsToReview
+                    let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                    appDelegate.updateTimelineBadge(with: numberOfVisitsToReview)
                 }
                 
             }
@@ -271,6 +300,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             count += 1
         }
         
+        timeline.showRings = Settings.getShowActivityRings()
         timeline.points = timelinePoints
         timeline.bubbleArrows = false
         timeline.timelineTitle = timelineTitle
@@ -281,6 +311,32 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         timeline.timelineValidatedPlaceTouchAction = visitValidatedTouchAction
         timeline.timelineRemovedPlaceTouchAction = visitRemovedTouchAction
         timeline.numberOfVisitsToReview = DataStoreService.shared.getNumberOfVisitsToReview(for: timelineDay, ctxt: nil)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let strongSelf = self else { return }
+            // get the pedometer data for the current day
+            let pedometerData = DataStoreService.shared.getPedometerData(for: strongSelf.timelineDay, ctxt: nil)
+            
+            let steps = pedometerData.map({ $0.numberOfSteps }).reduce(0, +)
+            let time = pedometerData.map({ $0.duration }).reduce(0, +)
+            var distance = pedometerData.map({ $0.distance / 1000 }).reduce(0, +)
+            
+            if Settings.getPedometerUnit()?.lowercased() == "miles" {
+                distance /= 1.60934
+            }
+            
+            let stepsProgress = Double(steps) / Double(Settings.getPedometerStepsGoal())
+            let timeProgress = Double(time) / Double(Settings.getPedometerTimeGoal())
+            let distanceProgress = Double(distance) / Double(Settings.getPedometerDistanceGoal())
+            
+            timeline.ringDistanceUnit = Settings.getPedometerUnit() ?? "miles"
+            timeline.ringSteps = Int(steps)
+            timeline.ringTime = time
+            timeline.ringDistance = distance
+            timeline.ringStepsProgress = stepsProgress
+            timeline.ringTimeProgress = timeProgress
+            timeline.ringDistanceProgress = distanceProgress
+        }
     }
     
     private func updateLastVisit(from visits: [Visit]) {
@@ -407,7 +463,6 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
     
     // DataStoreUpdateProtocol methods
     func dataStoreDidUpdate(for day: String?) {
-        print("called dataStoreDidUpdate")
         if day != nil && day == timelineDay {
             reload()
         }

@@ -14,6 +14,7 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
     var updatedReviews: [String:[Int32]] = [:]
     var pics: [String]! = []
     var personalInformation: [String: [AggregatedPersonalInformation]]! = [:]
+    var scores: [String:Double] = [:]
     var aggregatedPersonalInformation: [AggregatedPersonalInformation]! = [] {
         didSet {
             if aggregatedPersonalInformation.count > 0 {
@@ -27,11 +28,16 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
                         }
                         s[picid]!.insert(pi)
                     }
+                    if let piid = pi.id {
+                        scores[piid] = pi.score
+                    }
                 }
                 pics = s.keys.sorted(by: { $0 < $1 })
                 
                 for picid in pics {
-                    personalInformation[picid] = s[picid]!.sorted(by: { $0.numberOfVisits > $1.numberOfVisits })
+                    personalInformation[picid] = s[picid]!.sorted(by: {
+                        scores[$0.id!] ?? 1 > scores[$1.id!] ?? 0
+                    })
                 }
                 
                 if collectionView == nil {
@@ -47,6 +53,7 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
     let headerCellId = "HeaderCellId"
     let sectionHeaderCellId = "SectionHeaderCellId"
     var color = Constants.colors.primaryDark
+    var selectedIndexPath: IndexPath?
     
     var numberOfDaysStudy: Int?
     var numberofPlacesVisited: Int?
@@ -132,8 +139,10 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
         cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! ProfilePersonalInformatonCell
         
         let picid = pics[indexPath.section-1]
-        cell.personalInformation = self.personalInformation[picid]![indexPath.item]
+        let pi = self.personalInformation[picid]![indexPath.item]
+        cell.personalInformation = pi
         cell.numberOfDaysStudy = numberOfDaysStudy
+        cell.score = scores[pi.id!]
         cell.color = color
         return cell
     }
@@ -184,6 +193,8 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let picid = pics[indexPath.section-1]
         if let pi = personalInformation[picid]?[indexPath.item] {
+            self.selectedIndexPath = indexPath
+            
             let overlayView = AggregatedPersonalInformationExplanationOverlayView()
             overlayView.color = color
             overlayView.picIndexPath = indexPath
@@ -206,9 +217,48 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
     // MARK: - OverlayViewDelegate methods
     func overlayViewDismissed() {
         if updatedReviews.count > 0 {
+            // get the cell and move it to the appropriate place
+            if let idx = selectedIndexPath {
+                let picid = pics[idx.section-1]
+                if let pi = self.personalInformation[picid]?[idx.item], let piid = pi.id {
+                    // update the score
+                    let score = pi.score
+                    scores[piid] = score
+                    if let cell = collectionView.cellForItem(at: idx) as? ProfilePersonalInformatonCell {
+                        cell.score = score
+                    }
+                    
+                    // determine the new position in the category
+                    let count = self.personalInformation[picid]!.count
+                    var newItemIdx = count-1
+                    var lastScore: Double? = nil
+                    for (index,api) in self.personalInformation[picid]!.enumerated() {
+                        if api.id == piid { continue }
+                        let apiScore = scores[api.id!]!
+                        if apiScore < score {
+                            newItemIdx = index
+                            lastScore = apiScore
+                            break
+                        }
+                    }
+                    
+                    if lastScore != nil && newItemIdx > idx.item {
+                        newItemIdx -= 1
+                    }
+                    // move the item to the new index
+                    let newIndexPath = IndexPath(item: newItemIdx, section: idx.section)
+                    collectionView.moveItem(at: idx, to: newIndexPath)
+                    // update the personal information order
+                    let tmp = personalInformation[picid]!.remove(at: idx.item)
+                    personalInformation[picid]!.insert(tmp, at: newIndexPath.item)
+                }
+            }
+            
             UserUpdateHandler.sendPersonalInformationReviewUpdate(reviews: updatedReviews)
             updatedReviews.removeAll()
         }
+        
+        self.selectedIndexPath = nil
     }
     
     // MARK: - PersonalInformationReviewCategoryDelegate methods
@@ -591,6 +641,9 @@ class ProfileSectionHeaderCell: UICollectionViewCell {
 }
 
 class ProfilePersonalInformatonCell: UICollectionViewCell {
+    var score: Double? { didSet {
+        updateColor()
+    }}
     var numberOfDaysStudy: Int?
     var personalInformation: AggregatedPersonalInformation? {
         didSet {
@@ -602,33 +655,26 @@ class ProfilePersonalInformatonCell: UICollectionViewCell {
     
     var color: UIColor = Constants.colors.orange {
         didSet {
-            if let score = personalInformation?.numberOfVisits, let days = numberOfDaysStudy {
-                
-                // do something with the review
-                
-                let alpha:CGFloat = min(CGFloat(score) / CGFloat(days), 1.0)
-                bgView.backgroundColor = color.withAlphaComponent(alpha)
-                if alpha > 0.5 {
-                    nameLabel.textColor = .white
-                } else {
-                    nameLabel.textColor = color
-                }
-            } else {
-                bgView.backgroundColor = color.withAlphaComponent(0.3)
-                nameLabel.textColor = color
-            }
+            updateColor()
         }
     }
     
-    lazy var bgView: UIView = {
-        let v = UIView()
-        v.layer.cornerRadius = 10
-        v.translatesAutoresizingMaskIntoConstraints = false
-        v.backgroundColor = color.withAlphaComponent(0.3)
-        return v
-    }()
+    private func updateColor() {
+        if let score = score, let len = numberOfDaysStudy {
+            let alpha = min(CGFloat(score) / (CGFloat(len) * 100.0), 1.0)
+            backgroundColor = color.withAlphaComponent(alpha)
+            if alpha > 0.4 {
+                nameLabel.textColor = .white
+            } else {
+                nameLabel.textColor = color
+            }
+        } else {
+            backgroundColor = color.withAlphaComponent(0.0)
+            nameLabel.textColor = color
+        }
+    }
     
-    lazy var nameLabel: UILabel = {
+    lazy private var nameLabel: UILabel = {
         let label = UILabel()
         label.text = "Personal information"
         label.font = UIFont.boldSystemFont(ofSize: 16.0)
@@ -649,13 +695,13 @@ class ProfilePersonalInformatonCell: UICollectionViewCell {
     }
     
     func setupViews() {
-        addSubview(bgView)
-        bgView.addSubview(nameLabel)
+        layer.cornerRadius = 10
+        backgroundColor = color.withAlphaComponent(0.3)
         
-        bgView.addVisualConstraint("H:|-14-[v0]-14-|", views: ["v0": nameLabel])
-        bgView.addVisualConstraint("V:|-14-[v0]-14-|", views: ["v0": nameLabel])
-        addVisualConstraint("H:|[v0]|", views: ["v0": bgView])
-        addVisualConstraint("V:|[v0]|", views: ["v0": bgView])
+        contentView.addSubview(nameLabel)
+        
+        contentView.addVisualConstraint("H:|-14-[v0]-14-|", views: ["v0": nameLabel])
+        contentView.addVisualConstraint("V:|-14-[v0]-14-|", views: ["v0": nameLabel])
     }
 }
 

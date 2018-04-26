@@ -10,6 +10,7 @@ target 'TrackingAdvisor' do
   pod 'Eureka', '~> 4.0'
   pod 'Mapbox-iOS-SDK', '~> 3.7'
   pod 'Cosmos', '~> 15.0'
+  pod 'MKRingProgressView'
 
   target 'TrackingAdvisorTests' do
     inherit! :search_paths
