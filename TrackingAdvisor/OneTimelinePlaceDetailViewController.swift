@@ -114,7 +114,13 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
         collectionView.alwaysBounceVertical = true
         
         // Register cells types
+<<<<<<< HEAD
         collectionView.register(PlacePersonalInformationCell.self, forCellWithReuseIdentifier: cellId)
+=======
+        collectionView.register(.self, forCellWithReuseIdentifier: cellId)
+        
+        
+>>>>>>> dc0a22c743824bb102be3818e05a8d1e5e630eb6
         collectionView.register(HeaderPersonalInformationCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, withReuseIdentifier: headerCellId)
         
         setupViews()
@@ -529,6 +535,7 @@ class HeaderPersonalInformationCell : UICollectionViewCell, MGLMapViewDelegate {
 }
 
 class PlacePersonalInformationCell : UICollectionViewCell {
+<<<<<<< HEAD
     var indexPath: IndexPath?
     var delegate: PersonalInformationCellDelegate?
     var personalInformation: PersonalInformation? { didSet {
@@ -582,6 +589,10 @@ class PlacePersonalInformationCell : UICollectionViewCell {
         addVisualConstraint("H:|[name]", views: ["name": nameLabel])
         addVisualConstraint("H:[feedback]|", views: ["feedback": feedbackView])
     }
+=======
+    var delegate: PersonalInformationCategoryCellDelegate?
+    
+>>>>>>> dc0a22c743824bb102be3818e05a8d1e5e630eb6
     
 }
 
