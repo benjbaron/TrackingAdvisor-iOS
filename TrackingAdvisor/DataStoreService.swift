@@ -51,6 +51,7 @@ class DataStoreService: NSObject {
                     _ = try? Place.findOrCreatePlace(matching: userPlace, in: context)
                 }
             }
+            
             if let visits = userUpdate.v, let days = userUpdate.days {
                 var savedVisits: Set<String> = Set()
                 for day in days {
@@ -99,6 +100,7 @@ class DataStoreService: NSObject {
                 self?.delegate?.dataStoreDidUpdate?(for: userUpdate.days?.first)
                 let appDelegate = UIApplication.shared.delegate as! AppDelegate
                 appDelegate.updateTabBadges()
+                UserStats.shared.updateAll()
                 callback?()
             }
         }
@@ -319,7 +321,7 @@ class DataStoreService: NSObject {
             }
         }
     }
-    
+        
     func getUniqueVisitDays(ctxt: NSManagedObjectContext?) -> [String] {
         print("getUniqueVisitDays")
         
@@ -382,7 +384,7 @@ class DataStoreService: NSObject {
         request.sortDescriptors = [sortDescriptor]
         
         // Add a predicate
-        request.predicate = NSPredicate(format: "day = %@ AND visited = 0", day)
+        request.predicate = NSPredicate(format: "day = %@ AND visited == 0", day)
         
         do {
             let matches = try context.fetch(request)
@@ -395,7 +397,7 @@ class DataStoreService: NSObject {
     }
     
     func getVisit(for vid: String, ctxt: NSManagedObjectContext?) -> Visit? {
-        print("getvisit for vid")
+        print("getvisit for vid \(vid)")
         
         let context = (ctxt == nil) ? container.viewContext : ctxt!
         
@@ -508,7 +510,7 @@ class DataStoreService: NSObject {
         
         return []
     }
-
+    
     func getAllPlacesToReview(ctxt: NSManagedObjectContext?) -> [Place] {
         print("getAllPlacesToReview")
         
@@ -534,6 +536,27 @@ class DataStoreService: NSObject {
         }
         
         return []
+    }
+    
+    func getAggregatePersonalInformation(with piid: String, ctxt: NSManagedObjectContext?) -> AggregatedPersonalInformation? {
+        print("getAggregatePersonalInformation with \(piid)")
+        
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
+
+        // create the fetch request
+        let request: NSFetchRequest<AggregatedPersonalInformation> = AggregatedPersonalInformation.fetchRequest()
+        
+        // Add a predicate
+        request.predicate = NSPredicate(format: "id = %@", piid)
+        
+        do {
+            let matches = try context.fetch(request)
+            return matches[0]
+        } catch {
+            print("Could not fetch visit. \(error)")
+        }
+        
+        return nil
     }
     
     func getAllAggregatedPersonalInformation(ctxt: NSManagedObjectContext?) -> [AggregatedPersonalInformation] {
@@ -713,6 +736,57 @@ class DataStoreService: NSObject {
         }
     }
     
+    func deletePlace(pid: String, ctxt: NSManagedObjectContext?, callback:(()->Void)? = nil) {
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
+        context.mergePolicy = NSMergePolicy(merge: .mergeByPropertyObjectTrumpMergePolicyType)
+        
+        if let place = try! Place.findPlace(matching: pid, in: context) {
+            
+            context.delete(place)
+            
+            do {
+                try context.save()
+                callback?()
+            } catch {
+                print("error when deleting place \(pid)", error)
+            }
+        }
+    }
+    
+    func deletePersonalInformation(piid: String, ctxt: NSManagedObjectContext?, callback:(()->Void)? = nil) {
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
+        context.mergePolicy = NSMergePolicy(merge: .mergeByPropertyObjectTrumpMergePolicyType)
+        
+        if let pi = try! PersonalInformation.findPersonalInformation(matching: piid, in: context) {
+            
+            context.delete(pi)
+            
+            do {
+                try context.save()
+                callback?()
+            } catch {
+                print("error when deleting personal information \(piid)", error)
+            }
+        }
+    }
+    
+    func deleteAggregatedPersonalInformation(piid: String, ctxt: NSManagedObjectContext?, callback:(()->Void)? = nil) {
+        let context = (ctxt == nil) ? container.viewContext : ctxt!
+        context.mergePolicy = NSMergePolicy(merge: .mergeByPropertyObjectTrumpMergePolicyType)
+        
+        if let api = try! AggregatedPersonalInformation.findPersonalInformation(matching: piid, in: context) {
+            
+            context.delete(api)
+            
+            do {
+                try context.save()
+                callback?()
+            } catch {
+                print("error when deleting aggregated personal information \(piid)", error)
+            }
+        }
+    }
+    
     func deleteVisit(vid: String, ctxt: NSManagedObjectContext?, callback:(()->Void)? = nil) {
         let context = (ctxt == nil) ? container.viewContext : ctxt!
         context.mergePolicy = NSMergePolicy(merge: .mergeByPropertyObjectTrumpMergePolicyType)
@@ -768,15 +842,16 @@ class DataStoreService: NSObject {
     }
     
     func updateIfNeeded(force: Bool = false) {
+        if Settings.getLastDatabaseUpdate() == nil {
+            // add the setting to yesterday
+            Settings.saveLastDatabaseUpdate(with: Date().yesterday)
+        }
+        
         if let lastUpdate = Settings.getLastDatabaseUpdate() {
-            print("lastUpdate: \(lastUpdate)")
             let lastUpdateStr = DateHandler.dateToDayString(from: lastUpdate.startOfDay)
-            print("lastUpdateStr: \(lastUpdateStr)")
             let todayStr = DateHandler.dateToDayString(from: Date())
-            print("force: \(force)")
             if force || todayStr != lastUpdateStr {
                 let days = getUniqueVisitDays(ctxt: nil)
-                print("days: \(days)")
                 for day in days {
                     if day == todayStr { continue }
                     let lastVisit = getVisits(for: day, ctxt: nil).last
@@ -790,6 +865,11 @@ class DataStoreService: NSObject {
     }
     
     func updatePedometerData(callback:(()->Void)? = nil) {
+        
+        if !ActivityService.isServiceActivated() {
+            print("updatePedometerData - Activity services are not activated")
+            return
+        }
         
         // get the pedometer data from the last 6 days (max 7 in the doc)
         var components = DateComponents()

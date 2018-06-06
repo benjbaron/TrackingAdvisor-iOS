@@ -54,7 +54,7 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
         }
         
         // configure the location manager
-        locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
+        locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
         locationManager.distanceFilter = kCLDistanceFilterNone
         locationManager.pausesLocationUpdatesAutomatically = false
         if #available(iOS 9.0, *) {
@@ -77,7 +77,7 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
     func startUpdatingLocation() {
         requestPermission()
         
-        locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
+        locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
         locationManager.distanceFilter = kCLDistanceFilterNone
 
         locationManager.delegate = self
@@ -102,7 +102,6 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
     }
     
     func stopUpdatingLocation() {
-        
         locationManager.stopUpdatingLocation()
         adaptiveLocationManager = LocationAdaptiveService.shared
         adaptiveLocationManager.stopUpdatingLocation()
@@ -134,11 +133,11 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
         deleteRegions()
     
         // update the surrounding region
-        var radius: CLLocationDistance = 100.0
+        var radius: CLLocationDistance = 50.0
         if let prev = previousLocation {
             let s = location.speed(with: prev)
             if s > 5.0 {
-                radius = max(100.0, min(100.0 * sqrt(s), 1000.0))
+                radius = max(50.0, min(100.0 * sqrt(s), 1000.0))
             }
         }
         
@@ -259,15 +258,16 @@ class LocationRegionService: NSObject, CLLocationManagerDelegate, LocationAdapti
         restartUpdatingLocation()
         locationUpdateType = .visit
         
-//        UserUpdateHandler.getClosestPlace(coordinate: visit.coordinate) { place in
-//            if let emoji = place?.emoji, let name = place?.name {
-//                var text = "\(emoji) Are you at \(name)?"
-//                if visit.departureDate != Date.distantFuture {
-//                    text = "\(emoji) Were you at \(name)?"
-//                }
-//                NotificationService.shared.sendLocalNotificationNow(body: text)
-//            }
-//        }
+        /*
+        UserUpdateHandler.getClosestPlace(coordinate: visit.coordinate) { place in
+            if let emoji = place?.emoji, let name = place?.name {
+                var text = "\(emoji) Are you at \(name)?"
+                if visit.departureDate != Date.distantFuture {
+                    text = "\(emoji) Were you at \(name)?"
+                }
+                NotificationService.shared.sendLocalNotificationNow(body: text)
+            }
+        } */
         
         if ProcessInfo.processInfo.isLowPowerModeEnabled {
             saveVisitToFile(visit, timestamp: visit.arrivalDate)

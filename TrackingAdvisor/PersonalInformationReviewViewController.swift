@@ -207,6 +207,7 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
     }
     
     func showPlaces(cat: String, personalInformation: AggregatedPersonalInformation, picIndexPath: IndexPath, personalInformationIndexPath: IndexPath) {
+        print("showPlaces")
         let overlayView = AggregatedPersonalInformationExplanationOverlayView()
         overlayView.color = color
         overlayView.picIndexPath = picIndexPath
@@ -239,8 +240,9 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
             
             // update header count
             if let headerView = collectionView.supplementaryView(forElementKind: UICollectionElementKindSectionHeader, at: IndexPath(item: 0, section: 0)) as? PersonalInformationReviewHeaderCell {
-                let numberOfPersonalInformationToReview = aggregatedPersonalInformation.filter({ !$0.reviewed }).count
-                headerView.numberOfPersonalInformationToReview = numberOfPersonalInformationToReview
+                UserStats.shared.updateAggregatedPersonalInformation()
+                headerView.numberOfPersonalInformationToReview = UserStats.shared.numberOfAggregatedPersonalInformationToReview
+                
             }
         }
     }

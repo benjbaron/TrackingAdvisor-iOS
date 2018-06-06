@@ -16,6 +16,7 @@ class LogService : NSObject {
         static let notificationReceived = "notification-received"
         static let notificationOpen = "notification-open"
         static let appLaunchType = "app-launch-type"
+        static let appLaunchStep = "app-launch-step"
         static let appBackground = "app-background"
         static let appForeground = "app-foreground"
         static let appTerminate = "app-terminate"
@@ -76,6 +77,9 @@ class LogService : NSObject {
         static let personalInfoSaved = "personal-info-saved"
         static let placeEditSaved = "place-edit-saved"
         static let reviewNotification = "review-notification"
+        static let reviewPINotification = "review-pi-notification"
+        static let reviewPlacesNotification = "review-places-notification"
+        static let chatMessageNotification = "chat-message-notification"
         static let reviewPlaces = "review-places"
         static let reviewPi = "review-pi"
         static let reviewPlacesVisited = "review-places-visited"
@@ -102,7 +106,8 @@ class LogService : NSObject {
         static let settingsDataFileDelete = "settings-data-file-delete"
         static let settingsDataFileMap = "settings-data-file-map"
         static let webView = "web-view"
-        static let mapReview = "map-review"
+        static let mapReviewPrompt = "map-review-prompt"
+        static let aggPIReviewPrompt = "aggregated-personal-information-review-prompt"
         static let settingsPedometer = "settings-pedometer"
     }
     
@@ -152,6 +157,8 @@ class LogService : NSObject {
         static let pedometerTime = "pedometer-time"
         static let pedometerDistance = "pedometer-distance"
         static let pedometerUnit = "pedometer-unit"
+        static let aggPItoReview = "aggregated-personal-information-to-review"
+        static let aggPIReviewed = "aggregated-personal-information-reviewed"
     }
     
     func determineBatteryState() -> BatteryState {

@@ -32,6 +32,15 @@ class ActivityService {
     var pedometer = CMPedometer()
     var activityManager = CMMotionActivityManager()
     
+    class func isServiceActivated() -> Bool {
+        if #available(iOS 11.0, *) {
+            return CMPedometer.authorizationStatus() == .authorized
+        } else {
+            // Fallback on earlier versions
+            return CMSensorRecorder.isAuthorizedForRecording()
+        }
+    }
+    
     func getSteps(from start: Date, to end: Date, callback: @escaping (Int) -> Void) {
         pedometer.queryPedometerData(from: start, to: end) {
             (pedometerData, error) in

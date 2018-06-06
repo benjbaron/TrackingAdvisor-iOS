@@ -55,7 +55,17 @@ class PedometerSettingsViewController: FormViewController {
                 $0.tag = "unit"
                 $0.title = "Distance unit     "
                 $0.options = ["Miles", "Kilometers"]
-                $0.value = Settings.getPedometerUnit()
+                $0.value = Settings.getPedometerUnit() ?? "Miles"
+                $0.onChange { [unowned self] row in
+                    if let unit = row.value, let distanceRow = self.form.rowBy(tag: "distance") as? StepperRow {
+                        if unit == "Miles" {
+                            print("\tsettings miles")
+                            distanceRow.cell.textLabel?.text = "Distance goal (miles)"
+                        } else if unit == "Kilometers" {
+                            distanceRow.cell.textLabel?.text = "Distance goal (km)"
+                        }
+                    }
+                }
             }
     }
 
@@ -86,15 +96,4 @@ class PedometerSettingsViewController: FormViewController {
         LogService.shared.log(LogService.types.settingsPedometer, args: [LogService.args.pedometerSteps: "\(steps)", LogService.args.pedometerDistance: "\(distance)", LogService.args.pedometerTime: "\(time)", LogService.args.pedometerUnit: unit])
     }
     
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }

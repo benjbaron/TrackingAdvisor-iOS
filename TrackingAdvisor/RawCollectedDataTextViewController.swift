@@ -42,7 +42,6 @@ class RawCollectedDataTextViewController: UIViewController {
 //            print("upload button tapped")
 //            guard let strongSelf = self else { return }
 //            FileService.upload(file: strongSelf.file) { response in
-//                print("data sent to the server!")
 //                // TODO: Show on-screen confirmation
 //            }
 //        }

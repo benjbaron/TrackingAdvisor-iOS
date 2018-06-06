@@ -83,6 +83,11 @@ extension Formatter {
         formatter.dateFormat = "LLLL"
         return formatter
     }()
+    static let monthShort: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "LLL"
+        return formatter
+    }()
 }
 
 extension Calendar {
@@ -107,6 +112,9 @@ extension Date {
     }
     var monthName: String {
         return Formatter.month.string(from: self)
+    }
+    var monthShortName: String {
+        return Formatter.monthShort.string(from: self)
     }
     var dayOfWeek: Int {
         let calendar = Calendar.current
@@ -146,8 +154,16 @@ extension Date {
         return (date?.addingTimeInterval(-1))!
     }
     
-    public func earlier(_ date:Date) -> Date{
+    public func earlier(_ date:Date) -> Date {
         return (self.timeIntervalSince1970 <= date.timeIntervalSince1970) ? self : date
+    }
+    
+    var yesterday: Date {
+        return Calendar.current.date(byAdding: .day, value: -1, to: self.startOfDay)!
+    }
+    
+    var tomorrow: Date {
+        return Calendar.current.date(byAdding: .day, value: 1, to: self.startOfDay)!
     }
     
     var startOfWeek: Date? {

@@ -240,6 +240,7 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
         if let piid = personalInformation.id {
             updatedReviews[piid] = answer.rawValue
             DataStoreService.shared.updatePersonalInformationRating(with: piid, rating: answer.rawValue)
+            UserStats.shared.updatePlacePersonalInformation()
         }
     }
     
@@ -409,7 +410,7 @@ class HeaderPersonalInformationCell : UICollectionViewCell, MGLMapViewDelegate {
     }()
     
     private lazy var mapView: MGLMapView = {
-        let map = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.lightStyleURL())
+        let map = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.lightStyleURL)
         map.delegate = self
         map.tintColor = color
         map.zoomLevel = 14
@@ -494,6 +495,7 @@ class HeaderPersonalInformationCell : UICollectionViewCell, MGLMapViewDelegate {
     
     func setVisited(with visited: Int32) {
         visitReviewView.selected = ReviewAnswer(rawValue: visited)!
+        UserStats.shared.updateVisitConfirmed()
     }
     
     // MARK: - MGLMapViewDelegate delegate methods

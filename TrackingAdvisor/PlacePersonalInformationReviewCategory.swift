@@ -9,6 +9,7 @@
 import Foundation
 import UIKit
 import Mapbox
+import Alamofire
 
 
 protocol PlacePersonalInformationReviewCategoryDelegate {
@@ -24,6 +25,25 @@ class PlacePersonalInformationReviewCategory : UICollectionViewCell, UICollectio
     var indexPath: IndexPath?
     var delegate: PlacePersonalInformationReviewCategoryDelegate?
     var lastPlace: Bool = false
+    
+    var rawTrace: [VisitRawTrace]? {
+        didSet {
+            guard rawTrace != nil else { return }
+            
+            var annotations: [CustomPointAnnotation] = []
+            for point in rawTrace! {
+                let pointAnnotation = CustomPointAnnotation(coordinate: CLLocationCoordinate2D(latitude: point.lon, longitude: point.lat), title: nil, subtitle: nil)
+                pointAnnotation.reuseIdentifier = "rawTrace\(point.lon)"
+                pointAnnotation.image = dot(size: 15, color: Constants.colors.primaryDark.withAlphaComponent(0.3))
+                pointAnnotation.type = "raw"
+                
+                annotations.append(pointAnnotation)
+            }
+            
+            mapView.addAnnotations(annotations)
+        }
+    }
+    
     var status: Int = -2 { didSet {
         if status == -2 {
             setupInitialContainerView()
@@ -120,15 +140,15 @@ class PlacePersonalInformationReviewCategory : UICollectionViewCell, UICollectio
     }()
     
     private lazy var mapView: MGLMapView = {
-        let map = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.lightStyleURL())
+        let map = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.lightStyleURL)
         map.delegate = self
         map.tintColor = color
         map.zoomLevel = 14
         map.attributionButton.alpha = 0
-        map.allowsZooming = false
+        map.allowsZooming = true
+        map.allowsScrolling = true
         map.allowsTilting = false
         map.allowsRotating = false
-        map.allowsScrolling = false
         
         map.layer.cornerRadius = 5.0
         map.backgroundColor = .white
@@ -259,12 +279,10 @@ class PlacePersonalInformationReviewCategory : UICollectionViewCell, UICollectio
         
         containerView.addVisualConstraint("H:|-14-[v0]-14-|", views: ["v0": reviewPlaceButton])
         containerView.addVisualConstraint("H:|-14-[v0]-14-|", views: ["v0": mapView])
-        
         containerView.addVisualConstraint("V:|[v0]-10-[v1(64)]-|", views: ["v0": mapView, "v1": reviewPlaceButton])
-        
         containerView.layoutIfNeeded()
         
-        mapView.heightAnchor.constraint(greaterThanOrEqualToConstant: 100.0).isActive = true
+        mapView.heightAnchor.constraint(greaterThanOrEqualToConstant: 100.0).isActive = true        
     }
     
     func setupEndContainerView() {
@@ -319,6 +337,8 @@ class PlacePersonalInformationReviewCategory : UICollectionViewCell, UICollectio
         
         setupInitialContainerView()
     }
+    
+    // MARK: - CollectionView delegate methods
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if let count = personalInformation?.count {
@@ -395,4 +415,5 @@ class PlacePersonalInformationReviewCategory : UICollectionViewCell, UICollectio
         
         return annotationView
     }
+    
 }

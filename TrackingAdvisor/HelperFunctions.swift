@@ -293,6 +293,7 @@ class FullScreenView: UIView {
     }
     
     func setupViews() {
+        print("fullscreen - setupviews - 1")
         backgroundColor = .white
         
         addSubview(headerImage)
@@ -313,6 +314,7 @@ class FullScreenView: UIView {
         
         buttonConstraint = NSLayoutConstraint(item: button, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 0)
         buttonConstraint?.isActive = true
+        print("fullscreen - setupviews - 2")
     }
     
     private func getImageArray(icon: String, numberOfImages: Int, color: UIColor?) -> [UIImage] {

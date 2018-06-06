@@ -21,6 +21,8 @@ class TimelineSwipeViewController: UIViewController, EMPageViewControllerDataSou
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        view.backgroundColor = .white
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -62,6 +64,7 @@ class TimelineSwipeViewController: UIViewController, EMPageViewControllerDataSou
     private func setupPageViewcontroller() {
         // Instantiate EMPageViewController and set the data source and delegate to 'self'
         let pageViewController = EMPageViewController()
+        pageViewController.view.frame = view.frame
         
         // Or, for a vertical orientation
         // let pageViewController = EMPageViewController(navigationOrientation: .Vertical)

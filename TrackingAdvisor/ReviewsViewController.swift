@@ -8,70 +8,14 @@
 
 import UIKit
 
-class ReviewsViewController: UIViewController, UIScrollViewDelegate {
+class ReviewsViewController: UIViewController, UIScrollViewDelegate, VisitsTimelineViewDelegate {
     // set a content view inside the scroll view
     // From https://developer.apple.com/library/content/technotes/tn2154/_index.html
 
-    
     var fullScreenView: FullScreenView?
     
-    var numberOfPlacesToReview: Int? { didSet {
-        if numberOfPlacesToReview! > 0 {
-            placesToReviewButton.setTitle("Review places", for: .normal)
-            placesToReviewButton.subviews.first?.backgroundColor = Constants.colors.midPurple
-            placesToReviewButton.layoutIfNeeded()
-            print("set badge")
-            placesToReviewButton.badge = "\(numberOfPlacesToReview!)"
-        } else {
-            placesToReviewButton.subviews.first?.backgroundColor = Constants.colors.midPurple.withAlphaComponent(0.5)
-            placesToReviewButton.setTitle("No places to review", for: .normal)
-            placesToReviewButton.badge = nil
-        }
-    }}
-    
-    var numberOfPlacesReviewed: Int? { didSet {
-         placeReviewsSummary.bigText.bigText = String(numberOfPlacesReviewed!)
-        
-        if numberOfPlacesReviewed! < 2 {
-            placeReviewsSummary.bigText.smallBottomText = "PLACE"
-            if numberOfPlacesReviewed! < 1 {
-                placeReviewsSummary.descriptionText = "You haven't reviewed any places yet."
-            } else {
-                placeReviewsSummary.descriptionText = "You have reviewed one place."
-            }
-        } else {
-            placeReviewsSummary.bigText.smallBottomText = "PLACES"
-            placeReviewsSummary.descriptionText = "You have reviewed \(numberOfPlacesReviewed!) places. You are doing great!"
-        }
-    }}
-    
-    var numberOfPersonalInformationToReview: Int? { didSet {
-        if numberOfPersonalInformationToReview! > 0 {
-            personalInformationToReviewButton.setTitle("Review\npersonal information", for: .normal)
-            personalInformationToReviewButton.subviews.first?.backgroundColor = Constants.colors.orange
-            personalInformationToReviewButton.layoutIfNeeded()
-            personalInformationToReviewButton.badge = "\(numberOfPersonalInformationToReview!)"
-        } else {
-            personalInformationToReviewButton.setTitle("No personal information\nto review", for: .normal)
-            personalInformationToReviewButton.subviews.first?.backgroundColor = Constants.colors.orange.withAlphaComponent(0.5)
-            personalInformationToReviewButton.badge = nil
-        }
-    }}
-    
-    var numberOfPersonalInformationReviewed: Int? { didSet {
-        personalInformationReviewsSummary.bigText.bigText = String(numberOfPersonalInformationReviewed!)
-        
-        if numberOfPersonalInformationReviewed! < 2 {
-            if numberOfPersonalInformationReviewed! < 1 {
-                personalInformationReviewsSummary.descriptionText = "You haven't reviewed any personal information item yet."
-            } else {
-                personalInformationReviewsSummary.descriptionText = "You have reviewed one personal information item."
-            }
-        } else {
-            
-            personalInformationReviewsSummary.descriptionText = "So far, you have reviewed \(numberOfPersonalInformationReviewed!) personal information items."
-        }
-    }}
+    var numberOfPlacesToReview: Int?
+    var numberOfPersonalInformationToReview: Int?
     
     var scrollView : UIScrollView!
     var contentView : UIView!
@@ -85,74 +29,6 @@ class ReviewsViewController: UIViewController, UIScrollViewDelegate {
         return label
     }()
     
-    private lazy var placesToReviewButton: BadgeButton = {
-        let l = BadgeButton(type: .system)
-        l.setTitle("You have places to review", for: .normal)
-        l.titleLabel?.textAlignment = .center
-        l.titleLabel?.numberOfLines = 2
-        l.titleLabel?.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
-        l.setTitleColor(.white, for: .normal)
-        l.badge = nil
-        l.translatesAutoresizingMaskIntoConstraints = false
-        l.addTarget(self, action: #selector(tappedPlacesToReview), for: .touchUpInside)
-        
-        let view = UIView()
-        view.layer.cornerRadius = 5.0
-        view.layer.masksToBounds = true
-        view.backgroundColor = Constants.colors.midPurple
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.isUserInteractionEnabled = false
-        view.isExclusiveTouch = false
-        
-        l.addSubview(view)
-        l.sendSubview(toBack: view)
-        l.addVisualConstraint("H:|[v0]|", views: ["v0": view])
-        l.addVisualConstraint("V:|[v0]|", views: ["v0": view])
-
-        return l
-    }()
-    
-    @objc fileprivate func tappedPlacesToReview() {
-        print("tappedPlacesToReview")
-        if numberOfPlacesToReview != nil && numberOfPlacesToReview! > 0 {
-            let viewController = PlacePersonalInformationReviewViewController()
-            navigationController?.pushViewController(viewController, animated: true)
-        }
-    }
-    
-    private lazy var personalInformationToReviewButton: BadgeButton = {
-        let l = BadgeButton(type: .system)
-        l.setTitle("You have personal information to review", for: .normal)
-        l.titleLabel?.textAlignment = .center
-        l.titleLabel?.numberOfLines = 2
-        l.titleLabel?.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
-        l.setTitleColor(.white, for: .normal)
-        l.badge = nil
-        l.translatesAutoresizingMaskIntoConstraints = false
-        l.addTarget(self, action: #selector(tappedPersonalInformationToReview), for: .touchUpInside)
-        
-        let view = UIView()
-        view.layer.cornerRadius = 5.0
-        view.layer.masksToBounds = true
-        view.backgroundColor = Constants.colors.orange
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.isUserInteractionEnabled = false
-        view.isExclusiveTouch = false
-        
-        l.addSubview(view)
-        l.sendSubview(toBack: view)
-        l.addVisualConstraint("H:|[v0]|", views: ["v0": view])
-        l.addVisualConstraint("V:|[v0]|", views: ["v0": view])
-        return l
-    }()
-    
-    @objc fileprivate func tappedPersonalInformationToReview() {
-        if numberOfPersonalInformationToReview != nil && numberOfPersonalInformationToReview! > 0 {
-            let viewController = PersonalInformationReviewViewController()
-            navigationController?.pushViewController(viewController, animated: true)
-        }
-    }
-    
     let dividerLineView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor(white: 0.4, alpha: 0.4)
@@ -160,35 +36,167 @@ class ReviewsViewController: UIViewController, UIScrollViewDelegate {
         return view
     }()
     
-    var yourReviewsTitle: UILabel = {
+    var yourVisitsTitle: UILabel = {
         let label = UILabel()
-        label.text = "Your reviews"
+        label.text = "Your visits"
         label.textAlignment = .left
-        label.font = UIFont.systemFont(ofSize: 28, weight: .bold)
+        label.font = UIFont.systemFont(ofSize: 23, weight: .bold)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    var yourVisitsSubTitle: UILabel = {
+        let label = UILabel()
+        label.text = "You can find below a summary of your daily visits."
+        label.numberOfLines = 2
+        label.textAlignment = .left
+        label.lineBreakMode = .byWordWrapping
+        label.textColor = Constants.colors.descriptionColor
+        if AppDelegate.isIPhone5() {
+            label.font = UIFont.italicSystemFont(ofSize: 12)
+        } else {
+            label.font = UIFont.italicSystemFont(ofSize: 14)
+        }
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-    lazy var placeReviewsSummary: InfoCardView = {
-        return InfoCardView(bigText: BigText(bigText: "XX", topExponent: "", smallBottomText: "PLACES"),
-                            descriptionText: "You have reviewed XX places!")
+    lazy var visitsTimeline: VisitsTimelineView = {
+        print("visitsTimeline")
+        let timeline = VisitsTimelineView()
+        timeline.delegate = self
+        return timeline
     }()
     
-    lazy var personalInformationReviewsSummary: InfoCardView = {
-        return InfoCardView(bigText: BigText(bigText: "XX", topExponent: "", smallBottomText: "INFO"),
-                            descriptionText: "You have reviewed XX personal information items!")
+    var yourReviewsTitle: UILabel = {
+        let label = UILabel()
+        label.text = "Your reviews"
+        label.textAlignment = .left
+        label.font = UIFont.systemFont(ofSize: 23, weight: .bold)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }()
+    var yourReviewsSubTitle: UILabel = {
+        let label = UILabel()
+        label.text = "You can find below a summary of the different reviews."
+        label.numberOfLines = 2
+        label.textAlignment = .left
+        label.lineBreakMode = .byWordWrapping
+        label.textColor = Constants.colors.descriptionColor
+        label.font = UIFont.italicSystemFont(ofSize: 14)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    lazy var visitsReviewProgress: ReviewProgressBar = {
+        print("visitsReviewProgress")
+        let pb = ReviewProgressBar()
+        pb.color = Constants.colors.primaryDark
+        pb.filled = UserStats.shared.numberOfVisitsConfirmed
+        pb.empty = UserStats.shared.numberOfVisitsToConfirm
+        pb.total = UserStats.shared.numberOfVisitsToConfirm + UserStats.shared.numberOfVisitsConfirmed
+        pb.name = "Visit confirmations"
+        if UserStats.shared.totNumberOfVisits == 0 {
+            pb.desc = "You have no visits to confirm yet."
+        } else if UserStats.shared.numberOfVisitsToConfirm == 0 {
+            pb.desc = "You have confirmed all the visits!"
+        } else if UserStats.shared.numberOfVisitsToConfirm < 2 {
+            pb.desc = "You have one visit to confirm."
+        } else {
+            pb.desc = "You have \(UserStats.shared.numberOfVisitsToConfirm) visits to confirm."
+        }
+        pb.translatesAutoresizingMaskIntoConstraints = false
+        return pb
+    }()
+
+    lazy var placesReviewProgress: ReviewProgressBar = {
+        print("instanciate placesReviewProgress")
+        let pb = ReviewProgressBar()
+        pb.color = Constants.colors.midPurple
+        pb.filled = UserStats.shared.numberOfPlacePersonalInformationReviewed
+        pb.empty = UserStats.shared.numberOfPlacePersonalInformationToReview
+        pb.total = UserStats.shared.numberOfPlacePersonalInformationReviewed + UserStats.shared.numberOfPlacePersonalInformationToReview
+        pb.name = "Place reviews"
+        print("number of places to review: \(UserStats.shared.numberOfPlacePersonalInformationToReview)")
+        if UserStats.shared.totNumberOfPlacePersonalInformation == 0 {
+            pb.desc = "You no places to review yet."
+        } else if UserStats.shared.numberOfPlacePersonalInformationToReview == 0 {
+            pb.desc = "You have reviewed all the places!"
+        } else if UserStats.shared.numberOfPlacePersonalInformationToReview == 1 {
+            pb.desc = "You have one place to review."
+        } else {
+            pb.desc = "You have \(UserStats.shared.numberOfPlacePersonalInformationToReview) places to review."
+        }
+        pb.translatesAutoresizingMaskIntoConstraints = false
+        return pb
+    }()
+    
+    var placesReviewActionLabel: UILabel = {
+        let label = UILabel()
+        if UserStats.shared.numberOfPlacePersonalInformationToReview > 0 {
+            let placeStr = UserStats.shared.numberOfPlacePersonalInformationToReview > 0 ? "places" : "place"
+            label.text = "Go review the \(placeStr) ‣"
+        } else {
+            label.text = ""
+        }
+        label.numberOfLines = 1
+        label.textAlignment = .right
+        label.font = UIFont.systemFont(ofSize: 16.0, weight: .black)
+        label.textColor = Constants.colors.darkRed
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    lazy var apiReviewProgress: ReviewProgressBar = {
+        print("apiReviewProgress")
+        let pb = ReviewProgressBar()
+        pb.color = Constants.colors.orange
+        pb.filled = UserStats.shared.numberOfAggregatedPersonalInformationReviewed
+        pb.empty = UserStats.shared.numberOfAggregatedPersonalInformationToReview
+        pb.total = UserStats.shared.totNumberOfAggregatedPersonalInformation
+        pb.name = "Personal information reviews"
+        if UserStats.shared.totNumberOfAggregatedPersonalInformation == 0 {
+            pb.desc = "You have no information to review yet."
+        } else if UserStats.shared.numberOfAggregatedPersonalInformationToReview == 0 {
+            pb.desc = "You have reviewed all the information!"
+        } else if UserStats.shared.numberOfAggregatedPersonalInformationToReview == 1 {
+            pb.desc = "You have one information to review."
+        } else {
+            pb.desc = "You have \(UserStats.shared.numberOfAggregatedPersonalInformationToReview) information to review."
+        }
+        pb.translatesAutoresizingMaskIntoConstraints = false
+        print("apiReviewProgress - end")
+        return pb
+    }()
+    
+    var apiReviewActionLabel: UILabel = {
+        let label = UILabel()
+        if UserStats.shared.numberOfVisitsToConfirm > 0 {
+            label.text = "Go review the information ‣"
+        } else {
+            label.text = ""
+        }
+        label.numberOfLines = 1
+        label.textAlignment = .right
+        label.font = UIFont.systemFont(ofSize: 16.0, weight: .black)
+        label.textColor = Constants.colors.darkRed
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+                
         LogService.shared.log(LogService.types.tabReviews)
         
         view.backgroundColor = .white
         self.navigationController?.isNavigationBarHidden = true
         self.tabBarController?.tabBar.isHidden = false
         
-        computeData()
+        let days = DataStoreService.shared.getUniqueVisitDays(ctxt: nil)
+        if days.count > 0 {
+            computeData()
+        }
     }
     
     override func viewDidLoad() {
@@ -208,7 +216,6 @@ class ReviewsViewController: UIViewController, UIScrollViewDelegate {
             
             // update with the latest aggregated personal information
             UserUpdateHandler.retrieveLatestAggregatedPersonalInformation { [weak self] in
-                print("retrieved latest aggregated personal information")
                 self?.computeData()
             }
         }
@@ -250,39 +257,125 @@ class ReviewsViewController: UIViewController, UIScrollViewDelegate {
         contentView.addSubview(mainTitle)
         contentView.addVisualConstraint("H:|-16-[v0]-|", views: ["v0": mainTitle])
         
-        contentView.addSubview(placeReviewsSummary)
-        contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0": placeReviewsSummary])
+        contentView.addSubview(yourVisitsTitle)
+        contentView.addVisualConstraint("H:|-16-[v0]-|", views: ["v0": yourVisitsTitle])
         
-        contentView.addSubview(personalInformationReviewsSummary)
-        contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0": personalInformationReviewsSummary])
+        contentView.addSubview(yourVisitsSubTitle)
+        contentView.addVisualConstraint("H:|-16-[v0]-|", views: ["v0": yourVisitsSubTitle])
+        
+        contentView.addSubview(yourReviewsTitle)
+        contentView.addVisualConstraint("H:|-16-[v0]-|", views: ["v0": yourReviewsTitle])
+        
+        contentView.addSubview(yourReviewsSubTitle)
+        contentView.addVisualConstraint("H:|-16-[v0]-|", views: ["v0": yourReviewsSubTitle])
+        
+        contentView.addSubview(visitsReviewProgress)
+        contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0": visitsReviewProgress])
+        
+        contentView.addSubview(placesReviewProgress)
+        contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0": placesReviewProgress])
+        
+        contentView.addSubview(placesReviewActionLabel)
+        contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0": placesReviewActionLabel])
+        
+        contentView.addSubview(apiReviewProgress)
+        contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0": apiReviewProgress])
+        
+        contentView.addSubview(apiReviewActionLabel)
+        contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0": apiReviewActionLabel])
         
         contentView.addSubview(dividerLineView)
         contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0": dividerLineView])
         
-        contentView.addSubview(yourReviewsTitle)
+        contentView.addSubview(visitsTimeline)
+        contentView.addVisualConstraint("H:|[v0]|", views: ["v0": visitsTimeline])
         
-        contentView.addVisualConstraint("H:|-16-[v0]-|", views: ["v0": yourReviewsTitle])
+        contentView.addVisualConstraint("V:|-48-[title(40)]-16-[vt][vst][visits(160)]-16-[line(0.5)]-16-[rt][rst]-16-[visitProgress(90)]-25-[placeProgress(90)][placeAction]-25-[apiProgress(90)][apiAction]-25-|", views: ["title": mainTitle, "vt": yourVisitsTitle, "vst": yourVisitsSubTitle, "visits": visitsTimeline, "line": dividerLineView, "rt": yourReviewsTitle, "rst": yourReviewsSubTitle, "visitProgress": visitsReviewProgress, "placeProgress": placesReviewProgress, "placeAction": placesReviewActionLabel, "apiProgress": apiReviewProgress, "apiAction": apiReviewActionLabel])
         
-        contentView.addSubview(placesToReviewButton)
-        contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0": placesToReviewButton])
         
-        contentView.addSubview(personalInformationToReviewButton)
-        contentView.addVisualConstraint("H:|-16-[v0]-16-|", views: ["v0": personalInformationToReviewButton])
+        // Add tap gestures
+        placesReviewActionLabel.addTapGestureRecognizer { [unowned self] in
+            let viewController = PlacePersonalInformationReviewViewController()
+            self.navigationController?.pushViewController(viewController, animated: true)
+        }
         
-        contentView.addVisualConstraint("V:|-48-[title(40)]-16-[statsPlaces]-16-[statsPI]-16-[line(0.5)]-16-[subtitle]-16-[placesBtn(64)]-16-[piBtn(64)]-16-|", views: ["title": mainTitle, "statsPlaces": placeReviewsSummary, "statsPI": personalInformationReviewsSummary, "line": dividerLineView, "subtitle": yourReviewsTitle, "placesBtn": placesToReviewButton, "piBtn": personalInformationToReviewButton])
+        apiReviewActionLabel.addTapGestureRecognizer { [unowned self] in
+            let viewController = PersonalInformationReviewViewController()
+            self.navigationController?.pushViewController(viewController, animated: true)
+        }
     }
     
     func computeData() {
-        let placesReviewed = DataStoreService.shared.getAllPlacesReviewed(ctxt: nil)
-        let placesToReview = DataStoreService.shared.getAllPlacesToReview(ctxt: nil)
-
-        numberOfPlacesReviewed = placesReviewed.count
-        numberOfPlacesToReview = placesToReview.count
+        // visitsReviewProgress
+        visitsReviewProgress.filled = UserStats.shared.numberOfVisitsConfirmed
+        visitsReviewProgress.empty = UserStats.shared.numberOfVisitsToConfirm
+        visitsReviewProgress.total = UserStats.shared.numberOfVisitsToConfirm + UserStats.shared.numberOfVisitsConfirmed
+        visitsReviewProgress.name = "Visit confirmations"
+        if UserStats.shared.totNumberOfVisits == 0 {
+            visitsReviewProgress.desc = "You have no visits to confirm yet."
+        } else if UserStats.shared.numberOfVisitsToConfirm == 0 {
+            visitsReviewProgress.desc = "You have confirmed all the visits!"
+        } else if UserStats.shared.numberOfVisitsToConfirm < 2 {
+            visitsReviewProgress.desc = "You have one visit to confirm."
+        } else {
+            visitsReviewProgress.desc = "You have \(UserStats.shared.numberOfVisitsToConfirm) visits to confirm."
+        }
         
-        let personalInformationReviewed = DataStoreService.shared.getAggregatedPersonalInformationReviewed(ctxt: nil)
-        let personalInformationToReview = DataStoreService.shared.getAggregatedPersonalInformationToReview(ctxt: nil)
+        // placesReviewProgress
+        placesReviewProgress.filled = UserStats.shared.numberOfPlacePersonalInformationReviewed
+        placesReviewProgress.empty = UserStats.shared.numberOfPlacePersonalInformationToReview
+        placesReviewProgress.total = UserStats.shared.numberOfPlacePersonalInformationReviewed + UserStats.shared.numberOfPlacePersonalInformationToReview
         
-        numberOfPersonalInformationReviewed = personalInformationReviewed.count
-        numberOfPersonalInformationToReview = personalInformationToReview.count        
+        placesReviewProgress.name = "Place reviews"
+        if UserStats.shared.totNumberOfPlacePersonalInformation == 0 {
+            placesReviewProgress.desc = "You have no places to review yet."
+        } else if UserStats.shared.numberOfPlacePersonalInformationToReview == 0 {
+            placesReviewProgress.desc = "You have reviewed all the places!"
+        } else if UserStats.shared.numberOfPlacePersonalInformationToReview == 1 {
+            placesReviewProgress.desc = "You have one place to review."
+        } else {
+            placesReviewProgress.desc = "You have \(UserStats.shared.numberOfPlacePersonalInformationToReview) places to review."
+        }
+        
+        // apiReviewProgress
+        apiReviewProgress.filled = UserStats.shared.numberOfAggregatedPersonalInformationReviewed
+        apiReviewProgress.empty = UserStats.shared.numberOfAggregatedPersonalInformationToReview
+        apiReviewProgress.total = UserStats.shared.totNumberOfAggregatedPersonalInformation
+        apiReviewProgress.name = "Personal information reviews"
+        if UserStats.shared.numberOfAggregatedPersonalInformationToReview == 0 {
+            apiReviewProgress.desc = "You have no information to review yet."
+        } else if UserStats.shared.numberOfAggregatedPersonalInformationToReview == 0 {
+            apiReviewProgress.desc = "You have reviewed all the information!"
+        } else if UserStats.shared.numberOfAggregatedPersonalInformationToReview == 1 {
+            apiReviewProgress.desc = "You have one information to review."
+        } else {
+            apiReviewProgress.desc = "You have \(UserStats.shared.numberOfAggregatedPersonalInformationToReview) information to review."
+        }
+        
+        // Action labels
+        numberOfPlacesToReview = UserStats.shared.numberOfPlacePersonalInformationToReview
+        if numberOfPlacesToReview! > 0 {
+            let placeStr = numberOfPlacesToReview! > 1 ? "places" : "place"
+            placesReviewActionLabel.text = "Go review the \(placeStr) ‣"
+        } else {
+            placesReviewActionLabel.text = ""
+        }
+        numberOfPersonalInformationToReview = UserStats.shared.numberOfAggregatedPersonalInformationToReview
+        if numberOfPersonalInformationToReview! > 0 {
+            apiReviewActionLabel.text = "Go review the information ‣"
+        } else {
+            apiReviewActionLabel.text = ""
+        }
+        
+        // update the layouts
+        visitsTimeline.layoutIfNeeded()
+        visitsReviewProgress.layoutSubviews()
+        placesReviewProgress.layoutSubviews()
+        apiReviewProgress.layoutSubviews()
+    }
+    
+    // MARK: - VisitsTimelineViewDelegate method
+    func selectedDate(day: String) {
+        print("selected day: \(day)")
     }
 }

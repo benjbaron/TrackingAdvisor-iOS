@@ -5,10 +5,10 @@ target 'TrackingAdvisor' do
   # Comment the next line if you're not using Swift and don't want to use dynamic frameworks
   use_frameworks!
   # Pods for TrackingAdvisor
-  pod "Fuse"
+  pod 'Fuse'
   pod 'Alamofire', '~> 4.6'
   pod 'Eureka', '~> 4.0'
-  pod 'Mapbox-iOS-SDK', '~> 3.7'
+  pod 'Mapbox-iOS-SDK', '~> 4.0'
   pod 'Cosmos', '~> 15.0'
   pod 'MKRingProgressView'
 

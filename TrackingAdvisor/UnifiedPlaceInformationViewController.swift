@@ -330,7 +330,7 @@ fileprivate class UnifiedPlaceInformationHeaderCell : UICollectionViewCell, MGLM
     }()
     
     private lazy var mapView: MGLMapView = {
-        let map = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.lightStyleURL())
+        let map = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.lightStyleURL)
         map.delegate = self
         map.tintColor = color
         map.zoomLevel = 14

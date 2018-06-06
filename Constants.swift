@@ -32,6 +32,7 @@ struct Constants {
         static let pedometerTimeGoal = "pedometerTimeGoal"
         static let pedometerUnit = "pedometerUnit"
         static let showActivityRings = "showActivityRings"
+        static let tutorial = "tutorial"
     }
     
     struct variables {
@@ -58,6 +59,7 @@ struct Constants {
         static let lightOrange = UIColor(red: 244/255, green: 197/255, blue: 146/255, alpha: 1.0)
         static let lightPurple = UIColor(red: 198/255, green: 176/255, blue: 188/255, alpha: 1.0)
         static let midPurple = UIColor(red: 80/255, green: 7/255, blue: 120/255, alpha: 1.0)
+        static let midPurpleDarker = UIColor(red: 90/255, green: 71/255, blue: 112/255, alpha: 1.0)
         static let darkPurple = UIColor(red: 75/255, green: 56/255, blue: 76/255, alpha: 1.0)
     }
     
@@ -90,6 +92,8 @@ struct Constants {
         static let consentFormURL = "https://iss-lab.geog.ucl.ac.uk/semantica/consentform"
         static let authClientURL = "https://iss-lab.geog.ucl.ac.uk/semantica/authclient"
         static let uploadPedometerDataURL = "https://iss-lab.geog.ucl.ac.uk/semantica/uploadpedometerdata"
+        static let sendMessageURL = "https://iss-lab.geog.ucl.ac.uk/semantica/sendmessage"
+        static let getAllMessagesURL = "https://iss-lab.geog.ucl.ac.uk/semantica/getmessages"
     }
     
 }

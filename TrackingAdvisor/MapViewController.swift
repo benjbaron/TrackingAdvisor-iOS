@@ -99,7 +99,7 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
     var dayLabel: UILabel = {
         let label = UILabel()
         label.text = "Today"
-        label.font = UIFont.systemFont(ofSize: 18.0)
+        label.font = UIFont.systemFont(ofSize: 16.0)
         label.textAlignment = .center
         label.textColor = Constants.colors.black
         label.backgroundColor = Constants.colors.superLightGray
@@ -107,13 +107,23 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
         return label
     }()
     
+    var dayStats: DayStats = {
+        let view = DayStats()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
     lazy var daysView: UIView = {
         let view = UIView()
         view.addSubview(weekCalendarView)
         view.addSubview(dayLabel)
+        view.addSubview(dayStats)
+        view.backgroundColor = Constants.colors.superLightGray
         view.addVisualConstraint("H:|[cal]|", views: ["cal": weekCalendarView])
         view.addVisualConstraint("H:|[day]|", views: ["day": dayLabel])
-        view.addVisualConstraint("V:|[cal(90)][day]|", views: ["cal": weekCalendarView, "day": dayLabel])
+        view.addVisualConstraint("H:|-10-[stats]-10-|", views: ["stats": dayStats])
+        view.addVisualConstraint("V:|[cal(80)][day(30)][stats(20)]-|", views: ["cal": weekCalendarView, "day": dayLabel, "stats": dayStats])
+        print("layout daysView")
         return view
     }()
 
@@ -168,16 +178,7 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
         self.tabBarController?.tabBar.isHidden = false
         
         days = DataStoreService.shared.getUniqueVisitDays(ctxt: nil)
-        
-        if fullScreenView == nil && days.count == 0 {
-            // the user just installed the app, show an animation
-            fullScreenView = FullScreenView(frame: view.frame)
-            fullScreenView!.icon = "path"
-            fullScreenView!.iconColor = Constants.colors.primaryLight
-            fullScreenView!.headerTitle = "Your map, here"
-            fullScreenView!.subheaderTitle = "After moving to a few places, you will find a map with the places that you visited here."
-            view.addSubview(fullScreenView!)
-        } else {
+        if days.count > 0 {
             weekCalendarView = WeekCalendarView()
             weekCalendarView.delegate = self
             
@@ -187,16 +188,17 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
             
             weekCalendarView.setToday()
             dayLabel.text = DateHandler.dateToDayLetterString(from: Date())
-        }
-        
-        if let date = dateSelected {
-            selectedDate(date: date)
-        } else {
-            selectedDate(date: Date())
-        }
-        
-        if mapView != nil, let a = mapView.annotations {
-            mapView.showAnnotations(a, animated: true)
+            
+            if let date = dateSelected {
+                selectedDate(date: date)
+            } else {
+                daysView.layoutIfNeeded()
+                selectedDate(date: Date())
+            }
+            
+            if mapView != nil, let a = mapView.annotations {
+                mapView.showAnnotations(a, animated: true)
+            }
         }
     }
     
@@ -213,7 +215,19 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
         let rightBarButton = UIBarButtonItem(customView: calendarButton)
         self.navigationItem.rightBarButtonItem = rightBarButton
         
-        self.title = "My Map"
+        self.title = "My Places"
+        
+        
+        days = DataStoreService.shared.getUniqueVisitDays(ctxt: nil)
+        if days.count == 0 {
+            // the user just installed the app, show an animation
+            fullScreenView = FullScreenView(frame: view.frame)
+            fullScreenView!.icon = "path"
+            fullScreenView!.iconColor = Constants.colors.primaryLight
+            fullScreenView!.headerTitle = "Your map, here"
+            fullScreenView!.subheaderTitle = "After moving to a few places, you will find a map with the places that you visited here."
+            view.addSubview(fullScreenView!)
+        }
     }
     
     func setupCollectionView() {
@@ -232,7 +246,7 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
     
     func setupMapView() {
         // set up the map view
-        mapView = MGLMapView(frame: view.bounds, styleURL: MGLStyle.streetsStyleURL())
+        mapView = MGLMapView(frame: view.bounds, styleURL: MGLStyle.streetsStyleURL)
         mapView.tintColor = color
         mapView.delegate = self
         mapView.zoomLevel = 15
@@ -259,11 +273,11 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
 //            (self.navigationController?.navigationBar.frame.height ?? 0.0)
         let width = Double(UIScreen.main.bounds.width)
         
-        daysView.frame = CGRect(x: 0.0, y: topBarHeight, width: width, height: 90.0+40)
+        daysView.frame = CGRect(x: 0.0, y: topBarHeight, width: width, height: 80.0+30+28)
         let daysViewPanGesture = UIPanGestureRecognizer(target: self, action: #selector(handleDaysViewPanGesture))
         daysView.addGestureRecognizer(daysViewPanGesture)
         
-        daysViewOffset = -90
+        daysViewOffset = -80.0
         daysViewUp = daysView.center
         daysViewDown = CGPoint(x: daysView.center.x ,y: daysView.center.y + daysViewOffset)
         
@@ -307,7 +321,6 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! MapVisitCell
         let visit = visits[indexPath.item]
         cell.visit = visit
-        cell.color = color
         return cell
     }
     
@@ -353,7 +366,7 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
             let av = CustomAnnotationView(reuseIdentifier: reuseIdentifier)
             av.frame = CGRect(x: 0, y: 0, width: 25, height: 25)
             av.image = image
-            av.backgroundColor = Constants.colors.midPurple
+            av.backgroundColor = point.color ?? Constants.colors.midPurple
             
             annotationView = av
         }
@@ -421,10 +434,10 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
             print("show alert controller")
             // show an alert
             let alertController = AppDelegate.createAlertController(title: "No places to show", message: "You need to review the visits for this day in order to see them. Do you want to review them now?", yesAction: {
-                LogService.shared.log(LogService.types.mapReview, args: [LogService.args.userChoice: "cancel", LogService.args.day: day])
+                LogService.shared.log(LogService.types.mapReviewPrompt, args: [LogService.args.userChoice: "cancel", LogService.args.day: day])
                 AppDelegate.showTimeline(for: day)
             }, noAction: {
-                LogService.shared.log(LogService.types.mapReview, args: [LogService.args.userChoice: "cancel", LogService.args.day: day])
+                LogService.shared.log(LogService.types.mapReviewPrompt, args: [LogService.args.userChoice: "cancel", LogService.args.day: day])
             })
             self.parent?.present(alertController, animated: true, completion: nil)
         } else if visitsToReview.count > 0 {
@@ -435,13 +448,13 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
                 
                 // show a view on top of the collection view
                 alertView = AlertView(frame: CGRect(x: UIScreen.main.bounds.midX - 125, y: UIScreen.main.bounds.maxY - 280, width: 250, height: 150), yesAction: { [weak self] in
-                    LogService.shared.log(LogService.types.mapReview, args: [LogService.args.userChoice: "review-place", LogService.args.day: day])
+                    LogService.shared.log(LogService.types.mapReviewPrompt, args: [LogService.args.userChoice: "review-place", LogService.args.day: day])
                     self?.alertView?.removeFromSuperview()
                     self?.alertView = nil
                     AppDelegate.showTimeline(for: day)
                     
                 }, noAction: { [weak self] in
-                    LogService.shared.log(LogService.types.mapReview, args: [LogService.args.userChoice: "dismiss", LogService.args.day: day])
+                    LogService.shared.log(LogService.types.mapReviewPrompt, args: [LogService.args.userChoice: "dismiss", LogService.args.day: day])
                     self?.alertView?.removeFromSuperview()
                     self?.alertView = nil
                     self?.collectionView.alpha = 1
@@ -474,6 +487,7 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
                 point.reuseIdentifier = pid
                 point.image = UIImage(named: place.icon ?? "map-marker")!.withRenderingMode(.alwaysTemplate)
                 point.type = "visit"
+                point.color = place.getPlaceColor()
                 annotations[pid] = point
                 placeSet.insert(place)
                 
@@ -494,12 +508,16 @@ class MapViewController: UIViewController, UICollectionViewDataSource, UICollect
             getRawTrace(day: day)
         }
         
-        let top:CGFloat = self.daysHidden ? 50 : 170
+        let top:CGFloat = self.daysHidden ? 50 : 180
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
             self?.mapView.showAnnotations(a,
                                           edgePadding: UIEdgeInsets(top: top, left: 25.0, bottom: 180.0, right: 25.0),
                                           animated: true)
         }
+        
+        // update the dayStats
+        print("update dayStats")
+        dayStats.visits = visits
     }
     
     private func getRawTrace(day: String) {
@@ -538,6 +556,9 @@ class MapVisitCell: UICollectionViewCell {
             iconView.icon = icon
         } else {
             iconView.icon = "map-marker"
+        }
+        if let color = visit?.place?.getPlaceColor() {
+            self.color = color
         }
     }}
     
@@ -728,5 +749,57 @@ fileprivate class AlertView: UIView {
         contentView.addVisualConstraint("V:|-[title][label]-10-[btn(40)]|", views: ["title": title, "label": label, "btn": yesBtn])
         contentView.addVisualConstraint("V:|-[title][label]-10-[btn(40)]|", views: ["title": title, "label": label, "btn": noBtn])
         yesBtn.widthAnchor.constraint(equalTo: noBtn.widthAnchor, multiplier: 1.0).isActive = true
+    }
+}
+
+class DayStats: UIView {
+    var visits: [Visit]? { didSet {
+        updateUI()
+    }}
+    let nbIntervals: CGFloat = 96.0
+    let intervalDuration: TimeInterval = 900 // 15-min intervals
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+    
+    convenience init(frame: CGRect, visits: [Visit]) {
+        self.init(frame: frame)
+        self.visits = visits
+        updateUI()
+    }
+    
+    required init(coder aDecoder: NSCoder) {
+        fatalError("This class does not support NSCoding")
+    }
+    
+    func updateUI() {
+        guard let visits = visits else { return }
+        
+        // remove all the subviews
+        for view in subviews {
+            view.removeFromSuperview()
+        }
+        
+        let intervalSize:CGFloat = frame.width / nbIntervals
+        let height: CGFloat = 20.0
+        
+        for visit in visits {
+            if let d = visit.departure, let a = visit.arrival {
+                let indexStart = floor(abs(a.timeIntervalSince(a.startOfDay)) / intervalDuration)
+                var indexEnd = floor(abs(d.timeIntervalSince(d.startOfDay)) / intervalDuration)
+                if indexEnd == indexStart { continue }
+                
+                if indexEnd == Double(nbIntervals)-1 {
+                    indexEnd = Double(nbIntervals)
+                }
+                
+                let intervalFrame = CGRect(x: CGFloat(indexStart)*intervalSize, y: 0,
+                                           width: CGFloat((indexEnd - indexStart))*intervalSize, height: height)
+                let view = UIView(frame: intervalFrame)
+                view.backgroundColor = visit.place?.getPlaceColor()
+                addSubview(view)
+            }
+        }
     }
 }

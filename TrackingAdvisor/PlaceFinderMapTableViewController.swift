@@ -62,6 +62,19 @@ protocol VisitTimesEditDelegate {
 class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate, VisitTimesEditDelegate {
 
     @objc func done(_ sender: Any) {
+        
+        // Check that the place is valid
+        if name == "Add a place" {
+            let alertController = UIAlertController(title: "Pick a place", message: "You need to pick a place", preferredStyle: UIAlertControllerStyle.alert)
+            let agreeAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default) { (result : UIAlertAction) -> Void in
+                print("tapped ok")
+            }
+            
+            alertController.addAction(agreeAction)
+            self.present(alertController, animated: true, completion: nil)
+            return
+        }
+        
         // create a user place from the different information
         let notificationView: NotificationView? = NotificationView(text: "Updating the place...")
         notificationView?.frame = CGRect(x: 0, y: 0, width: view.frame.width - 50, height: 50)
@@ -340,7 +353,7 @@ class PlaceFinderMapTableViewController: UIViewController, MGLMapViewDelegate, U
         editPlaceButton.addTarget(self, action: #selector(editPlace), for: .touchUpInside)
         
         // set up the map view
-        mapView = MGLMapView(frame: view.bounds, styleURL: MGLStyle.streetsStyleURL())
+        mapView = MGLMapView(frame: view.bounds, styleURL: MGLStyle.streetsStyleURL)
         mapView.tintColor = color
         mapView.delegate = self
         mapView.zoomLevel = 15
@@ -1078,21 +1091,25 @@ class PlaceFinderTableViewCell: UITableViewCell {
 
 
 // MGLAnnotation protocol reimplementation
-class CustomPointAnnotation: NSObject, MGLAnnotation {
+class CustomPointAnnotation: MGLPointAnnotation {
     
     // As a reimplementation of the MGLAnnotation protocol, we have to add mutable coordinate and (sub)title properties ourselves.
-    var coordinate: CLLocationCoordinate2D
-    var title: String?
-    var subtitle: String?
     var type: String?
+    var color: UIColor?
     
     // Custom properties that we will use to customize the annotation's image.
     var image: UIImage?
     var reuseIdentifier: String?
     
     init(coordinate: CLLocationCoordinate2D, title: String?, subtitle: String?) {
+        super.init()
+        
         self.coordinate = coordinate
         self.title = title
         self.subtitle = subtitle
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }

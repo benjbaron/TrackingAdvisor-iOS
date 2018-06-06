@@ -24,7 +24,7 @@ class PointAnnotation: MGLPointAnnotation {
     var annotationType: PointAnnotationType?
 }
 
-class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapViewDelegate {
+class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapViewDelegate, TutorialOverlayViewDelegate {
     
     var mapView: MGLMapView!
     var mapViewHeight: NSLayoutConstraint!
@@ -37,8 +37,16 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
     var timelineDay: String!
     var canUpdate: Bool = true
     var isAnimating = false
+    var isFolding: Bool?
+    var freeScroll = false
     var isFolded = true
-    var annotations: [CustomPointAnnotation] = []
+    var lowerHeight: CGFloat = UIScreen.main.bounds.height - 210.0
+    let upperHeight:CGFloat = 125.0
+    var lastOffset:CGFloat = 0.0
+    var annotations: [String:CustomPointAnnotation] = [:]
+    
+    var backgroundView: UIView!
+    var backgroundMarginView: UIView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -49,26 +57,44 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         timeline.delegate = self
         timeline.alwaysBounceVertical = true
         timeline.translatesAutoresizingMaskIntoConstraints = false
-        timeline.contentInset = UIEdgeInsetsMake(20.0, 20.0, 20.0, 20.0)
+        timeline.contentInset = UIEdgeInsets(top: upperHeight + 20.0, left: 20.0, bottom: 20.0, right: 20.0)
         
-        mapView = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.streetsStyleURL())
+        backgroundView = UIView(frame: .zero)
+        backgroundView.backgroundColor = UIColor.white
+        
+        backgroundMarginView = UIView(frame: .zero)
+        backgroundMarginView.backgroundColor = UIColor.black.withAlphaComponent(0.15)
+        
+        mapView = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.streetsStyleURL)
         mapView.zoomLevel = 15
         mapView.centerCoordinate = CLLocationCoordinate2D(latitude: 51.524543, longitude: -0.132176)
         mapView.maximumZoomLevel = 15.0
         mapView.allowsRotating = false
         mapView.allowsTilting = false
         mapView.delegate = self
-        mapView.translatesAutoresizingMaskIntoConstraints = false
+        mapView.userTrackingMode = .none
         
         // setup views
-        self.view.addSubview(timeline)
         self.view.addSubview(mapView)
+        self.view.addSubview(backgroundMarginView)
+        self.view.addSubview(backgroundView)
+        self.view.addSubview(timeline)
         
         self.view.addVisualConstraint("H:|[timeline]|", views: ["timeline": timeline])
-        self.view.addVisualConstraint("H:|[map]|", views: ["map": mapView])
-        self.view.addVisualConstraint("V:|[map][timeline]|", views: ["map": mapView, "timeline": timeline])
-        mapViewHeight = NSLayoutConstraint(item: mapView, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 0)
-        mapViewHeight.isActive = true
+        self.view.addVisualConstraint("V:|[timeline]|", views: ["timeline": timeline])
+        
+        // Adapt lowerHeight depending on the phone type
+        if AppDelegate.isIPhoneX() {
+            lowerHeight -= 65.0
+        }
+
+        mapView.frame = CGRect(x: 0,y: -175,
+                               width: UIScreen.main.bounds.width, height: lowerHeight)
+        
+        backgroundView.frame = CGRect(x: 0, y: upperHeight,
+                                      width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+        backgroundMarginView.frame = CGRect(x: 0, y: upperHeight-10.0,
+                                      width: UIScreen.main.bounds.width, height: 5.0)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -82,12 +108,27 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         appDelegate.updateTimelineBadge(with: numberOfVisitsToReview)
         
         reload()
+        
+        if !Settings.getTutorial() {
+            Timer.scheduledTimer(withTimeInterval: 2, repeats: false) { _ in
+                let overlayView = TutorialOverlayView()
+                overlayView.delegate = self
+                OverlayView.shared.delegate = overlayView
+                OverlayView.shared.showOverlay(with: overlayView)
+            }
+        }
+    }
+    
+    // MARK: - TutorialOverlayViewDelegate method
+    func tutorialFinished() {
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        appDelegate.updateTabBadges()
+        Settings.staveTutorial(value: true)
+        reload()
     }
     
     func reload() {
         guard let timeline = self.timeline else { return }
-        
-        print("reload timeline")
         
         let visits = DataStoreService.shared.getVisits(for: timelineDay, ctxt: nil)
         updateLastVisit(from: visits)
@@ -129,7 +170,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         let visitValidatedTouchAction = { [weak self] (_ point: ISPoint?) in
             guard let strongSelf = self else { return }
             
-            if let vid = point?.visit?.id {
+            if let vid = point?.visit?.id, let pid = point?.visit?.place?.id {
                 point?.visit?.visited = 1
                 LogService.shared.log(LogService.types.timelineFeedback,
                                       args: [LogService.args.day: strongSelf.timelineDay,
@@ -139,17 +180,27 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
                     DataStoreService.shared.updateVisit(with: vid, visited: 1)
                     let numberOfVisitsToReview = DataStoreService.shared.getNumberOfVisitsToReview(for: strongSelf.timelineDay, ctxt: nil)
                     timeline.numberOfVisitsToReview = numberOfVisitsToReview
+                    
+                    // update the user stats
+                    UserStats.shared.updateVisitConfirmed()
+                    UserStats.shared.updatePlacePersonalInformation()
+                    
                     let appDelegate = UIApplication.shared.delegate as! AppDelegate
                     appDelegate.updateTimelineBadge(with: numberOfVisitsToReview)
+                    
+                    // update the map
+                    if let a = strongSelf.annotations[pid] {
+                        a.color = Constants.colors.midPurple
+                        strongSelf.showAnnotations()
+                    }
                 }
-                
             }
         }
         
-        let visitRemovedTouchAction = { [weak self](_ point: ISPoint?) in
+        let visitRemovedTouchAction = { [weak self] (_ point: ISPoint?) in
             guard let strongSelf = self else { return }
             
-            if let vid = point?.visit?.id {
+            if let vid = point?.visit?.id, let pid = point?.visit?.place?.id {
                 LogService.shared.log(LogService.types.timelineFeedback,
                                       args: [LogService.args.day: strongSelf.timelineDay,
                                              LogService.args.visitId: vid,
@@ -158,10 +209,17 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
                     DataStoreService.shared.deleteVisit(vid: vid, ctxt: nil)
                     let numberOfVisitsToReview = DataStoreService.shared.getNumberOfVisitsToReview(for: strongSelf.timelineDay, ctxt: nil)
                     timeline.numberOfVisitsToReview = numberOfVisitsToReview
+                    
                     let appDelegate = UIApplication.shared.delegate as! AppDelegate
                     appDelegate.updateTimelineBadge(with: numberOfVisitsToReview)
+                    UserStats.shared.updateVisitConfirmed()
+                    
+                    // update the map
+                    if let a = strongSelf.annotations[pid] {
+                        strongSelf.annotations.removeValue(forKey: pid)
+                        strongSelf.mapView.removeAnnotation(a)
+                    }
                 }
-                
             }
         }
         
@@ -217,7 +275,6 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             LogService.shared.log(LogService.types.timelineUpdate,
                                   args: [LogService.args.day: strongSelf.timelineDay])
             
-            
             strongSelf.canUpdate = false
             Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
                 self?.canUpdate = true
@@ -225,6 +282,10 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             UserUpdateHandler.retrieveLatestUserUpdates(for: strongSelf.timelineDay, force: true) {
                 DataStoreService.shared.resetContext()
                 strongSelf.reload()
+                let numberOfVisitsToReview = DataStoreService.shared.getNumberOfVisitsToReview(for: strongSelf.timelineDay, ctxt: nil)
+                let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                appDelegate.updateTimelineBadge(with: numberOfVisitsToReview)
+                UserStats.shared.updateVisitConfirmed()
             }
         }
         
@@ -240,7 +301,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             
             let arrivalTime = dateFormatter.string(from: arrival)
             let departureTime = dateFormatter.string(from: departure)
-            var icon = UIImage(named: "location")!
+            var icon = UIImage(named: "map-marker")!.withRenderingMode(.alwaysTemplate)
             if let placeIcon = visit.place?.icon {
                 icon = UIImage(named: placeIcon)!.withRenderingMode(.alwaysTemplate)
             }
@@ -292,15 +353,20 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
                 let coordinate = CLLocationCoordinate2D(latitude: (visit.place?.latitude) ?? 0.0, longitude: (visit.place?.longitude) ?? 0.0)
                 let annotation = CustomPointAnnotation(coordinate: coordinate, title: placeName, subtitle: nil)
                 annotation.image = icon
+                if visit.visited == 0 {
+                    annotation.color = Constants.colors.lightGray
+                } else if visit.visited == 1 {
+                    annotation.color = Constants.colors.midPurple
+                }
                 annotation.reuseIdentifier = pid
-                annotations.append(annotation)
+                annotations[pid] = annotation
                 placeSet.insert(pid)
             }
             
             count += 1
         }
         
-        timeline.showRings = Settings.getShowActivityRings()
+        timeline.showRings = Settings.getShowActivityRings() && ActivityService.isServiceActivated()
         timeline.points = timelinePoints
         timeline.bubbleArrows = false
         timeline.timelineTitle = timelineTitle
@@ -312,31 +378,38 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
         timeline.timelineRemovedPlaceTouchAction = visitRemovedTouchAction
         timeline.numberOfVisitsToReview = DataStoreService.shared.getNumberOfVisitsToReview(for: timelineDay, ctxt: nil)
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            guard let strongSelf = self else { return }
-            // get the pedometer data for the current day
-            let pedometerData = DataStoreService.shared.getPedometerData(for: strongSelf.timelineDay, ctxt: nil)
-            
-            let steps = pedometerData.map({ $0.numberOfSteps }).reduce(0, +)
-            let time = pedometerData.map({ $0.duration }).reduce(0, +)
-            var distance = pedometerData.map({ $0.distance / 1000 }).reduce(0, +)
-            
-            if Settings.getPedometerUnit()?.lowercased() == "miles" {
-                distance /= 1.60934
+        if !ActivityService.isServiceActivated() {
+            print("reload timeline - Activity services are not activated")
+            return
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                guard let strongSelf = self else { return }
+                // get the pedometer data for the current day
+                let pedometerData = DataStoreService.shared.getPedometerData(for: strongSelf.timelineDay, ctxt: nil)
+                
+                let steps = pedometerData.map({ $0.numberOfSteps }).reduce(0, +)
+                let time = pedometerData.map({ $0.duration }).reduce(0, +)
+                var distance = pedometerData.map({ $0.distance / 1000 }).reduce(0, +)
+                
+                if Settings.getPedometerUnit()?.lowercased() == "miles" {
+                    distance /= 1.60934
+                }
+                
+                let stepsProgress = Double(steps) / Double(Settings.getPedometerStepsGoal())
+                let timeProgress = Double(time) / Double(Settings.getPedometerTimeGoal())
+                let distanceProgress = Double(distance) / Double(Settings.getPedometerDistanceGoal())
+                
+                timeline.ringDistanceUnit = Settings.getPedometerUnit() ?? "miles"
+                timeline.ringSteps = Int(steps)
+                timeline.ringTime = time
+                timeline.ringDistance = distance
+                timeline.ringStepsProgress = stepsProgress
+                timeline.ringTimeProgress = timeProgress
+                timeline.ringDistanceProgress = distanceProgress
             }
-            
-            let stepsProgress = Double(steps) / Double(Settings.getPedometerStepsGoal())
-            let timeProgress = Double(time) / Double(Settings.getPedometerTimeGoal())
-            let distanceProgress = Double(distance) / Double(Settings.getPedometerDistanceGoal())
-            
-            timeline.ringDistanceUnit = Settings.getPedometerUnit() ?? "miles"
-            timeline.ringSteps = Int(steps)
-            timeline.ringTime = time
-            timeline.ringDistance = distance
-            timeline.ringStepsProgress = stepsProgress
-            timeline.ringTimeProgress = timeProgress
-            timeline.ringDistanceProgress = distanceProgress
         }
+        
+        showAnnotations()
     }
     
     private func updateLastVisit(from visits: [Visit]) {
@@ -354,90 +427,92 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             if todayStr == timelineDay && distance <= 50 {
                 lastVisit.departure = now
             }
-            
         }
     }
     
     private func showAnnotations() {
-        mapView?.addAnnotations(annotations)
-        mapView?.showAnnotations(annotations, animated: true)
+        if let a = mapView.annotations {
+            for annotation in a {
+                mapView.removeAnnotation(annotation)
+            }
+        }
+        
+        let a = Array(annotations.values)
+        mapView?.addAnnotations(a)
+        mapView?.showAnnotations(a, animated: true)
     }
     
-    private func hideAnnotations() {
-        mapView?.removeAnnotations(annotations)
-    }
-    
-    private func foldMapView() {
-        LogService.shared.log(LogService.types.timelineMap,
-                              args: [LogService.args.day: timelineDay,
-                                     LogService.args.toggle: "hide"])
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let scrollOffset = scrollView.contentOffset.y
         
-        isAnimating = true
-        self.hideAnnotations()
-        UIView.animate(withDuration: 0.5, animations: { [weak self] in
-            self?.mapViewHeight.constant = 0
-            self?.view.layoutIfNeeded()
-            }, completion: { [weak self] c in
-                if c {
-                    self?.isAnimating = false
-                    self?.isFolded = true
-                    self?.mapCloseView.removeFromSuperview()
-                }
-        })
-    }
-    
-    private func unfoldMapView() {
-        LogService.shared.log(LogService.types.timelineMap,
-                              args: [LogService.args.day: timelineDay,
-                                     LogService.args.toggle: "show"])
+        var headerFrame = mapView.frame
         
-        isAnimating = true
-        UIView.animate(withDuration: 0.5, animations: { [weak self] in
-            self?.mapViewHeight.constant = 350
-            self?.view.layoutIfNeeded()
-            }, completion: { [weak self] completed in
-                if completed {
-                    self?.isAnimating = false
-                    self?.isFolded = false
-                    self?.showAnnotations()
-                    if let map = self?.mapView {
-                        self?.mapCloseView = CloseView(text: "Close")
-                        self?.mapCloseView.frame = CGRect(x: 0, y: 0, width: 95.0, height: 40)
-                        self?.mapCloseView.center = CGPoint(x: map.center.x, y: map.frame.height - 40)
-                        map.addSubview((self?.mapCloseView)!)
-                        self?.mapCloseView.addTapGestureRecognizer { [weak self] in
-                            self?.mapCloseView.alpha = 0.7
-                            self?.foldMapView()
-                            UIView.animate(withDuration: 0.3) { [weak self] in
-                                self?.mapCloseView.alpha = 1
-                            }
-                        }
-                    }
-                }
-        })
-    }
-    
-    func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        let factor = 150.0 / (lowerHeight - upperHeight)
+        let yMapOffset = max(-150.0, min(25, -150.0 - (upperHeight + scrollOffset) * factor))
+                
+        if (self.lastOffset > scrollOffset) && (scrollOffset < -1*upperHeight - 35.0) && (scrollOffset > -1*lowerHeight + 15.0) {
+            // move up
+            isFolding = false
+        }
+        else if (self.lastOffset < scrollOffset) && (scrollOffset < -1*upperHeight - 35.0) && (scrollOffset > -1*lowerHeight + 15.0) {
+            // move down
+            isFolding = true
+        }
         
-        if isAnimating { return }
-        let y = scrollView.contentOffset.y
+        if scrollOffset > -1*upperHeight + 50.0 {
+            freeScroll = true
+        } else {
+            freeScroll = false
+        }
         
-        if !isFolded && y < -50.0 {
-            foldMapView()
-        } else if isFolded && y < -50.0 {
-            unfoldMapView()
+        // Update the mapView parallax effect
+        if scrollOffset < 0 {
+            headerFrame = CGRect(x: mapView.frame.origin.x, y: yMapOffset,
+                                 width: mapView.frame.size.width, height: lowerHeight-20.0)
+
+            mapView.frame = headerFrame
+        }
+        
+        backgroundView.frame = CGRect(x: 0, y: max(0.0,-1*(scrollOffset+20.0)), width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
+        backgroundMarginView.frame = CGRect(x: 0, y: max(-10.0,-1*(scrollOffset+25.0)), width: UIScreen.main.bounds.width, height: 5.0)
+        lastOffset = scrollOffset
+        
+        if scrollOffset <= -1*lowerHeight {
+            self.view.bringSubview(toFront: mapView)
+            self.view.bringSubview(toFront: backgroundMarginView)
+        } else {
+            self.view.sendSubview(toBack: mapView)
         }
     }
+    
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        guard !decelerate else { return }
+        setContentOffset(scrollView)
+    }
+    
+    func scrollViewWillBeginDecelerating(_ scrollView: UIScrollView) {
+        setContentOffset(scrollView)
+    }
+    
+    func setContentOffset(_ scrollView: UIScrollView) {
+        guard let isFolding = isFolding, !freeScroll else { return }
+        
+        let anchor = isFolding ? -1*(upperHeight+20.0) : -1*lowerHeight
+            
+        scrollView.setContentOffset(CGPoint(x: scrollView.contentOffset.x, y: anchor), animated: true)
+        
+        scrollView.isScrollEnabled = true
+        isFolded = !isFolded
+    }
+
     
     // MARK: -  MGLMapViewDelegate methods
     
     func mapView(_ mapView: MGLMapView, viewFor annotation: MGLAnnotation) -> MGLAnnotationView? {
         
         guard let point = annotation as? CustomPointAnnotation,
-            let image = point.image,
-            let reuseIdentifier = point.reuseIdentifier else {
-                return nil
-        }
+            let image = point.image, let color = point.color,
+            let reuseIdentifier = point.reuseIdentifier else { return nil }
         
         var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier)
         
@@ -445,7 +520,7 @@ class OneTimelineViewController: UIViewController, UIScrollViewDelegate, MGLMapV
             let av = CustomAnnotationView(reuseIdentifier: reuseIdentifier)
             av.frame = CGRect(x: 0, y: 0, width: 25, height: 25)
             av.image = image
-            av.backgroundColor = Constants.colors.midPurple
+            av.backgroundColor = color
             
             annotationView = av
         }

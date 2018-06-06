@@ -32,6 +32,7 @@
 		B531181B2084F9A6005705EE /* WebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B531181A2084F9A6005705EE /* WebViewController.swift */; };
 		B5317A9E203DCE420057B857 /* PersonalInformationChooserViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5317A9D203DCE420057B857 /* PersonalInformationChooserViewController.swift */; };
 		B539944A207D71BD00737CAF /* PlaceEditViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5399449207D71BD00737CAF /* PlaceEditViewController.swift */; };
+		B53EE11820B6D22800BBD437 /* GetInTouchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53EE11720B6D22800BBD437 /* GetInTouchViewController.swift */; };
 		B53FB6FB1FAB74630000112E /* ActivityServiceOld.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53FB6FA1FAB74630000112E /* ActivityServiceOld.swift */; };
 		B53FB6FD1FAB9A870000112E /* FileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53FB6FC1FAB9A870000112E /* FileService.swift */; };
 		B54C36B1200EBAFC0085BFEA /* OneTimelinePlaceDetailPersonalInformationCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54C36B0200EBAFC0085BFEA /* OneTimelinePlaceDetailPersonalInformationCollectionView.swift */; };
@@ -43,11 +44,17 @@
 		B55B59DC206A37120068BCA0 /* OverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55B59DB206A37120068BCA0 /* OverlayView.swift */; };
 		B55C10101FED736B001EE08D /* PlaceReviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55C100F1FED736B001EE08D /* PlaceReviewViewController.swift */; };
 		B55DE5D41FAB582B00CACB47 /* DataStoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55DE5D31FAB582B00CACB47 /* DataStoreService.swift */; };
+		B5661DB420B8911A00B1F457 /* TutorialOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5661DB320B8911A00B1F457 /* TutorialOverlayView.swift */; };
 		B567758F2086466F0086D4FA /* CALayerIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = B567758E2086466F0086D4FA /* CALayerIcons.swift */; };
 		B568B3B2202B037F00425A20 /* OnboardingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568B3B1202B037F00425A20 /* OnboardingViewController.swift */; };
 		B568B3BC202B05EC00425A20 /* Onboarding.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B568B3BB202B05EC00425A20 /* Onboarding.storyboard */; };
 		B568D8801FB45D0700E051B1 /* LocationAdaptiveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568D87F1FB45D0700E051B1 /* LocationAdaptiveService.swift */; };
 		B568D8821FB45FD800E051B1 /* ActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568D8811FB45FD800E051B1 /* ActivityService.swift */; };
+		B56DD05A20B0918C004BBD45 /* UserStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56DD05920B0918C004BBD45 /* UserStats.swift */; };
+		B56DD05C20B2302D004BBD45 /* UserStatsOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56DD05B20B2302D004BBD45 /* UserStatsOverlayView.swift */; };
+		B56DD05E20B2F5F5004BBD45 /* VisitsTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56DD05D20B2F5F4004BBD45 /* VisitsTimelineView.swift */; };
+		B56DD06020B32D37004BBD45 /* ReviewProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56DD05F20B32D37004BBD45 /* ReviewProgressBar.swift */; };
+		B56DD06F20B4395F004BBD45 /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56DD06E20B4395F004BBD45 /* ChatViewController.swift */; };
 		B574986B207B700B001C4B54 /* LogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B574986A207B700B001C4B54 /* LogService.swift */; };
 		B57768FA2016027900A0FD1B /* PlacePersonalInformationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57768F92016027900A0FD1B /* PlacePersonalInformationController.swift */; };
 		B577690420164C2B00A0FD1B /* HeaderPlace.swift in Sources */ = {isa = PBXBuildFile; fileRef = B577690320164C2B00A0FD1B /* HeaderPlace.swift */; };
@@ -154,6 +161,7 @@
 		B531181A2084F9A6005705EE /* WebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewController.swift; sourceTree = "<group>"; };
 		B5317A9D203DCE420057B857 /* PersonalInformationChooserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalInformationChooserViewController.swift; sourceTree = "<group>"; };
 		B5399449207D71BD00737CAF /* PlaceEditViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceEditViewController.swift; sourceTree = "<group>"; };
+		B53EE11720B6D22800BBD437 /* GetInTouchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetInTouchViewController.swift; sourceTree = "<group>"; };
 		B53FB6FA1FAB74630000112E /* ActivityServiceOld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityServiceOld.swift; sourceTree = "<group>"; };
 		B53FB6FC1FAB9A870000112E /* FileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileService.swift; sourceTree = "<group>"; };
 		B54C36B0200EBAFC0085BFEA /* OneTimelinePlaceDetailPersonalInformationCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OneTimelinePlaceDetailPersonalInformationCollectionView.swift; sourceTree = "<group>"; };
@@ -165,12 +173,18 @@
 		B55B59DB206A37120068BCA0 /* OverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayView.swift; sourceTree = "<group>"; };
 		B55C100F1FED736B001EE08D /* PlaceReviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceReviewViewController.swift; sourceTree = "<group>"; };
 		B55DE5D31FAB582B00CACB47 /* DataStoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataStoreService.swift; sourceTree = "<group>"; };
+		B5661DB320B8911A00B1F457 /* TutorialOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutorialOverlayView.swift; sourceTree = "<group>"; };
 		B567758E2086466F0086D4FA /* CALayerIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CALayerIcons.swift; sourceTree = "<group>"; };
 		B568B3B1202B037F00425A20 /* OnboardingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewController.swift; sourceTree = "<group>"; };
 		B568B3BB202B05EC00425A20 /* Onboarding.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Onboarding.storyboard; sourceTree = "<group>"; };
 		B568D87E1FB3827100E051B1 /* TrackingAdvisor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TrackingAdvisor.entitlements; sourceTree = "<group>"; };
 		B568D87F1FB45D0700E051B1 /* LocationAdaptiveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationAdaptiveService.swift; sourceTree = "<group>"; };
 		B568D8811FB45FD800E051B1 /* ActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityService.swift; sourceTree = "<group>"; };
+		B56DD05920B0918C004BBD45 /* UserStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserStats.swift; sourceTree = "<group>"; };
+		B56DD05B20B2302D004BBD45 /* UserStatsOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserStatsOverlayView.swift; sourceTree = "<group>"; };
+		B56DD05D20B2F5F4004BBD45 /* VisitsTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisitsTimelineView.swift; sourceTree = "<group>"; };
+		B56DD05F20B32D37004BBD45 /* ReviewProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewProgressBar.swift; sourceTree = "<group>"; };
+		B56DD06E20B4395F004BBD45 /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
 		B574986A207B700B001C4B54 /* LogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogService.swift; sourceTree = "<group>"; };
 		B57768F92016027900A0FD1B /* PlacePersonalInformationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlacePersonalInformationController.swift; sourceTree = "<group>"; };
 		B577690320164C2B00A0FD1B /* HeaderPlace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderPlace.swift; sourceTree = "<group>"; };
@@ -269,6 +283,8 @@
 			isa = PBXGroup;
 			children = (
 				B5BFB3F220835D2F00EDE91E /* WeekCalendarView.swift */,
+				B56DD05D20B2F5F4004BBD45 /* VisitsTimelineView.swift */,
+				B56DD05F20B32D37004BBD45 /* ReviewProgressBar.swift */,
 				B577690320164C2B00A0FD1B /* HeaderPlace.swift */,
 				B5C28A8A20321D2700B48017 /* CardView.swift */,
 				B54D4969207CB99800398138 /* RatingView.swift */,
@@ -382,11 +398,15 @@
 				B5DA0A782052E2FD00EDA570 /* PlacePersonalInformationReviewCategory.swift */,
 				B517F5B720742A1A00507DA5 /* ReviewsViewController.swift */,
 				B517F5B92074D61800507DA5 /* AggregatedPersonalInformationExplanationOverlayView.swift */,
+				B56DD05B20B2302D004BBD45 /* UserStatsOverlayView.swift */,
 				B54D496B207CF3AC00398138 /* PlacesVisitedListTableViewController.swift */,
 				B5399449207D71BD00737CAF /* PlaceEditViewController.swift */,
 				B5BFB3EE207FCF4B00EDE91E /* QRScannerViewController.swift */,
 				B5BFB3F02080F72200EDE91E /* MapViewController.swift */,
 				B531181A2084F9A6005705EE /* WebViewController.swift */,
+				B56DD06E20B4395F004BBD45 /* ChatViewController.swift */,
+				B53EE11720B6D22800BBD437 /* GetInTouchViewController.swift */,
+				B5661DB320B8911A00B1F457 /* TutorialOverlayView.swift */,
 			);
 			path = TrackingAdvisor;
 			sourceTree = "<group>";
@@ -426,12 +446,13 @@
 				B599B3B21FA0B57F006D70B4 /* Info.plist */,
 				B51BAFAF1FD961E200BE9CAA /* UserLocation.swift */,
 				B5C347451FB0929F0078C12E /* EMPageViewController.swift */,
-				B51BAFB91FD9621A00BE9CAA /* DateHandler.swift */,
 				B59E24542028A4AF008C8AC5 /* PersonalInformationCategory.swift */,
 				B512ED431FBC8EB60062B9E1 /* Constants.swift */,
 				B51BAFBB1FD98D2900BE9CAA /* Settings.swift */,
 				B5D63B3F1FED358700DAB61C /* Extensions.swift */,
+				B51BAFB91FD9621A00BE9CAA /* DateHandler.swift */,
 				B5C28A88202E092A00B48017 /* HelperFunctions.swift */,
+				B56DD05920B0918C004BBD45 /* UserStats.swift */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -518,7 +539,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0910;
-				LastUpgradeCheck = 0900;
+				LastUpgradeCheck = 0930;
 				ORGANIZATIONNAME = "Benjamin BARON";
 				TargetAttributes = {
 					B599B39F1FA0B57F006D70B4 = {
@@ -712,22 +733,26 @@
 				B51C756A1FB4C643008C4BBF /* TaskService.swift in Sources */,
 				B539944A207D71BD00737CAF /* PlaceEditViewController.swift in Sources */,
 				B55DE5D41FAB582B00CACB47 /* DataStoreService.swift in Sources */,
+				B53EE11820B6D22800BBD437 /* GetInTouchViewController.swift in Sources */,
 				B5DA0A752052076500EDA570 /* PersonalInformationReviewCategory.swift in Sources */,
 				B5174B69205723EC0018FB3F /* AggregatedPersonalInformation.swift in Sources */,
 				B53118172084E2FD005705EE /* BadgeButton.swift in Sources */,
 				B59E24572028B0DC008C8AC5 /* ReviewPersonalInformation.swift in Sources */,
 				B5C347431FB064D50078C12E /* RawCollectedDataViewController.swift in Sources */,
+				B56DD06020B32D37004BBD45 /* ReviewProgressBar.swift in Sources */,
 				B5C347461FB0929F0078C12E /* EMPageViewController.swift in Sources */,
 				B57F514E1FD55A5B0018B416 /* NetworkService.swift in Sources */,
 				B507BB5C1FFFCA1F00FEBC34 /* ProfileViewController.swift in Sources */,
 				B59F64001FE819220025BE06 /* PlaceFinderMapTableViewController.swift in Sources */,
 				B51BAFBA1FD9621A00BE9CAA /* DateHandler.swift in Sources */,
 				B5C3C9521FB20F750037DD22 /* LocationRegionService.swift in Sources */,
+				B56DD05E20B2F5F5004BBD45 /* VisitsTimelineView.swift in Sources */,
 				B517F5BA2074D61800507DA5 /* AggregatedPersonalInformationExplanationOverlayView.swift in Sources */,
 				B5DA0A71205061D400EDA570 /* UnifiedPlaceInformationCell.swift in Sources */,
 				B58612751FB0D9C700480DD4 /* NotificationService.swift in Sources */,
 				B51BAFBC1FD98D2900BE9CAA /* Settings.swift in Sources */,
 				B54C36B1200EBAFC0085BFEA /* OneTimelinePlaceDetailPersonalInformationCollectionView.swift in Sources */,
+				B56DD06F20B4395F004BBD45 /* ChatViewController.swift in Sources */,
 				B5F20A80201BF0A700D24A70 /* ReviewChallenge.swift in Sources */,
 				B577690420164C2B00A0FD1B /* HeaderPlace.swift in Sources */,
 				B59ABF681FDAADA300A60066 /* PositionMapModalViewController.swift in Sources */,
@@ -749,6 +774,7 @@
 				B512ED441FBC8EB60062B9E1 /* Constants.swift in Sources */,
 				B5C28A8B20321D2700B48017 /* CardView.swift in Sources */,
 				B50EF6B21FA8AFAC0008ADFB /* LocationService.swift in Sources */,
+				B56DD05C20B2302D004BBD45 /* UserStatsOverlayView.swift in Sources */,
 				B599B3A41FA0B57F006D70B4 /* AppDelegate.swift in Sources */,
 				B5C3474A1FB093F50078C12E /* OneTimelineViewController.swift in Sources */,
 				B59E24552028A4AF008C8AC5 /* PersonalInformationCategory.swift in Sources */,
@@ -756,6 +782,7 @@
 				B59E24592028B3B1008C8AC5 /* ReviewVisit.swift in Sources */,
 				B58B79211FC734AF007BA1BC /* Place.swift in Sources */,
 				B530432F1FE0419600DBC7C0 /* OneTimelinePlaceDetailViewController.swift in Sources */,
+				B5661DB420B8911A00B1F457 /* TutorialOverlayView.swift in Sources */,
 				B53043231FDED92A00DBC7C0 /* UserUpdateHandler.swift in Sources */,
 				B5C3474C1FB0B4760078C12E /* RawCollectedDataTextViewController.swift in Sources */,
 				B568D8801FB45D0700E051B1 /* LocationAdaptiveService.swift in Sources */,
@@ -770,6 +797,7 @@
 				B51BAFB01FD961E200BE9CAA /* UserLocation.swift in Sources */,
 				B5DA0A772052DEB300EDA570 /* PlacePersonalInformationReviewViewController.swift in Sources */,
 				B5BFB3EF207FCF4B00EDE91E /* QRScannerViewController.swift in Sources */,
+				B56DD05A20B0918C004BBD45 /* UserStats.swift in Sources */,
 				B5DA0A732051F6BD00EDA570 /* PersonalInformationReviewViewController.swift in Sources */,
 				B54D496C207CF3AC00398138 /* PlacesVisitedListTableViewController.swift in Sources */,
 				B5D63B401FED358700DAB61C /* Extensions.swift in Sources */,
@@ -849,6 +877,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -856,6 +885,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -864,7 +894,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -888,7 +918,8 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 4.0;
 			};
 			name = Debug;
 		};
@@ -906,6 +937,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -913,6 +945,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -921,7 +954,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
@@ -938,6 +971,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 4.0;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -950,7 +984,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = TrackingAdvisor/TrackingAdvisor.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 8UMT23UD55;
@@ -979,7 +1013,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = TrackingAdvisor/TrackingAdvisor.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				CODE_SIGN_IDENTITY = "iPhone Distribution: University College London (8UMT23UD55)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 8UMT23UD55;

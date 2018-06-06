@@ -9,6 +9,7 @@
 import UIKit
 import CoreData
 import UserNotifications
+import Alamofire
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -18,6 +19,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         
         Settings.registerDefaults()
+        getNotificationSettings()
         registerNotificationCustomActions()
         
         Settings.incrementCurrentSessionId()
@@ -44,6 +46,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if locationStatus == .denied || locationStatus == .restricted {
             launchStoryboard(storyboard: "LocationServicesDenied")
             return true
+            
         } else if locationStatus == .authorizedWhenInUse {
             launchStoryboard(storyboard: "LocationServicesWhenInUse")
             
@@ -125,6 +128,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
         // Saves changes in the application's managed object context before the application terminates.
         self.saveContext()
+        _ = UserStats.saveUserStats(stats: UserStats.shared)
         Settings.saveCurrentAppState(with: "inactive")
         LogService.shared.log(LogService.types.appTerminate)
         
@@ -239,7 +243,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         
         let token = tokenParts.joined()
-        Settings.savePushNotificationId(with: token)
+        let savedToken = Settings.getPushNotificationId()
+        if token != savedToken {
+            Settings.savePushNotificationId(with: token)
+            
+            // send the new information to the server
+            UserUpdateHandler.updateUserInformation()
+        }
     }
     
     func application(_ application: UIApplication,
@@ -362,6 +372,85 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                     }
                                 }
                             }
+                        } else if notificationType == "review-pi" {
+                            LogService.shared.log(LogService.types.notificationOpen,
+                                                  args: [LogService.args.launchType: "review-pi"])
+                            
+                            DispatchQueue.main.async { [weak self] () -> Void in
+                                guard let strongSelf = self else { return }
+                                
+                                let action = {
+                                    // show the personal information review tab
+                                    AppDelegate.showPersonalInformationReviews()
+                                }
+                                
+                                if UIApplication.shared.applicationState == .active {
+                                    if let title = userInfo["title"] as? String, let message = userInfo["message"] as? String {
+                                        let alertController = AppDelegate.createAlertController(title: title, message: message, yesAction: {
+                                            LogService.shared.log(LogService.types.reviewPINotification, args: [LogService.args.userChoice: "accept"])
+                                            action()
+                                        }, noAction: {
+                                            LogService.shared.log(LogService.types.reviewPINotification, args: [LogService.args.userChoice: "cancel"])
+                                        })
+                                        strongSelf.window?.rootViewController?.present(alertController, animated: true, completion: nil)
+                                    }
+                                } else {
+                                    action()
+                                }
+                            }
+                        } else if notificationType == "review-places" {
+                            LogService.shared.log(LogService.types.notificationOpen,
+                                                  args: [LogService.args.launchType: "review-places"])
+                            
+                            DispatchQueue.main.async { [weak self] () -> Void in
+                                guard let strongSelf = self else { return }
+                                
+                                let action = {
+                                    // show the personal information review tab
+                                    AppDelegate.showPlacePersonalInformationReviews()
+                                }
+                                
+                                if UIApplication.shared.applicationState == .active {
+                                    if let title = userInfo["title"] as? String, let message = userInfo["message"] as? String {
+                                        let alertController = AppDelegate.createAlertController(title: title, message: message, yesAction: {
+                                            LogService.shared.log(LogService.types.reviewPlacesNotification, args: [LogService.args.userChoice: "accept"])
+                                            action()
+                                        }, noAction: {
+                                            LogService.shared.log(LogService.types.reviewPlacesNotification, args: [LogService.args.userChoice: "cancel"])
+                                        })
+                                        strongSelf.window?.rootViewController?.present(alertController, animated: true, completion: nil)
+                                    }
+                                } else {
+                                    action()
+                                }
+                            }
+                        } else if notificationType == "message" {
+                            LogService.shared.log(LogService.types.notificationOpen,
+                                                  args: [LogService.args.launchType: "message"])
+                            DispatchQueue.main.async { [weak self] () -> Void in
+                                guard let strongSelf = self else { return }
+                                if UIApplication.shared.applicationState == .active {
+                                    if let topController = UIApplication.topViewController() as? ChatViewController {
+                                        if let msg = userInfo["msg"] as? String, let timestamp = userInfo["timestamp"] as? TimeInterval {
+                                            let date = Date(timeIntervalSince1970: timestamp)
+                                            let message = topController.createMessage(with: msg, minutesAgo: date.timeIntervalSince(Date()))
+                                            topController.messages.append(message)
+                                        }
+                                    } else {
+                                        if let message = userInfo["msg"] as? String {
+                                            let alertController = AppDelegate.createAlertController(title: "New message", message: message, yesMessage: "See messages", yesAction: {
+                                                LogService.shared.log(LogService.types.chatMessageNotification, args: [LogService.args.userChoice: "accept"])
+                                                AppDelegate.showChatMessages()
+                                            }, noAction: {
+                                                LogService.shared.log(LogService.types.chatMessageNotification, args: [LogService.args.userChoice: "cancel"])
+                                            })
+                                            strongSelf.window?.rootViewController?.present(alertController, animated: true, completion: nil)
+                                        }
+                                    }
+                                } else {
+                                    AppDelegate.showChatMessages()
+                                }
+                            }
                         }
                     }
                 }
@@ -370,6 +459,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     private func handleLaunchingOperations(_ application: UIApplication) {
+        LogService.shared.log(LogService.types.appLaunchStep, args: [LogService.args.launchType: "handleLaunchingOperations"])
+        
         // force the location upload after one location has been collected
         Settings.saveForceUploadLocation(with: true)
         
@@ -381,6 +472,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // update the pedometer count
         DataStoreService.shared.updatePedometerData()
+        if !ActivityService.isServiceActivated() {
+            Settings.saveShowActivityRings(with: false)
+        }
+        
+        // udpate the user stats
+        UserStats.shared.updateAll()
         
         // update tab badges
         updateTabBadges()
@@ -425,28 +522,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
             
             // get the number of places to review
-            let numberOfPlacesToReview = DataStoreService.shared.getAllPlacesToReview(ctxt: nil).count
+            let numberOfPlacesToReview = UserStats.shared.numberOfPlacePersonalInformationToReview
             
             // get the number of personal information to review
-            let numberOfAggregatePersonalInformationToReview = DataStoreService.shared.getAggregatedPersonalInformationToReview(ctxt: nil).count
+            let numberOfAggregatePersonalInformationToReview = UserStats.shared.numberOfAggregatedPersonalInformationToReview
             
             let sum = numberOfPlacesToReview + numberOfAggregatePersonalInformationToReview
             if sum == 0 {
                 tabController.tabBar.items?[1].badgeValue = nil
             } else {
-                tabController.tabBar.items?[1].badgeValue = String(sum)
+                tabController.tabBar.items?[1].badgeValue = "!"
             }
         }
     }
     
-    class func createAlertController(title: String, message: String, yesAction: @escaping ()->(), noAction: @escaping ()->()) -> UIAlertController {
+    class func createAlertController(title: String, message: String, yesMessage: String = "Yes", noMessage: String = "Cancel", yesAction: @escaping ()->(), noAction: @escaping ()->()) -> UIAlertController {
         let alertController = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.alert)
         
-        let yAction = UIAlertAction(title: "Yes", style: UIAlertActionStyle.default) { _ in
+        let yAction = UIAlertAction(title: yesMessage, style: UIAlertActionStyle.default) { _ in
             yesAction()
         }
         
-        let nAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel) { _ in
+        let nAction = UIAlertAction(title: noMessage, style: UIAlertActionStyle.cancel) { _ in
             noAction()
         }
         
@@ -474,16 +571,60 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
     
-    class func isIPhone5 () -> Bool {
+    class func showPersonalInformationReviews() {
+        let appDelegate = UIApplication.shared.delegate as? AppDelegate
+        if let tabController = appDelegate?.window?.rootViewController as? UITabBarController {
+            tabController.selectedIndex = 1
+            if let vc = tabController.viewControllers?[1] {
+                if let reviewsVC = vc.childViewControllers[0] as? ReviewsViewController {
+                    let viewController = PersonalInformationReviewViewController()
+                    reviewsVC.navigationController?.pushViewController(viewController, animated: true)
+                }
+            }
+        }
+    }
+    
+    class func showPlacePersonalInformationReviews() {
+        let appDelegate = UIApplication.shared.delegate as? AppDelegate
+        if let tabController = appDelegate?.window?.rootViewController as? UITabBarController {
+            tabController.selectedIndex = 1
+            if let vc = tabController.viewControllers?[1] {
+                if let reviewsVC = vc.childViewControllers[0] as? ReviewsViewController {
+                    let viewController = PlacePersonalInformationReviewViewController()
+                    reviewsVC.navigationController?.pushViewController(viewController, animated: true)
+                }
+            }
+        }
+    }
+    
+    class func showChatMessages() {
+        let appDelegate = UIApplication.shared.delegate as? AppDelegate
+        if let tabController = appDelegate?.window?.rootViewController as? UITabBarController {
+            tabController.selectedIndex = 4
+            if let vc = tabController.viewControllers?[4] {
+                if let settingsVC = vc.childViewControllers[0] as? SettingsTableTableViewController {
+                    let storyboard = UIStoryboard(name: "Main", bundle: nil)
+                    let viewController = storyboard.instantiateViewController(withIdentifier: "ChatViewController")
+                    settingsVC.navigationController?.pushViewController(viewController, animated: true)
+                }
+            }
+        }
+    }
+    
+    class func isIPhone5() -> Bool {
         return max(UIScreen.main.bounds.width, UIScreen.main.bounds.height) == 568.0
     }
     
-    class func isIPhone6 () -> Bool {
+    class func isIPhone6() -> Bool {
         return max(UIScreen.main.bounds.width, UIScreen.main.bounds.height) == 667.0
     }
     
-    class func isIPhone6Plus () -> Bool {
+    class func isIPhone6Plus() -> Bool {
         return max(UIScreen.main.bounds.width, UIScreen.main.bounds.height) == 736.0
+    }
+    
+    class func isIPhoneX() -> Bool {
+        return max(UIScreen.main.bounds.width, UIScreen.main.bounds.height) == 812.0
     }
 }
 

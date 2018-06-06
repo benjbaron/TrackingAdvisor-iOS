@@ -41,7 +41,13 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
         
         DataStoreService.shared.delegate = self
         
+        let visits = DataStoreService.shared.getAllVisits(ctxt: nil)
+        let visitsConfirmed = visits.filter({ $0.visited == 1 })
+        let uniquePlaces = Array(Set(visitsConfirmed.map { $0.place! }))
+        print(uniquePlaces.filter({ !$0.reviewed && $0.numberOfPersonalInformationToReview > 0 && $0.numberOfVisitsConfirmed > 0 }))
+        
         places = DataStoreService.shared.getAllPlacesToReview(ctxt: nil)
+        print("number of places: \(places.count), \(UserStats.shared.numberOfPlacePersonalInformationToReview)")
         updatedReviews.removeAll()
         if collectionView != nil {
             collectionView.reloadData()
@@ -53,6 +59,7 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
     
         if updatedReviews.count > 0 {
             UserUpdateHandler.sendReviewUpdate(reviews: updatedReviews)
+            UserStats.shared.updatePlacePersonalInformation()
         }
     }
     
@@ -60,8 +67,6 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
         super.viewDidLoad()
         
         LogService.shared.log(LogService.types.reviewPlaces)
-        
-        places = DataStoreService.shared.getAllPlacesToReview(ctxt: nil)
         
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
@@ -206,6 +211,7 @@ class PlacePersonalInformationReviewViewController: UIViewController, UICollecti
                                          LogService.args.userChoice: String(visited)])
             
             DataStoreService.shared.updatePlaceReviewed(with: pid, reviewed: true)
+            place.reviewed = true // update the current context
 
             self.places.remove(at: idx.item)
             self.placesStatus.remove(at: idx.item)

@@ -17,8 +17,17 @@ class GetInTouchFormViewController: FormViewController {
     var reason: String = ""
     var message: String = ""
 
+    @objc func back(sender: UIBarButtonItem) {
+        self.navigationController!.popToRootViewController(animated: true)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // change the behaviour of the back button
+        self.navigationItem.hidesBackButton = true
+        let newBackButton = UIBarButtonItem(title: "Back", style: UIBarButtonItemStyle.plain, target: self, action: #selector(back(sender:)))
+        self.navigationItem.leftBarButtonItem = newBackButton
         
         LogService.shared.log(LogService.types.settingsContact)
         
@@ -169,7 +178,6 @@ public extension UIDevice {
         case "iPad5,1", "iPad5,2":                      return "iPad Mini 4"
         case "iPad6,7", "iPad6,8":                      return "iPad Pro"
         case "AppleTV5,3":                              return "Apple TV"
-        case "i386", "x86_64":                          return "Simulator"
         default:                                        return identifier
         }
     }

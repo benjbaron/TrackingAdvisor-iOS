@@ -22,7 +22,7 @@ open class Settings {
             defaults.set(Date(), forKey: Constants.defaultsKeys.lastLocationUpdate)
             defaults.set(Date(), forKey: Constants.defaultsKeys.lastUserUpdate)
             defaults.set(Date(), forKey: Constants.defaultsKeys.lastPersonalInformationCategoryUpdate)
-            defaults.set(Date(), forKey: Constants.defaultsKeys.lastDatabaseUpdate)
+            defaults.set(Date().yesterday, forKey: Constants.defaultsKeys.lastDatabaseUpdate)
             defaults.set(String(), forKey: Constants.defaultsKeys.pushNotificationToken)
             defaults.set(false, forKey: Constants.defaultsKeys.onboarding)
             defaults.set(false, forKey: Constants.defaultsKeys.optOut)
@@ -39,6 +39,16 @@ open class Settings {
             defaults.set("miles", forKey: Constants.defaultsKeys.pedometerUnit)
             defaults.set(false, forKey: Constants.defaultsKeys.showActivityRings)
         }
+    }
+    
+    open class func getTutorial() -> Bool {
+        let defaults = UserDefaults.standard
+        return defaults.bool(forKey: Constants.defaultsKeys.tutorial)
+    }
+    
+    open class func staveTutorial(value: Bool) {
+        let defaults = UserDefaults.standard
+        defaults.set(value, forKey: Constants.defaultsKeys.tutorial)
     }
     
     open class func getVersionOfLastRun() -> String? {

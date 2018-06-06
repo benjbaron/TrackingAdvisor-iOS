@@ -55,11 +55,8 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
     var color = Constants.colors.primaryDark
     var selectedIndexPath: IndexPath?
     
-    var numberOfDaysStudy: Int?
-    var numberofPlacesVisited: Int?
-    var numberOfAggregatedPersonalInformation: Int?
-    var numberOfPlacesToReviewTotal: Int?
-    var mapAnnotations: [CustomPointAnnotation] = []
+    var userStats: UserStats!
+    var visitCoordinates: [CLLocationCoordinate2D] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -68,19 +65,32 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
         LogService.shared.log(LogService.types.tabProfile)
+        
+        userStats = UserStats.shared
         
         view.backgroundColor = .white
         self.navigationController?.isNavigationBarHidden = true
         self.tabBarController?.tabBar.isHidden = false
         
         aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationReviewed(ctxt: nil)
+        let uniquePlaces = Array(Set(DataStoreService.shared.getAllVisitsConfirmed(ctxt: nil).map { $0.place! }))
+        visitCoordinates = uniquePlaces.map({ CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) })
         
         DataStoreService.shared.delegate = self
         
-        computeData()
         collectionView.reloadData()
+        
+        if userStats.numberOfAggregatedPersonalInformationToReview > 0 {
+            // show an alert
+            let alertController = AppDelegate.createAlertController(title: "Personal information to review", message: "You have some personal information to review. Do you want to review them now?", yesAction: { [unowned self] in
+                LogService.shared.log(LogService.types.aggPIReviewPrompt, args: [LogService.args.userChoice: "yes", LogService.args.aggPItoReview: String(self.userStats.numberOfAggregatedPersonalInformationToReview), LogService.args.aggPIReviewed: String(self.userStats.totNumberOfAggregatedPersonalInformation)])
+                AppDelegate.showPersonalInformationReviews()
+            }, noAction: {
+                LogService.shared.log(LogService.types.aggPIReviewPrompt, args: [LogService.args.userChoice: "cancel", LogService.args.aggPItoReview: String(self.userStats.numberOfAggregatedPersonalInformationToReview), LogService.args.aggPIReviewed: String(self.userStats.totNumberOfAggregatedPersonalInformation)])
+            })
+            self.parent?.present(alertController, animated: true, completion: nil)
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -98,7 +108,7 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.alwaysBounceVertical = true
-        collectionView.contentInset =  UIEdgeInsets(top: 0, left: 14.0, bottom: 14.0, right: 14.0)
+        collectionView.contentInset =  UIEdgeInsets(top: 0, left: 16.0, bottom: 14.0, right: 16.0)
         
         // Register cells types
         collectionView.register(ProfilePersonalInformatonCell.self, forCellWithReuseIdentifier: cellId)
@@ -115,8 +125,6 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
             ])
         self.view.addVisualConstraint("H:|[collection]|", views: ["collection" : collectionView])
         self.view.addVisualConstraint("V:[collection]|", views: ["collection" : collectionView])
-        
-        computeData()
     }
     
     // MARK: - UICollectionViewDataSource delegate methods
@@ -141,14 +149,14 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
         let picid = pics[indexPath.section-1]
         let pi = self.personalInformation[picid]![indexPath.item]
         cell.personalInformation = pi
-        cell.numberOfDaysStudy = numberOfDaysStudy
+        cell.numberOfDaysStudy = userStats.numberOfDaysStudy
         cell.score = scores[pi.id!]
         cell.color = color
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = (collectionView.frame.width - 38.0) / 2.0
+        let width = (collectionView.frame.width - 42.0) / 2.0
         return CGSize(width: width, height: 75.0)
     }
     
@@ -159,11 +167,8 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
                 let headerCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerCellId, for: indexPath) as! ProfileHeaderCell
                 headerCell.color = color
                 headerCell.parent = self
-                headerCell.numberOfDaysStudy = numberOfDaysStudy
-                headerCell.numberofPlacesVisited = numberofPlacesVisited
-                headerCell.numberOfPlacesToReviewTotal = numberOfPlacesToReviewTotal
-                headerCell.numberOfAggregatedPersonalInformation = numberOfAggregatedPersonalInformation
-                headerCell.mapAnnotations = mapAnnotations
+                headerCell.visitCoordinates = visitCoordinates
+                headerCell.userStats = userStats
                 return headerCell
             } else {
                 let sectionHeaderCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: sectionHeaderCellId, for: indexPath) as! ProfileSectionHeaderCell
@@ -184,7 +189,7 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
         
         // 4 - return the correct size
         if section == 0 {
-            return CGSize(width: collectionView.frame.width, height: 700)
+            return CGSize(width: collectionView.frame.width, height: 650)
         } else {
             return CGSize(width: collectionView.frame.width, height: 75)
         }
@@ -271,8 +276,9 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
                                          LogService.args.reviewType: String(type.rawValue),
                                          LogService.args.value: String(rating)])
             
-            DataStoreService.shared.updatePersonalInformationReview(with: piid, type: type, rating: rating) { [weak self] allRatings in
-                self?.updatedReviews[piid] = allRatings
+            DataStoreService.shared.updatePersonalInformationReview(with: piid, type: type, rating: rating) { [unowned self] allRatings in
+                self.updatedReviews[piid] = allRatings
+                UserStats.shared.updateAggregatedPersonalInformation()
             }
         }
     }
@@ -300,52 +306,6 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
     func dataStoreDidUpdate(for day: String?) {
         aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationReviewed(ctxt: nil)
     }
-    
-    func computeData() {
-        // get all visits
-        let allVisits = DataStoreService.shared.getAllVisitsConfirmed(ctxt: nil)
-        let today = Date()
-        
-        // compute the number of days since the start of the study
-        if let firstVisit = allVisits.first {
-            numberOfDaysStudy = today.numberOfDays(to: firstVisit.arrival)! + 1
-        }
-        
-        if allVisits.count == 0 {
-            numberOfDaysStudy = 1
-            return
-        }
-        
-        // compute the number of places visited
-        let placeIds = allVisits.map { $0.placeid! }
-        let uniquePlaceIds = Array(Set(placeIds))
-        numberofPlacesVisited = uniquePlaceIds.count
-        
-        let placesToReview = DataStoreService.shared.getAllPlacesToReview(ctxt: nil)
-        numberOfPlacesToReviewTotal = placesToReview.count
-        
-        numberOfAggregatedPersonalInformation = aggregatedPersonalInformation.count
-        
-        // put all the places in the map
-        mapAnnotations.removeAll()
-        for v in allVisits {
-            guard let p = v.place else { return }
-            
-            var color = Constants.colors.midPurple
-            let dayOfWeek = v.arrival?.dayOfWeek
-            if dayOfWeek == 1 || dayOfWeek == 7 {
-                color = Constants.colors.orange
-            }
-            
-            let count = mapAnnotations.count + 1
-            let pointAnnotation = CustomPointAnnotation(coordinate: CLLocationCoordinate2D(latitude: p.latitude, longitude: p.longitude), title: p.name, subtitle: nil)
-            pointAnnotation.reuseIdentifier = "customAnnotation\(count)"
-            // This dot image grows in size as more annotations are added to the array.
-            pointAnnotation.image = dot(size: 20, color: color)
-            
-            mapAnnotations.append(pointAnnotation)
-        }
-    }
 }
 
 
@@ -353,69 +313,31 @@ class ProfileHeaderCell: UICollectionViewCell, MGLMapViewDelegate {
     var parent: ProfileViewController?
     
     var color: UIColor = Constants.colors.orange { didSet {
-        studySummary.bigTextColor = color
-        studySummary.descriptionTextColor = color
-        studyStats.statsOneColor = color
-        studyStats.statsTwoColor = color
-        studyStats.statsThreeColor = color
         iconExitMapView.color = color
     }}
     
-    var numberOfDaysStudy: Int? { didSet {
-        if numberOfDaysStudy == nil {
-            numberOfDaysStudy = 1
-        }
-        studySummary.bigText.bigText = String(numberOfDaysStudy!)
-        if numberOfDaysStudy == 1 {
-            studySummary.descriptionText = "This is your first day in the study!"
-        } else {
-            studySummary.descriptionText = "You have been participating in the study for \(numberOfDaysStudy!) days!"
-        }
-        
-        if numberOfDaysStudy! < 2 {
-            studySummary.bigText.smallBottomText = "DAY"
-        } else {
-            studySummary.bigText.smallBottomText = "DAYS"
+    var userStats: UserStats? { didSet {
+        if let stats = userStats {
+            progressBar.level = stats.level
+            progressBar.points = stats.score
+            let (minVal, maxVal) = UserStats.getLevelBounds(level: stats.level)
+            progressBar.minValue = minVal
+            progressBar.maxValue = maxVal
+            progressBar.progress = Float((stats.score - minVal)) / Float((maxVal - minVal))
+            
+            if stats.numberOfAggregatedPersonalInformationReviewed == 0 {
+                yourPISubTitle.text = "After visiting some places and reviewing the personal information associated to the places, you will be able to find the personal information below."
+            }
         }
     }}
     
-    var numberofPlacesVisited: Int? { didSet {
-        if numberofPlacesVisited == nil {
-            numberofPlacesVisited = 0
-        }
-        studyStats.statsOne.bigText = String(numberofPlacesVisited!)
-        if numberofPlacesVisited! < 2 {
-            studyStats.statsOne.smallBottomText = "PLACE\nVISITED"
-        } else {
-            studyStats.statsOne.smallBottomText = "PLACES\nVISITED"
-        }
+    var visitsSource: MGLShapeSource? { didSet {
+        setHeatmap()
     }}
-    
-    var numberOfAggregatedPersonalInformation: Int? { didSet {
-        if numberOfAggregatedPersonalInformation == nil {
-            numberOfAggregatedPersonalInformation = 0
+    var visitCoordinates: [CLLocationCoordinate2D] = [] { didSet {
+        if visitCoordinates.count > 0, let multiPoints = MGLPointCollectionFeature(coordinates: &visitCoordinates, count: UInt(visitCoordinates.count)) {
+            visitsSource = MGLShapeSource(identifier: "visits", features: [multiPoints], options: nil)
         }
-        studyStats.statsTwo.bigText = String(numberOfAggregatedPersonalInformation!)
-        if numberOfAggregatedPersonalInformation == 0 {
-            mainTitlePI.isHidden = true
-        }
-    }}
-    
-    var numberOfPlacesToReviewTotal: Int? { didSet {
-        if numberOfPlacesToReviewTotal == nil {
-            numberOfPlacesToReviewTotal = 0
-        }
-        studyStats.statsThree.bigText = String(numberOfPlacesToReviewTotal!)
-        if numberOfPlacesToReviewTotal! < 2 {
-            studyStats.statsThree.smallBottomText = "PLACE TO\nREVIEW"
-        } else {
-            studyStats.statsThree.smallBottomText = "PLACES TO\nREVIEW"
-        }
-    }}
-    
-    var mapAnnotations: [CustomPointAnnotation] = [] { didSet {
-        mapView.addAnnotations(mapAnnotations)
-        mapView.showAnnotations(mapAnnotations, animated: false)
     }}
     
     var mainTitle: UILabel = {
@@ -427,30 +349,53 @@ class ProfileHeaderCell: UICollectionViewCell, MGLMapViewDelegate {
         return label
     }()
     
-    var mainTitlePI: UILabel = {
+    var progressBar: LevelProgressBar = {
+        return LevelProgressBar()
+    }()
+    
+    var yourMapTitle: UILabel = {
         let label = UILabel()
-        label.text = "Your personal information"
+        label.text = "Your map"
         label.textAlignment = .left
-        label.numberOfLines = 0
-        label.font = UIFont.systemFont(ofSize: 36, weight: .heavy)
+        label.font = UIFont.systemFont(ofSize: 23, weight: .bold)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    var yourMapSubTitle: UILabel = {
+        let label = UILabel()
+        label.text = "You can find below a heatmap of the visits you made while you have been participating in the study."
+        label.numberOfLines = 3
+        label.textAlignment = .left
+        label.lineBreakMode = .byWordWrapping
+        label.textColor = Constants.colors.descriptionColor
+        label.font = UIFont.italicSystemFont(ofSize: 14)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-    lazy var studySummary: InfoCardView = {
-        return InfoCardView(bigText: BigText(bigText: "XX", topExponent: "", smallBottomText: "DAYS"),
-                            descriptionText: "You have been participating in the study for XX days!")
+    var yourPITitle: UILabel = {
+        let label = UILabel()
+        label.text = "Your personal information"
+        label.textAlignment = .left
+        label.font = UIFont.systemFont(ofSize: 23, weight: .bold)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }()
-    
-    var studyStats: StatsCardView = {
-        return StatsCardView(statsOne: BigText(bigText: "0", smallBottomText: "PLACES\nVISITED"),
-                             statsTwo: BigText(bigText: "0", smallBottomText: "PERSONAL\nINFO"),
-                             statsThree: BigText(bigText: "0", smallBottomText: "PLACES TO\nREVIEW"))
+    var yourPISubTitle: UILabel = {
+        let label = UILabel()
+        label.text = "You can find below a summary of the different personal information we have infered from the places you have visited. Tap on them to get more information."
+        label.numberOfLines = 4
+        label.textAlignment = .left
+        label.lineBreakMode = .byWordWrapping
+        label.textColor = Constants.colors.descriptionColor
+        label.font = UIFont.italicSystemFont(ofSize: 14)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }()
     
     var mapView: MGLMapView = {
-        let map = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.lightStyleURL())
-        map.zoomLevel = 15
+        let map = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.darkStyleURL)
+        map.zoomLevel = 2
         map.translatesAutoresizingMaskIntoConstraints = false
         map.layer.cornerRadius = 5.0
         map.layer.shadowRadius = 5.0
@@ -458,9 +403,9 @@ class ProfileHeaderCell: UICollectionViewCell, MGLMapViewDelegate {
         map.layer.shadowOffset = CGSize(width: 5, height: 5)
         map.backgroundColor = Constants.colors.superLightGray
         map.allowsZooming = false
+        map.allowsScrolling = false
         map.allowsTilting = false
         map.allowsRotating = false
-        map.allowsScrolling = false
         
         map.attributionButton.alpha = 0
         map.logoView.alpha = 0
@@ -475,11 +420,13 @@ class ProfileHeaderCell: UICollectionViewCell, MGLMapViewDelegate {
     }()
     
     var zoomMapView: MGLMapView = {
-        let map = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.lightStyleURL())
-        map.zoomLevel = 15
+        let map = MGLMapView(frame: CGRect(x: 0, y: 0, width: 50, height: 50), styleURL: MGLStyle.darkStyleURL)
+        map.zoomLevel = 10
         map.backgroundColor = Constants.colors.superLightGray
         map.attributionButton.alpha = 0
         map.logoView.alpha = 0
+        map.allowsTilting = false
+        map.allowsRotating = false
         
         // Center the map on the visit coordinates
         let coordinates = CLLocationCoordinate2D(latitude: 51.524528, longitude: -0.134524)
@@ -488,7 +435,7 @@ class ProfileHeaderCell: UICollectionViewCell, MGLMapViewDelegate {
     }()
     
     lazy var iconExitMapView: RoundIconView = {
-        return RoundIconView(image: UIImage(named: "times")!, color: color, imageColor: .white)
+        return RoundIconView(image: UIImage(named: "times")!, color: Constants.colors.primaryLight, imageColor: .white)
     }()
     
     override init(frame: CGRect) {
@@ -506,52 +453,37 @@ class ProfileHeaderCell: UICollectionViewCell, MGLMapViewDelegate {
         addSubview(mainTitle)
         addVisualConstraint("H:|[v0]|", views: ["v0": mainTitle])
         addVisualConstraint("V:|-48-[v0(40)]", views: ["v0": mainTitle])
-
-        addSubview(studySummary)
-        addVisualConstraint("H:|[v0]|", views: ["v0": studySummary])
-        addVisualConstraint("V:[v0]-16-[v1]", views: ["v0": mainTitle, "v1": studySummary])
         
+        addSubview(progressBar)
+        addVisualConstraint("H:|[v0]|", views: ["v0": progressBar])
+        addVisualConstraint("V:[v0]-30-[v1(70)]", views: ["v0": mainTitle, "v1": progressBar])
+        progressBar.addTapGestureRecognizer { [unowned self] in
+            self.showUserStatsOverlay()
+        }
         
-        addSubview(studyStats)
-        addVisualConstraint("H:|[v0]|", views: ["v0": studyStats])
-        addVisualConstraint("V:[v0]-16-[v1]", views: ["v0": studySummary, "v1": studyStats])
+        addSubview(yourMapTitle)
+        addVisualConstraint("H:|[v0]|", views: ["v0": yourMapTitle])
+        
+        addSubview(yourMapSubTitle)
+        addVisualConstraint("H:|[v0]|", views: ["v0": yourMapSubTitle])
         
         addSubview(mapView)
-        mapView.addTapGestureRecognizer {
+        addVisualConstraint("H:|[v0]|", views: ["v0": mapView])
+        
+        addSubview(yourPITitle)
+        addVisualConstraint("H:|[v0]|", views: ["v0": yourPITitle])
+        
+        addSubview(yourPISubTitle)
+        addVisualConstraint("H:|[v0]|", views: ["v0": yourPISubTitle])
+        
+        addVisualConstraint("V:|-48-[title(40)]-30-[level(70)]-16-[mt][mst]-[map(250)]-(>=16)-[pit][pist]|", views: ["title": mainTitle, "level": progressBar, "mt": yourMapTitle, "mst": yourMapSubTitle, "map": mapView, "pit": yourPITitle, "pist": yourPISubTitle])
+        
+        mapView.addTapGestureRecognizer { [unowned self] in
             self.animateMapViewIn()
         }
-        addVisualConstraint("H:|[v0]|", views: ["v0": mapView])
-        addVisualConstraint("V:[v0]-16-[v1(250)]", views: ["v0": studyStats, "v1": mapView])
-        
-        addSubview(mainTitlePI)
-        addVisualConstraint("H:|[v0]|", views: ["v0": mainTitlePI])
-        addVisualConstraint("V:[v0]|", views: ["v0": mainTitlePI])
     }
     
-    // MARK: - MGLMapViewDelegate protocol
-    
-    func mapView(_ mapView: MGLMapView, imageFor annotation: MGLAnnotation) -> MGLAnnotationImage? {
-        if let point = annotation as? CustomPointAnnotation,
-            let image = point.image,
-            let reuseIdentifier = point.reuseIdentifier {
-            
-            if let annotationImage = mapView.dequeueReusableAnnotationImage(withIdentifier: reuseIdentifier) {
-                // The annotatation image has already been cached, just reuse it.
-                return annotationImage
-            } else {
-                // Create a new annotation image.
-                return MGLAnnotationImage(image: image, reuseIdentifier: reuseIdentifier)
-            }
-        }
-        
-        // Fallback to the default marker image.
-        return nil
-    }
-    
-    func mapView(_ mapView: MGLMapView, annotationCanShowCallout annotation: MGLAnnotation) -> Bool {
-        return true
-    }
-    
+
     func animateMapViewIn() {
         LogService.shared.log(LogService.types.profileMap)
         
@@ -562,17 +494,56 @@ class ProfileHeaderCell: UICollectionViewCell, MGLMapViewDelegate {
             
             parent.view.addSubview(zoomMapView)
             
-            UIView.animate(withDuration: 0.75, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 0.5, options: .curveEaseOut, animations: {
+            UIView.animate(withDuration: 0.75, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 0.5, options: .curveEaseOut, animations: { [unowned self] in
                 self.zoomMapView.frame = CGRect(x: 0, y: -1 * UIApplication.shared.statusBarFrame.height, width: parent.view.frame.width, height: parent.view.frame.height)
-            }, completion: { didComplete in
+            }, completion: { [unowned self] didComplete in
                 if didComplete {
                     self.iconExitMapView.frame = CGRect(x: 20, y: UIApplication.shared.statusBarFrame.height + 10, width: 30, height: 30)
                     self.iconExitMapView.addTapGestureRecognizer {
                         self.animateMapViewOut()
                     }
                     parent.view.addSubview(self.iconExitMapView)
-                    self.zoomMapView.addAnnotations(self.mapAnnotations)
-                    self.zoomMapView.showAnnotations(self.mapAnnotations, animated: true)
+                    if self.visitCoordinates.count == 0 {
+                        return
+                    }
+                    
+                    if let multiPoints = MGLPointCollectionFeature(coordinates: &self.visitCoordinates, count: UInt(self.visitCoordinates.count)) {
+                        let source = MGLShapeSource(identifier: "visits-big", features: [multiPoints], options: nil)
+                        
+                        if self.zoomMapView.style?.layer(withIdentifier: "visits-big-heat") == nil, self.zoomMapView.style?.source(withIdentifier: "visits-big") == nil {
+                                
+                            let layer = MGLHeatmapStyleLayer(identifier: "visits-big-heat", source: source)
+                            layer.heatmapRadius = NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'linear', nil, %@)",
+                                                               [0: 5,
+                                                                6: 10])
+                            layer.heatmapWeight = NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:(magnitude, 'linear', nil, %@)",
+                                                               [0: 0,
+                                                                6: 1])
+                            layer.heatmapIntensity = NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'linear', nil, %@)",
+                                                                  [0: 1,
+                                                                   9: 2])
+                            
+                            layer.heatmapOpacity = NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'linear', nil, %@)",
+                                                                [0: 0.75,
+                                                                 10: 0.75,
+                                                                 12: 0])
+                            
+                            let circleLayers = MGLCircleStyleLayer(identifier: "visits-big-circles", source: source)
+                            circleLayers.circleColor = NSExpression(forConstantValue: Constants.colors.lightOrange)
+                            circleLayers.circleOpacity = NSExpression(format: "mgl_interpolate:withCurveType:parameters:stops:($zoomLevel, 'linear', nil, %@)",
+                                                                      [0: 0,
+                                                                       11: 0,
+                                                                       13: 1])
+                            
+                            self.zoomMapView.style?.addSource(source)
+                            self.zoomMapView.style?.addLayer(layer)
+                            self.zoomMapView.style?.addLayer(circleLayers)
+                            if let coordinates = source.shape?.coordinate {
+                                self.zoomMapView.centerCoordinate = coordinates
+                                self.zoomMapView.zoomLevel = 5
+                            }
+                        }
+                    }
                 }
             })
         }
@@ -581,14 +552,46 @@ class ProfileHeaderCell: UICollectionViewCell, MGLMapViewDelegate {
     func animateMapViewOut() {
         if let startingFrame = mapView.superview?.convert(mapView.frame, to: nil) {
             self.iconExitMapView.removeFromSuperview()
-            UIView.animate(withDuration: 0.75, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 0.5, options: .curveEaseOut, animations: {
+            UIView.animate(withDuration: 0.75, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 0.5, options: .curveEaseOut, animations: { [unowned self] in
                 self.zoomMapView.frame = startingFrame
-            }, completion: { didComplete in
+            }, completion: { [unowned self] didComplete in
                 if didComplete {
                     self.zoomMapView.removeFromSuperview()
                     self.mapView.alpha = 1
                 }
             })
+        }
+    }
+    
+    func showUserStatsOverlay() {
+        let overlayView = UserStatsOverlayView()
+        overlayView.color = color
+        OverlayView.shared.showOverlay(with: overlayView)
+    }
+    
+    // MARK: -  MGLMapViewDelegate methods
+    func mapViewDidFinishLoadingMap(_ mapView: MGLMapView) {
+        setHeatmap()
+    }
+    
+    private func setHeatmap() {
+        if visitCoordinates.count > 0 &&
+           self.mapView.style?.layer(withIdentifier: "visits-heat") == nil,
+           let source = visitsSource {
+            
+            // set a heatmap layer
+            // https://www.mapbox.com/ios-sdk/api/4.0.0/Classes/MGLHeatmapStyleLayer.html
+            
+            let layer = MGLHeatmapStyleLayer(identifier: "visits-heat", source: source)
+            layer.heatmapWeight = NSExpression(forConstantValue: 0.2)
+            layer.heatmapIntensity = NSExpression(forConstantValue: 0.1)
+            layer.heatmapRadius = NSExpression(forConstantValue: 7)
+            layer.heatmapOpacity = NSExpression(forConstantValue: 0.75)
+            
+            mapView.style?.addSource(source)
+            mapView.style?.addLayer(layer)
+            mapView.centerCoordinate = source.shape!.coordinate
+            mapView.layoutIfNeeded()
         }
     }
 }
@@ -702,6 +705,93 @@ class ProfilePersonalInformatonCell: UICollectionViewCell {
         
         contentView.addVisualConstraint("H:|-14-[v0]-14-|", views: ["v0": nameLabel])
         contentView.addVisualConstraint("V:|-14-[v0]-14-|", views: ["v0": nameLabel])
+    }
+}
+
+class LevelProgressBar : UIView {
+    var progress: Float = 0.33 { didSet { progressBarView.progress = progress }}
+    var minValue: Int = 5000 { didSet { leftLabel.text = String(minValue) }}
+    var maxValue: Int = 10000 { didSet { rightLabel.text = String(maxValue) }}
+    var level: Int = 6 { didSet { levelLabel.text = "Level \(level)" }}
+    var points: Int = 5432 { didSet { pointsLabel.text = "\(points) points ‣" }}
+    
+    internal lazy var progressBarView: UIProgressView = {
+        let pg = UIProgressView()
+        pg.progress = self.progress
+        pg.progressTintColor = Constants.colors.midPurple
+        pg.translatesAutoresizingMaskIntoConstraints = false
+        return pg
+    }()
+    
+    internal lazy var leftLabel: UILabel = {
+        let label = UILabel()
+        label.text = String(minValue)
+        label.textAlignment = .left
+        label.font = UIFont.systemFont(ofSize: 14.0)
+        label.textColor = Constants.colors.descriptionColor
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    internal lazy var rightLabel: UILabel = {
+        let label = UILabel()
+        label.text = String(maxValue)
+        label.textAlignment = .right
+        label.font = UIFont.systemFont(ofSize: 14.0)
+        label.textColor = Constants.colors.descriptionColor
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    internal lazy var levelLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Level \(level)"
+        label.textAlignment = .left
+        label.font = UIFont.systemFont(ofSize: 18.0, weight: .heavy)
+        label.textColor = Constants.colors.midPurple
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    internal lazy var pointsLabel: UILabel = {
+        let label = UILabel()
+        label.text = "\(points) points ‣"
+        label.textAlignment = .right
+        label.font = UIFont.systemFont(ofSize: 16.0, weight: .bold)
+        label.textColor = Constants.colors.midPurple
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+    
+    convenience init() {
+        self.init(frame: CGRect.zero)
+        setupViews()
+    }
+    
+    required init(coder aDecoder: NSCoder) {
+        fatalError("This class does not support NSCoding")
+    }
+    
+    func setupViews() {
+        addSubview(progressBarView)
+        addSubview(leftLabel)
+        addSubview(rightLabel)
+        addSubview(levelLabel)
+        addSubview(pointsLabel)
+        
+        addVisualConstraint("H:|[v0]|", views: ["v0": progressBarView])
+        addVisualConstraint("H:|[v0]", views: ["v0": leftLabel])
+        addVisualConstraint("H:[v0]|", views: ["v0": rightLabel])
+        addVisualConstraint("H:|[v0]", views: ["v0": levelLabel])
+        addVisualConstraint("H:[v0]|", views: ["v0": pointsLabel])
+        addVisualConstraint("V:|[v0]-5-[v1(10)]-2-[v2]", views: ["v0": levelLabel, "v1": progressBarView, "v2": leftLabel])
+        addVisualConstraint("V:|[v0]-5-[v1(10)]-2-[v2]", views: ["v0": pointsLabel, "v1": progressBarView, "v2": rightLabel])
+        
+        translatesAutoresizingMaskIntoConstraints = false
     }
 }
 

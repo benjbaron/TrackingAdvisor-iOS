@@ -586,8 +586,8 @@ class OnboardingPermissionsViewController: UIViewController, CLLocationManagerDe
             // activity and motion permission
             ActivityService.shared.getSteps(from: Date(), to: Date(), callback: { _ in
                 Settings.saveShowActivityRings(with: true)
-                // notification permission
                 
+                // notification permission
                 UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge]) {
                     [weak self] (granted, error) in
                     
@@ -656,6 +656,11 @@ fileprivate func showCancelDialog(_ controller: UIViewController, handler: (() -
 
 
 class LocationServicesDeniedViewController: UIViewController {
+    @IBOutlet weak var textView: UITextView!
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        textView.setContentOffset(CGPoint.zero, animated: false)
+    }
     
     @IBAction func goLocationServices(_ sender: UIButton) {
         if let url = URL(string: "App-Prefs:root=Privacy&path=LOCATION") {

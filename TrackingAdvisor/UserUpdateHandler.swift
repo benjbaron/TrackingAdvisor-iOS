@@ -30,7 +30,7 @@ struct UserVisit: Codable {
     let a: Date          // arrival
     let d: Date          // departure
     let c: Double        // confidence
-    let visited: Bool?   // visited
+    let visited: Bool?   // visited    
 }
 
 struct UserMove: Codable {
@@ -89,6 +89,8 @@ struct UserAggregatedPersonalInformation : Codable {
     let icon: String?
     let s: [String] = []      // source
     let privacy: String?
+    let subcat: String?       // subcategory
+    let scicon: String?       // subcategory icon
     var rpi: Int32 = 0
     var rexp: Int32 = 0
     var rpriv: Int32 = 0
@@ -132,18 +134,17 @@ class UserUpdateHandler {
                 days.insert(day)
                 if let dayDate = DateHandler.dateFromDayString(from: day) {
                     date = dayDate
-                    print("force -- start from \(date)")
                 }
             }
             
             // 0 - get the days since the last update
-            
             let today = Date()
-            while date <= today {
+            var count = 0
+            while date <= today && count < 4 {
                 days.insert(DateHandler.dateToDayString(from: date))
                 date = calendar.date(byAdding: .day, value: 1, to: date)!
+                count += 1
             }
-            print("days: \(days)")
         }
         
         DispatchQueue.global(qos: .background).async {

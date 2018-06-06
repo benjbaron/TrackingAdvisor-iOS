@@ -15,13 +15,13 @@ class Networking {
     public var backgroundSessionManager: Alamofire.SessionManager // your web services you intend to keep running when the system backgrounds your app will use this
     private init() {
         let configuration = URLSessionConfiguration.default
-        configuration.timeoutIntervalForResource = 4
-        configuration.timeoutIntervalForRequest = 4
+        configuration.timeoutIntervalForResource = 10
+        configuration.timeoutIntervalForRequest = 10
         self.sessionManager = Alamofire.SessionManager(configuration: configuration)
         
         let backgroundConfiguration = URLSessionConfiguration.background(withIdentifier: "com.trackingadvisor.backgroundtransfer")
-        backgroundConfiguration.timeoutIntervalForResource = 4
-        backgroundConfiguration.timeoutIntervalForRequest = 4
+        backgroundConfiguration.timeoutIntervalForResource = 10
+        backgroundConfiguration.timeoutIntervalForRequest = 10
         
         self.backgroundSessionManager = Alamofire.SessionManager(configuration: backgroundConfiguration)
     }

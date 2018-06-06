@@ -68,8 +68,8 @@ class PlaceVisitedTableViewCell: UITableViewCell {
     
     var icon: String? {
         didSet {
-            if let icon = icon {
-                iconView.image = UIImage(named: icon)!.withRenderingMode(.alwaysTemplate)
+            if let icon = icon, let image = UIImage(named: icon) {
+                iconView.image = image.withRenderingMode(.alwaysTemplate)
             }
         }
     }

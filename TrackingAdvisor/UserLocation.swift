@@ -129,6 +129,8 @@ class UserLocation {
                 
                 let date = Date()
                 
+                print("send the location file")
+                
                 Networking.shared.backgroundSessionManager.upload(
                     multipartFormData: { multipartFormData in
                         let id: String = Settings.getUserId() ?? ""
@@ -150,6 +152,7 @@ class UserLocation {
                         switch encodingResult {
                         case .success(let upload, _, _):
                             upload.responseJSON { response in
+                                print(response)
                                 LogService.shared.log(LogService.types.serverResponse,
                                                       args: [LogService.args.responseMethod: "post",
                                                              LogService.args.responseUrl: Constants.urls.locationUploadURL,

@@ -285,10 +285,12 @@ extension String {
 
 extension Dictionary {
     func json() -> String? {
-        let encoder = JSONEncoder()
-        if let jsonData = try? encoder.encode(self) {
-            if let jsonString = String(data: jsonData, encoding: .utf8) {
-                return jsonString
+        if let d = self as? [String:String] {
+            let encoder = JSONEncoder()
+            if let jsonData = try? encoder.encode(d) {
+                if let jsonString = String(data: jsonData, encoding: .utf8) {
+                    return jsonString
+                }
             }
         }
         return nil
@@ -308,8 +310,21 @@ class UILabelPadding: UILabel {
         let height = superContentSize.height + padding.top + padding.bottom
         return CGSize(width: width, height: height)
     }
-    
-    
-    
 }
 
+extension UIApplication {
+    class func topViewController(base: UIViewController? = UIApplication.shared.keyWindow?.rootViewController) -> UIViewController? {
+        if let nav = base as? UINavigationController {
+            return topViewController(base: nav.visibleViewController)
+        }
+        if let tab = base as? UITabBarController {
+            if let selected = tab.selectedViewController {
+                return topViewController(base: selected)
+            }
+        }
+        if let presented = base?.presentedViewController {
+            return topViewController(base: presented)
+        }
+        return base
+    }
+}

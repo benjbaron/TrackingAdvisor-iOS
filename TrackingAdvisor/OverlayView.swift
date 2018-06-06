@@ -46,6 +46,9 @@ public class OverlayView {
     }
     
     public func showOverlay(with view: UIView? = nil) {
+        if overlayView != nil { // there is already another overlay showing
+            return
+        }
         if  let appDelegate = UIApplication.shared.delegate as? AppDelegate,
             let window = appDelegate.window {
             
@@ -90,8 +93,11 @@ public class OverlayView {
     public func hideOverlayView() {
         DispatchQueue.main.async() { [weak self] in
             self?.overlayView?.removeFromSuperview()
+            self?.overlayView = nil
             self?.effectView?.removeFromSuperview()
+            self?.effectView = nil
             self?.bgView?.removeFromSuperview()
+            self?.bgView = nil
             self?.delegate?.overlayViewDismissed()
         }
     }

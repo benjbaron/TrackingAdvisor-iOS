@@ -83,7 +83,7 @@ class WeekCalendarView: UIView, UICollectionViewDataSource, UICollectionViewDele
         
         // configure the flow layout
         flowLayout = WeekCalendarLayout()
-        flowLayout.itemSize = CGSize(width: frame.width, height: 90)
+        flowLayout.itemSize = CGSize(width: frame.width, height: 80)
         flowLayout.minimumInteritemSpacing = 0 // to hide the next cell
         flowLayout.minimumLineSpacing = 0 // to hide the next cell
         flowLayout.scrollDirection = .horizontal
@@ -197,7 +197,7 @@ fileprivate class WeekCalendarCell: UICollectionViewCell, UICollectionViewDataSo
         // configure the flow layout
         let flowLayout = UICollectionViewFlowLayout()
         let cellWidth = ((UIScreen.main.bounds.width) - 20) / 7
-        flowLayout.itemSize = CGSize(width: cellWidth, height: 80)
+        flowLayout.itemSize = CGSize(width: cellWidth, height: 70)
         
         flowLayout.minimumInteritemSpacing = 0 // to show the next cell
         flowLayout.minimumLineSpacing = 0 // to show the next cell
@@ -320,7 +320,7 @@ fileprivate class WeekDayCalendarCell: UICollectionViewCell {
     private lazy var weekDayNumberLabel: UILabel = {
         let label = UILabel()
         label.text = "28"
-        label.font = UIFont.systemFont(ofSize: 20.0)
+        label.font = UIFont.systemFont(ofSize: 18.0)
         label.textAlignment = .center
         label.textColor = Constants.colors.black
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -328,7 +328,7 @@ fileprivate class WeekDayCalendarCell: UICollectionViewCell {
     }()
     
     lazy var circleView: UIView = {
-        let path = UIBezierPath(ovalIn: CGRect(x: 0, y: 0, width: 35, height: 35))
+        let path = UIBezierPath(ovalIn: CGRect(x: 0, y: 0, width: 32, height: 32))
         let shapeLayer = CAShapeLayer()
         shapeLayer.path = path.cgPath
         shapeLayer.fillColor = UIColor.red.cgColor
@@ -358,8 +358,8 @@ fileprivate class WeekDayCalendarCell: UICollectionViewCell {
         addVisualConstraint("H:|[number]|", views: ["number": weekDayNumberLabel])
         addVisualConstraint("V:|-[letter]-[number]-|", views: ["letter": weekDayLetterLabel, "number": weekDayNumberLabel])
         
-        circleView.widthAnchor.constraint(equalToConstant: 35.0).isActive = true
-        circleView.heightAnchor.constraint(equalToConstant: 35.0).isActive = true
+        circleView.widthAnchor.constraint(equalToConstant: 32.0).isActive = true
+        circleView.heightAnchor.constraint(equalToConstant: 32.0).isActive = true
         circleView.centerXAnchor.constraint(equalTo: weekDayNumberLabel.centerXAnchor).isActive = true
         circleView.centerYAnchor.constraint(equalTo: weekDayNumberLabel.centerYAnchor).isActive = true
         
@@ -368,8 +368,8 @@ fileprivate class WeekDayCalendarCell: UICollectionViewCell {
 }
 
 class WeekCalendarLayout: UICollectionViewFlowLayout {
-    var cellWidth: CGFloat = 50
-    var cellHeight: CGFloat = 50
+    var cellWidth: CGFloat = 45
+    var cellHeight: CGFloat = 45
     
     override init() {
         super.init()

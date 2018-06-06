@@ -438,13 +438,13 @@ open class ISTimeline: UIScrollView {
     
     override public init(frame: CGRect) {
         super.init(frame: frame)
-        self.backgroundColor = .white
+        self.backgroundColor = .clear
         initialize()
     }
     
     required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
-        self.backgroundColor = .white
+        self.backgroundColor = .clear
         initialize()
     }
     
@@ -879,7 +879,18 @@ open class ISTimeline: UIScrollView {
             y += ISTimeline.gap * 2.2 // section gap
         }
         y += pointDiameter / 2.0 + 100.0
+        
+        // adjust for the different iPhone sizes
+        if AppDelegate.isIPhone5() {
+            y -= 100
+        }
+        if AppDelegate.isIPhoneX() {
+            print("iPhoneX")
+            y += 150
+        }
+        
         self.contentSize = CGSize(width: self.bounds.width - (self.contentInset.left + self.contentInset.right), height: y)
+
     }
     
     fileprivate func buildTimelineTitleLabel() {

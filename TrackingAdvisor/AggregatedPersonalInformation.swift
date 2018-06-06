@@ -66,6 +66,12 @@ class AggregatedPersonalInformation : PersonalInformation {
                 managedObject.setValue(userAggregatedPersonalInformation.rexp, forKey: "reviewExplanation")
                 managedObject.setValue(userAggregatedPersonalInformation.rpriv, forKey: "reviewPrivacy")
                 managedObject.setValue(userAggregatedPersonalInformation.com, forKey: "comment")
+                if let subcat = userAggregatedPersonalInformation.subcat {
+                    managedObject.setValue(subcat, forKey: "subcategory")
+                }
+                if let subcatIcon = userAggregatedPersonalInformation.subcat{
+                    managedObject.setValue(subcatIcon, forKey: "subcategoryicon")
+                }
                 
                 managedObject.mutableSetValue(forKey: "personalInformation").removeAllObjects()
                 for piid in userAggregatedPersonalInformation.piids {
@@ -92,6 +98,13 @@ class AggregatedPersonalInformation : PersonalInformation {
         personalInformation.reviewExplanation = userAggregatedPersonalInformation.rexp
         personalInformation.reviewPrivacy = userAggregatedPersonalInformation.rpriv
         personalInformation.comment = userAggregatedPersonalInformation.com
+        
+        if let subcat = userAggregatedPersonalInformation.subcat {
+            personalInformation.subcategory = subcat
+        }
+        if let subcatIcon = userAggregatedPersonalInformation.scicon {
+            personalInformation.subcategoryicon = subcatIcon
+        }
         
         for piid in userAggregatedPersonalInformation.piids {
             if let pi = try! PersonalInformation.findPersonalInformation(matching: piid, in: context) {
@@ -167,6 +180,10 @@ class AggregatedPersonalInformation : PersonalInformation {
         var res:[AggregatedPersonalInformationExplanationPlace] = []
         if let personalInformation = personalInformation {
             for case let pi as PersonalInformation in personalInformation {
+                if let picid = pi.category, picid != category {
+                    continue
+                }
+                
                 if let place = pi.place, let visits = pi.place?.visits, let nbVisits = pi.place?.numberOfVisitsConfirmed, nbVisits > 0 {
                     let visitFiltered = (Array(visits) as? [Visit] ?? []).filter({ $0.visited == 1 }).sorted(by: { $0.arrival! < $1.arrival! })
                     let expPlace = AggregatedPersonalInformationExplanationPlace(

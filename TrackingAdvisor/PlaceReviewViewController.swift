@@ -185,7 +185,7 @@ class PlaceReviewViewController: UIViewController, UICollectionViewDataSource, P
     }
     
     private func setTabBarCount(with count: Int?) {
-        if let tabItems = self.tabBarController?.tabBar.items as NSArray! {
+        if let tabItems = self.tabBarController?.tabBar.items as NSArray? {
             let tabItem = tabItems[1] as! UITabBarItem
             if count == nil {
                 tabItem.badgeValue = nil

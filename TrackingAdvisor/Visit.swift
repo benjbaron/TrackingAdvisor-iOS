@@ -57,8 +57,8 @@ class Visit: NSManagedObject {
                     newPlace.addToVisits(managedObject)
                 }
                 
-                if let visited = userVisit.visited, let placeName = managedObject.place?.name { // 1: visited
-                    print("\t\tvisited \(placeName): \(visited)")
+                if let visited = userVisit.visited {
+                    // 1: visited
                     if visited {
                         managedObject.setValue(1, forKey: "visited")
                     } else {

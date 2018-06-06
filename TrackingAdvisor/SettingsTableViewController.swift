@@ -12,6 +12,8 @@ import Alamofire
 class SettingsTableTableViewController: UITableViewController {
 
     @IBOutlet weak var versionNumber: UILabel!
+    @IBOutlet weak var showRawTraceCell: UITableViewCell!
+    @IBOutlet weak var showRingActivityCell: UITableViewCell!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -24,8 +26,23 @@ class SettingsTableTableViewController: UITableViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         LogService.shared.log(LogService.types.tabSettings)
+        
+        tabBarController?.tabBar.isHidden = false
+        
+        if Settings.getShowRawTrace() {
+            showRawTraceCell.accessoryType = .checkmark
+        } else {
+            showRawTraceCell.accessoryType = .none
+        }
+        
+        if Settings.getShowActivityRings() {
+            showRingActivityCell.accessoryType = .checkmark
+        } else {
+            showRingActivityCell.accessoryType = .none
+        }
+
     }
-    
+        
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if let cell = tableView.cellForRow(at: indexPath) {
             let id = cell.reuseIdentifier
@@ -95,8 +112,34 @@ class SettingsTableTableViewController: UITableViewController {
                     cell.accessoryType = .none
                     Settings.saveShowActivityRings(with: false)
                 } else {
-                    cell.accessoryType = .checkmark
-                    Settings.saveShowActivityRings(with: true)
+                    // check that activity services are enabled
+                    if !ActivityService.isServiceActivated() {
+                        // show an alert message
+                        
+                        let alertController = UIAlertController(title: "Motion & Fitness", message: "You must activate the Motion & Fitness service to show the activity rings.", preferredStyle: UIAlertControllerStyle.alert)
+                        
+                        let goToSettingAction = UIAlertAction(title: "Change",
+                                                            style: UIAlertActionStyle.default) {
+                                                                (result : UIAlertAction) -> Void in
+                            if let url = URL(string: "App-Prefs:root=Privacy&path=LOCATION") {
+                                // If general location settings are disabled then open general location settings
+                                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                            }
+                        }
+                        
+                        let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel) {
+                            (result : UIAlertAction) -> Void in
+                            print("cancel")
+                        }
+                        
+                        alertController.addAction(goToSettingAction)
+                        alertController.addAction(cancelAction)
+                        self.present(alertController, animated: true, completion: nil)
+                        
+                    } else {
+                        cell.accessoryType = .checkmark
+                        Settings.saveShowActivityRings(with: true)
+                    }
                 }
                 tableView.deselectRow(at: indexPath, animated: true)
             }
