@@ -1,5 +1,0 @@
-This version brings several UI and performance improvements, in addition to some issues that have been solved.
- - You now have the possibility to confirm/delete/edit each place directly on the timeline
- - There now a unified review tab to access the reviews of places and personal information
- - You can find a summary of the personal information you have validated in the Profile tab
- - You can now have more information about the personal information you have validated with the associated places
