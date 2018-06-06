@@ -530,8 +530,59 @@ class HeaderPersonalInformationCell : UICollectionViewCell, MGLMapViewDelegate {
 }
 
 class PlacePersonalInformationCell : UICollectionViewCell {
-    var delegate: PersonalInformationCategoryCellDelegate?
+    var indexPath: IndexPath?
+    var delegate: PersonalInformationCellDelegate?
+    var personalInformation: PersonalInformation? { didSet {
+        
+        }
+    }
     
+    var color: UIColor = Constants.colors.orange { didSet {
+        
+        }
+    }
+    
+    var feedback: FeedbackType = .none { didSet {
+        feedbackView.selectedFeedback = feedback
+    }}
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupViews()
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    lazy var nameLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Personal information"
+        label.font = UIFont.boldSystemFont(ofSize: 18.0)
+        label.textColor = color
+        label.numberOfLines = 2
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    lazy var feedbackView: FeedbackRow = {
+        let row = FeedbackRow(onChange: { [weak self] feedback in
+            guard let strongSelf = self else { return }
+            strongSelf.delegate?.didPressPersonalInformationReview(personalInformation: strongSelf.personalInformation, answer: feedback, indexPath: strongSelf.indexPath)
+        })
+        row.selectedFeedback = feedback
+        row.selectedColor = color
+        row.unselectedColor = color.withAlphaComponent(0.3)
+        return row
+    }()
+    
+    private func setupViews() {
+        addSubview(nameLabel)
+        addSubview(feedbackView)
+        addVisualConstraint("H:|[name]", views: ["name": nameLabel])
+        addVisualConstraint("H:[feedback]|", views: ["feedback": feedbackView])
+    }
     
 }
 
