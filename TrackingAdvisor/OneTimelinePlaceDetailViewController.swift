@@ -114,9 +114,7 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
         collectionView.alwaysBounceVertical = true
         
         // Register cells types
-        collectionView.register(.self, forCellWithReuseIdentifier: cellId)
-        
-        
+        collectionView.register(PlacePersonalInformationCell.self, forCellWithReuseIdentifier: cellId)
         collectionView.register(HeaderPersonalInformationCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, withReuseIdentifier: headerCellId)
         
         setupViews()
@@ -162,6 +160,8 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     
     // MARK: - UICollectionViewDataSource delegate methods
     
+    
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if let count = personalInformation?.count {
             return count
@@ -170,8 +170,7 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell: PersonalInformationCategoryCell
-        cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! PersonalInformationCategoryCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! PlacePersonalInformationCell
         
         guard let pi = personalInformation, let pics = pics else { return cell }
         let picid = pics[indexPath.item]
