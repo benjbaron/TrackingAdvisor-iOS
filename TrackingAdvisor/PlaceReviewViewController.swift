@@ -1031,6 +1031,125 @@ class FeedbackRow : UIView {
     }
 }
 
+class FeedbackRowCondensed : UIView {
+    var feedbackChanged: ((FeedbackType) -> ())?
+    let iconDiameter:CGFloat = 30.0
+    var selectedColor: UIColor! = Constants.colors.primaryDark {
+        didSet {
+            resetColors()
+        }
+    }
+    var unselectedColor: UIColor! = Constants.colors.primaryLight {
+        didSet {
+            resetColors()
+        }
+    }
+    var selectedFeedback: FeedbackType = .meh {
+        didSet {
+            unselectAll()
+            switch selectedFeedback {
+            case .yes:
+                yesView.isSelected = true
+            case .no:
+                noView.isSelected = true
+            case .meh:
+                mehView.isSelected = true
+            case .none:
+                break
+            }
+        }
+    }
+    
+    private func unselectAll() {
+        yesView.isSelected = false
+        noView.isSelected = false
+        mehView.isSelected = false
+    }
+    
+    private func resetColors() {
+        yesView.selectedColor = selectedColor
+        yesView.unselectedColor = unselectedColor
+        noView.selectedColor = selectedColor
+        noView.unselectedColor = unselectedColor
+        mehView.selectedColor = selectedColor
+        mehView.unselectedColor = unselectedColor
+    }
+    
+    private lazy var yesView: CircleCheckView = {
+        let view = CircleCheckView(frame: CGRect(x: 0, y: 0, width: iconDiameter, height: iconDiameter))
+        view.selectedColor = selectedColor
+        view.unselectedColor = unselectedColor
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private lazy var mehView: MehView = {
+        let view = MehView(frame: CGRect(x: 0, y: 0, width: iconDiameter, height: iconDiameter))
+        view.selectedColor = selectedColor
+        view.unselectedColor = unselectedColor
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private lazy var noView: TimesView = {
+        let view = TimesView(frame: CGRect(x: 0, y: 0, width: iconDiameter, height: iconDiameter))
+        view.selectedColor = selectedColor
+        view.unselectedColor = unselectedColor
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+    
+    convenience init(onChange: ((FeedbackType)->())?) {
+        self.init(frame: CGRect.zero)
+        self.feedbackChanged = onChange
+        setupViews()
+    }
+    
+    required init(coder aDecoder: NSCoder) {
+        fatalError("This class does not support NSCoding")
+    }
+    
+    func setupViews() {
+        yesView.widthAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        yesView.heightAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        mehView.widthAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        mehView.heightAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        noView.widthAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        noView.heightAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        
+        addSubview(yesView)
+        addSubview(mehView)
+        addSubview(noView)
+        
+        // add tap recognizers
+        yesView.addTapGestureRecognizer { [weak self] in
+            self?.selectedFeedback = .yes
+            self?.feedbackChanged?(.yes)
+        }
+        mehView.addTapGestureRecognizer { [weak self] in
+            self?.selectedFeedback = .meh
+            self?.feedbackChanged?(.meh)
+        }
+        noView.addTapGestureRecognizer { [weak self] in
+            self?.selectedFeedback = .no
+            self?.feedbackChanged?(.no)
+        }
+        
+        // add constraints
+        addVisualConstraint("V:|-[v]-|", views: ["v": yesView])
+        addVisualConstraint("V:|-[v]-|", views: ["v": mehView])
+        addVisualConstraint("V:|-[v]-|", views: ["v": noView])
+        addVisualConstraint("H:|[v1]-[v2]-[v3]|", views: ["v1": yesView, "v2": mehView, "v3": noView])
+        
+        translatesAutoresizingMaskIntoConstraints = false
+    }
+
+}
+
 
 class CommentRow : UIView {
     var action: (() -> ())?

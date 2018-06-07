@@ -9,7 +9,7 @@
 import UIKit
 import Mapbox
 
-class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, PersonalInformationCategoryCellDelegate, HeaderReviewVisitDelegate, DataStoreUpdateProtocol {
+class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, PersonalInformationCellDelegate, HeaderReviewVisitDelegate, DataStoreUpdateProtocol {
     
     private func presentEditVC() {
         let viewController = PlaceFinderMapTableViewController()
@@ -52,7 +52,12 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     }()
     let cellId = "CellId"
     let headerCellId = "HeaderCellId"
-    var color = Constants.colors.orange
+    let headerCategoryCellId = "HeaderCategoryCellId"
+    var color = Constants.colors.orange { didSet {
+        if collectionView != nil {
+            collectionView.reloadData()
+        }
+    }}
     
     var vid: String! {
         didSet {
@@ -68,15 +73,21 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
             color = place.getPlaceColor()
             headerView.backgroundColor = color
             personalInformation = place.getPersonalInformation()
-            pics = personalInformation!.keys.sorted(by: { $0 < $1 })
+            picids = personalInformation.keys.sorted(by: { $0 < $1 })
             if collectionView != nil {
                 collectionView.reloadData()
             }
         }
     }
     
-    var personalInformation: [String: [PersonalInformation]]?
-    var pics: [String]?
+    var personalInformation: [String: [PersonalInformation]] = [:] {
+        didSet {
+            for (picid, pis) in personalInformation {
+                personalInformation[picid] = pis.sorted(by: { $0.name ?? "" < $1.name ?? "" })
+            }
+        }
+    }
+    var picids: [String] = []
     var updatedReviews: [String:Int32] = [:]  // [reviewId : Answer]
     
     override func viewWillAppear(_ animated: Bool) {
@@ -108,20 +119,18 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
         
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
+        layout.minimumLineSpacing = 0
+        layout.minimumInteritemSpacing = 0
         collectionView = UICollectionView(frame: view.frame, collectionViewLayout: layout)
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.alwaysBounceVertical = true
         
         // Register cells types
-<<<<<<< HEAD
         collectionView.register(PlacePersonalInformationCell.self, forCellWithReuseIdentifier: cellId)
-=======
-        collectionView.register(.self, forCellWithReuseIdentifier: cellId)
         
-        
->>>>>>> dc0a22c743824bb102be3818e05a8d1e5e630eb6
         collectionView.register(HeaderPersonalInformationCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, withReuseIdentifier: headerCellId)
+        collectionView.register(HeaderCategoryPersonalInformationCell.self, forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, withReuseIdentifier: headerCategoryCellId)
         
         setupViews()
     }
@@ -166,47 +175,61 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
     
     // MARK: - UICollectionViewDataSource delegate methods
     
-    
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return personalInformation.count + 1
+    }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if let count = personalInformation?.count {
-            return count
+        if section == 0 {
+            return 0
+        } else {
+            let picid = picids[section-1]
+            return personalInformation[picid]?.count ?? 0
         }
-        return 0
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! PlacePersonalInformationCell
         
-        guard let pi = personalInformation, let pics = pics else { return cell }
-        let picid = pics[indexPath.item]
-        cell.personalInformationCategory = PersonalInformationCategory.getPersonalInformationCategory(with: picid)
-        cell.personalInformation = pi[picid]
+        let picid = picids[indexPath.section-1]
         cell.color = color
+        cell.personalInformation = personalInformation[picid]?[indexPath.item]
         cell.delegate = self
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: view.frame.width, height: 240)
+        return CGSize(width: view.frame.width, height: 50)
     }
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         if kind == UICollectionElementKindSectionHeader {
-            let headerCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerCellId, for: indexPath) as! HeaderPersonalInformationCell
-            headerCell.delegate = self
-            headerCell.color = color
-            if let count = personalInformation?.count {
-                headerCell.hasPersonalInformation = count > 0
+            if indexPath.section == 0 {
+                let headerCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerCellId, for: indexPath) as! HeaderPersonalInformationCell
+                headerCell.delegate = self
+                headerCell.color = color
+                headerCell.hasPersonalInformation = personalInformation.count > 0
+                if let place = visit?.place {
+                    headerCell.coordinates = CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude)
+                    headerCell.placeType = place.placetype
+                }
+                if let visited = visit?.visited {
+                    headerCell.setVisited(with: visited)
+                }
+                return headerCell
+            } else {
+                let headerCategoryCell = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerCategoryCellId, for: indexPath) as! HeaderCategoryPersonalInformationCell
+                
+                let picid = picids[indexPath.section-1]
+                if let pic = PersonalInformationCategory.getPersonalInformationCategory(with: picid) {
+                    headerCategoryCell.color = color
+                    headerCategoryCell.name = pic.name
+                    headerCategoryCell.icon = pic.icon
+                }
+                
+                return headerCategoryCell
             }
-            if let place = visit?.place {
-                headerCell.coordinates = CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude)
-                headerCell.placeType = place.placetype
-            }
-            if let visited = visit?.visited {
-                headerCell.setVisited(with: visited)
-            }
-            return headerCell
+            
         } else {
             assert(false, "Unexpected element kind")
         }
@@ -218,38 +241,32 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
         
         // From https://stackoverflow.com/questions/33402596/how-can-i-dynamically-resize-a-header-view-in-a-uicollectionview
         
-        // 1 - instanciate a new header
-        let headerView = HeaderPersonalInformationCell()
-        if let visited = visit?.visited {
-            headerView.setVisited(with: visited)
+        if section == 0 {
+            // 1 - instanciate a new header
+            let headerView = HeaderPersonalInformationCell()
+            if let visited = visit?.visited {
+                headerView.setVisited(with: visited)
+            }
+            if let place = visit?.place {
+                headerView.placeType = place.placetype
+            }
+            
+            // 2 - set the width through a constraint and layout the view
+            headerView.addConstraint(NSLayoutConstraint(item: headerView, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: collectionView.frame.width))
+            headerView.setNeedsLayout()
+            headerView.layoutIfNeeded()
+            
+            // 3 - get the height
+            let height = headerView.height()
+            
+            // 4 - return the correct size
+            return CGSize(width: collectionView.frame.width, height: height)
+        } else {
+            return CGSize(width: collectionView.frame.width, height: 50)
         }
-        if let place = visit?.place {
-            headerView.placeType = place.placetype
-        }
         
-        // 2 - set the width through a constraint and layout the view
-        headerView.addConstraint(NSLayoutConstraint(item: headerView, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: collectionView.frame.width))
-        headerView.setNeedsLayout()
-        headerView.layoutIfNeeded()
-        
-        // 3 - get the height
-        let height = headerView.height()
-        
-        // 4 - return the correct size
-        return CGSize(width: collectionView.frame.width, height: height)
     }
     
-    // MARK: - PersonalInformationCategoryCellDelegate method    
-    func reviewPersonalInformation(cat: String, personalInformation: PersonalInformation, answer: FeedbackType) {
-        
-        // save the feedback in the database
-        personalInformation.rating = answer.rawValue
-        if let piid = personalInformation.id {
-            updatedReviews[piid] = answer.rawValue
-            DataStoreService.shared.updatePersonalInformationRating(with: piid, rating: answer.rawValue)
-            UserStats.shared.updatePlacePersonalInformation()
-        }
-    }
     
     // MARK: - HeaderReviewVisitDelegate methods
     func didPressReviewVisit(with answer: ReviewAnswer) {
@@ -281,7 +298,7 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
         presentAddPIVC(for: nil)
     }
     
-    // MARK: DataStoreUpdateProtocol method
+    // MARK: - DataStoreUpdateProtocol methods
     func dataStoreDidUpdateReviewAnswer(for reviewId: String?, with answer: Int32) {
         if let reviewId = reviewId {
             updatedReviews[reviewId] = answer
@@ -301,6 +318,18 @@ class OneTimelinePlaceDetailViewController: UIViewController, UICollectionViewDa
             visit = DataStoreService.shared.getVisit(for: vid, ctxt: nil)
         }
     }
+    
+    // MARK: - PersonalInformationCellDelegate methods
+    func didPressPersonalInformationReview(personalInformation: PersonalInformation?, answer: FeedbackType, indexPath: IndexPath?) {
+        // save the feedback in the database
+        personalInformation?.rating = answer.rawValue
+        if let piid = personalInformation?.id {
+            updatedReviews[piid] = answer.rawValue
+            DataStoreService.shared.updatePersonalInformationRating(with: piid, rating: answer.rawValue)
+            UserStats.shared.updatePlacePersonalInformation()
+        }
+
+    }
 }
 
 protocol HeaderReviewVisitDelegate {
@@ -308,6 +337,54 @@ protocol HeaderReviewVisitDelegate {
     func didPressPlaceType(with answer: Int32)
     func didPressVisitEdit()
     func didPressAddPersonalInformation()
+}
+
+class HeaderCategoryPersonalInformationCell : UICollectionViewCell {
+    var name: String? { didSet {
+        titleLabel.text = name
+    }}
+    var icon: String? { didSet {
+        iconView.icon = icon
+        iconView.setNeedsDisplay()
+    }}
+    var color: UIColor = Constants.colors.orange { didSet {
+        iconView.iconColor = color
+    }}
+    
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Personal information"
+        label.font = UIFont.systemFont(ofSize: 20, weight: .heavy)
+        label.textColor = Constants.colors.black
+        label.lineBreakMode = .byWordWrapping
+        label.numberOfLines = 1
+        label.textAlignment = .left
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private lazy var iconView: IconView = {
+        return IconView(icon: "user-circle", iconColor: color)
+    }()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupViews()
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func setupViews() {
+        addSubview(titleLabel)
+        addSubview(iconView)
+        addVisualConstraint("H:|-14-[icon(25)]-[title]-14-|", views: ["icon": iconView, "title": titleLabel])
+        addVisualConstraint("V:|-[v0]-|", views: ["v0": titleLabel])
+        iconView.heightAnchor.constraint(equalToConstant: 25.0).isActive = true
+        iconView.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor).isActive = true
+    }
+
 }
 
 class HeaderPersonalInformationCell : UICollectionViewCell, MGLMapViewDelegate {
@@ -535,18 +612,21 @@ class HeaderPersonalInformationCell : UICollectionViewCell, MGLMapViewDelegate {
 }
 
 class PlacePersonalInformationCell : UICollectionViewCell {
-<<<<<<< HEAD
     var indexPath: IndexPath?
     var delegate: PersonalInformationCellDelegate?
     var personalInformation: PersonalInformation? { didSet {
-        
+        if let pi = personalInformation {
+            nameLabel.text = pi.name
+            if let f = FeedbackType(rawValue: pi.rating) {
+                feedback = f
+            }
         }
-    }
+    }}
     
     var color: UIColor = Constants.colors.orange { didSet {
-        
-        }
-    }
+        feedbackView.selectedColor = color
+        feedbackView.unselectedColor = color.withAlphaComponent(0.3)
+    }}
     
     var feedback: FeedbackType = .none { didSet {
         feedbackView.selectedFeedback = feedback
@@ -564,16 +644,16 @@ class PlacePersonalInformationCell : UICollectionViewCell {
     lazy var nameLabel: UILabel = {
         let label = UILabel()
         label.text = "Personal information"
-        label.font = UIFont.boldSystemFont(ofSize: 18.0)
-        label.textColor = color
+        label.font = UIFont.italicSystemFont(ofSize: 16.0)
+        label.textColor = .black
         label.numberOfLines = 2
-        label.textAlignment = .center
+        label.textAlignment = .left
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-    lazy var feedbackView: FeedbackRow = {
-        let row = FeedbackRow(onChange: { [weak self] feedback in
+    lazy var feedbackView: FeedbackRowCondensed = {
+        let row = FeedbackRowCondensed(onChange: { [weak self] feedback in
             guard let strongSelf = self else { return }
             strongSelf.delegate?.didPressPersonalInformationReview(personalInformation: strongSelf.personalInformation, answer: feedback, indexPath: strongSelf.indexPath)
         })
@@ -586,13 +666,11 @@ class PlacePersonalInformationCell : UICollectionViewCell {
     private func setupViews() {
         addSubview(nameLabel)
         addSubview(feedbackView)
-        addVisualConstraint("H:|[name]", views: ["name": nameLabel])
-        addVisualConstraint("H:[feedback]|", views: ["feedback": feedbackView])
+        addVisualConstraint("H:|-14-[name][feedback(106)]-14-|", views: ["name": nameLabel, "feedback": feedbackView])
+        nameLabel.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        feedbackView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
     }
-=======
-    var delegate: PersonalInformationCategoryCellDelegate?
-    
->>>>>>> dc0a22c743824bb102be3818e05a8d1e5e630eb6
-    
 }
+
+
 
