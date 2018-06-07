@@ -12,6 +12,7 @@ import CoreData
 
 struct AggregatedPersonalInformationExplanationPlace {
     let place: Place
+    let pi: PersonalInformation
     let pid: String
     let lastVisit: Date?
     let numberOfVisits: Int
@@ -188,6 +189,7 @@ class AggregatedPersonalInformation : PersonalInformation {
                     let visitFiltered = (Array(visits) as? [Visit] ?? []).filter({ $0.visited == 1 }).sorted(by: { $0.arrival! < $1.arrival! })
                     let expPlace = AggregatedPersonalInformationExplanationPlace(
                             place: place,
+                            pi: pi,
                             pid: place.id!,
                             lastVisit: visitFiltered.last?.arrival,
                             numberOfVisits: visitFiltered.count)

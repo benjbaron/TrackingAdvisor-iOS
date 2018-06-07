@@ -11,7 +11,6 @@ import Cosmos
 
 @objc protocol PersonalInformationReviewCategoryDelegate {
     func personalInformationReview(cat: String, personalInformation: AggregatedPersonalInformation, type: ReviewType, rating: Int32, picIndexPath: IndexPath, personalInformationIndexPath: IndexPath)
-    func explanationFeedback(cat: String, personalInformation: AggregatedPersonalInformation)
     @objc optional func showPlaces(cat: String, personalInformation: AggregatedPersonalInformation, picIndexPath: IndexPath, personalInformationIndexPath: IndexPath)
     @objc optional func goToNextPersonalInformation(currentPersonalInformation: AggregatedPersonalInformation?, picIndexPath: IndexPath?, personalInformationIndexPath: IndexPath?)
     @objc optional func goToNextPersonalInformationCategory(picIndexPath: IndexPath?)
@@ -263,12 +262,7 @@ class PersonalInformationReviewCategory: UICollectionViewCell, UICollectionViewD
             delegate?.personalInformationReview(cat: cat, personalInformation: pi, type: type, rating: rating, picIndexPath: picIdx, personalInformationIndexPath: indexPath)
         }
     }
-    
-    func didTapFeedbackExplanation(for personalInformation: AggregatedPersonalInformation) {
-        guard let cat = personalInformation.category else { return }
-        delegate?.explanationFeedback(cat: cat, personalInformation: personalInformation)
-    }
-    
+        
     func didTapHeader(for personalInformation: AggregatedPersonalInformation, indexPath: IndexPath?) {
         guard let cat = personalInformation.category else { return }
         
@@ -298,7 +292,6 @@ class PersonalInformationReviewCategory: UICollectionViewCell, UICollectionViewD
 
 protocol PersonalInformationReviewCellDelegate {
     func didReviewPersonalInformation(personalInformation: AggregatedPersonalInformation?, type: ReviewType, rating: Int32, indexPath: IndexPath?)
-    func didTapFeedbackExplanation(for personalInformation: AggregatedPersonalInformation)
     func didTapHeader(for personalInformation: AggregatedPersonalInformation, indexPath: IndexPath?)
     func didTapNextPersonalInformationButton(currentPersonalInformation: AggregatedPersonalInformation?, indexPath: IndexPath?)
 }

@@ -8,7 +8,13 @@
 
 import UIKit
 
-class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+protocol AggregatedPersonalInformationExplanationOverlayDelegate {
+    func aggregatedPersonalInformationReview(cat: String, personalInformation: AggregatedPersonalInformation, type: ReviewType, rating: Int32, picIndexPath: IndexPath, personalInformationIndexPath: IndexPath)
+    func explanationFeedback(cat: String, personalInformation: AggregatedPersonalInformation)
+    func placePersonalInformationReview(personalInformation: PersonalInformation?, rating: Int32)
+}
+
+class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, PersonalInformationCellDelegate {
     
     var showAllQuestions: Bool = false {
         didSet {
@@ -27,7 +33,7 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
     }
     var picIndexPath: IndexPath?
     var indexPath: IndexPath?
-    var delegate: PersonalInformationReviewCategoryDelegate?
+    var delegate: AggregatedPersonalInformationExplanationOverlayDelegate?
     var color: UIColor = Constants.colors.orange {
         didSet {
             headerBgView.backgroundColor = color
@@ -50,7 +56,13 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
                 iconView.icon = pic.icon
             }
             if let api = aggregatedPersonalInformation {
-                places = api.getExplanationPlaces().sorted(by: { $0.numberOfVisits > $1.numberOfVisits })
+                places = api.getExplanationPlaces().sorted(by: {
+                    if $0.numberOfVisits == $1.numberOfVisits {
+                        return $0.place.name ?? "" > $1.place.name ?? ""
+                    } else {
+                        return $0.numberOfVisits > $1.numberOfVisits
+                    }
+                })
             }
             if let explanationRating = aggregatedPersonalInformation?.reviewExplanation {
                 explanationRatingView.rating = max(0.0, Float(explanationRating))
@@ -136,7 +148,7 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
             if let cat = self?.picid, let pi = self?.aggregatedPersonalInformation {
                 pi.reviewExplanation = Int32(value)
                 if let picIdx = self?.picIndexPath, let idx = self?.indexPath {
-                    self?.delegate?.personalInformationReview(cat: cat, personalInformation: pi, type: .explanation, rating: Int32(value), picIndexPath: picIdx, personalInformationIndexPath: idx)
+                    self?.delegate?.aggregatedPersonalInformationReview(cat: cat, personalInformation: pi, type: .explanation, rating: Int32(value), picIndexPath: picIdx, personalInformationIndexPath: idx)
                 }
             }
         }
@@ -150,7 +162,7 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
             if let cat = self?.picid, let pi = self?.aggregatedPersonalInformation {
                 pi.reviewPersonalInformation = Int32(value)
                 if let picIdx = self?.picIndexPath, let idx = self?.indexPath {
-                    self?.delegate?.personalInformationReview(cat: cat, personalInformation: pi, type: .personalInformation, rating: Int32(value), picIndexPath: picIdx, personalInformationIndexPath: idx)
+                    self?.delegate?.aggregatedPersonalInformationReview(cat: cat, personalInformation: pi, type: .personalInformation, rating: Int32(value), picIndexPath: picIdx, personalInformationIndexPath: idx)
                 }
             }
         }
@@ -164,7 +176,7 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
             if let cat = self?.picid, let pi = self?.aggregatedPersonalInformation {
                 pi.reviewPrivacy = Int32(value)
                 if let picIdx = self?.picIndexPath, let idx = self?.indexPath {
-                    self?.delegate?.personalInformationReview(cat: cat, personalInformation: pi, type: .privacy, rating: Int32(value), picIndexPath: picIdx, personalInformationIndexPath: idx)
+                    self?.delegate?.aggregatedPersonalInformationReview(cat: cat, personalInformation: pi, type: .privacy, rating: Int32(value), picIndexPath: picIdx, personalInformationIndexPath: idx)
                 }
             }
         }
@@ -293,15 +305,15 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        
         return places.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! AggregatedPersonalInformationExplanationOverlayCell
-        let expPlace = places[indexPath.item]
-        cell.explanationPlace = expPlace
+        cell.delegate = self
+        cell.indexPath = indexPath
         cell.color = color
+        cell.explanationPlace = places[indexPath.item]
         cell.setupViews()
         return cell
     }
@@ -316,12 +328,22 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
         // 3 - get the height
         let height = cell.height(withConstrainedWidth: frame.width)
         
+        print("height: \(height)")
+        
         // 4 - return the correct size
         return CGSize(width: frame.width, height: height)
+    }
+    
+    // MARK: - PersonalInformationCellDelegate methods
+    func didPressPersonalInformationReview(personalInformation: PersonalInformation?, answer: FeedbackType, indexPath: IndexPath?) {
+        
+        self.delegate?.placePersonalInformationReview(personalInformation: personalInformation, rating: answer.rawValue)
     }
 }
 
 class AggregatedPersonalInformationExplanationOverlayCell : UICollectionViewCell {
+    var delegate: PersonalInformationCellDelegate?
+    var indexPath: IndexPath?
     var explanationPlace: AggregatedPersonalInformationExplanationPlace? {
         didSet {
             if let expPlace = explanationPlace {
@@ -332,6 +354,9 @@ class AggregatedPersonalInformationExplanationOverlayCell : UICollectionViewCell
                 let nov = expPlace.numberOfVisits
                 let visitStr = nov > 2 ? "\(nov) times" : (nov == 2 ? "twice" : "once")
                 explanationLabel.text = "You visited this place \(visitStr)."
+                
+                feedbackRow.selectedFeedback = FeedbackType(rawValue: expPlace.pi.rating)!
+                
                 layoutIfNeeded()
             }
         }
@@ -339,6 +364,8 @@ class AggregatedPersonalInformationExplanationOverlayCell : UICollectionViewCell
     var color: UIColor = Constants.colors.lightOrange {
         didSet {
             iconView.color = color
+            feedbackRow.selectedColor = color
+            feedbackRow.unselectedColor = color.withAlphaComponent(0.3)
         }
     }
     
@@ -351,13 +378,18 @@ class AggregatedPersonalInformationExplanationOverlayCell : UICollectionViewCell
     }
     
     private lazy var iconView: RoundIconView = {
-        return RoundIconView(image: UIImage(named: "map-marker")!, color: color, imageColor: .white, scale: 0.6)
+        let iconDiameter: CGFloat = AppDelegate.isIPhone5() ? 25.0 : 30.0
+        return RoundIconView(image: UIImage(named: "map-marker")!, color: color, imageColor: .white, diameter: iconDiameter, scale: 0.6)
     }()
     
     lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Place"
-        label.font = UIFont.boldSystemFont(ofSize: 15)
+        if AppDelegate.isIPhone5() {
+            label.font = UIFont.boldSystemFont(ofSize: 14)
+        } else {
+            label.font = UIFont.boldSystemFont(ofSize: 15)
+        }
         label.numberOfLines = 0
         label.textColor = .black
         label.textAlignment = .left
@@ -369,13 +401,33 @@ class AggregatedPersonalInformationExplanationOverlayCell : UICollectionViewCell
     lazy var explanationLabel: UILabel = {
         let label = UILabel()
         label.text = "Explanations"
-        label.font = UIFont.italicSystemFont(ofSize: 13)
+        if AppDelegate.isIPhone5() {
+            label.font = UIFont.italicSystemFont(ofSize: 12)
+        } else {
+            label.font = UIFont.italicSystemFont(ofSize: 13)
+        }
         label.textColor = Constants.colors.lightGray
         label.numberOfLines = 0
         label.textAlignment = .left
         label.sizeToFit()
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }()
+    
+    lazy var feedbackRow: FeedbackRowUltraCondensed = {
+        let iconDiameter: CGFloat = AppDelegate.isIPhone5() ? 25.0 : 30.0
+        let row = FeedbackRowUltraCondensed(onChange: { [weak self] feedback in
+            guard let strongSelf = self else { return }
+            
+            strongSelf.delegate?.didPressPersonalInformationReview(personalInformation: strongSelf.explanationPlace?.pi, answer: feedback, indexPath: strongSelf.indexPath)
+
+        }, iconDiameter: iconDiameter)
+        if let rating = self.explanationPlace?.pi.rating {
+            row.selectedFeedback = FeedbackType(rawValue: rating)!
+        }
+        row.selectedColor = color
+        row.unselectedColor = color.withAlphaComponent(0.3)
+        return row
     }()
     
     func setupViews() {
@@ -385,26 +437,40 @@ class AggregatedPersonalInformationExplanationOverlayCell : UICollectionViewCell
         vStackView.alignment = .leading
         vStackView.spacing = 2
         
-        iconView.widthAnchor.constraint(equalToConstant: 25.0).isActive = true
-        iconView.heightAnchor.constraint(equalToConstant: 25.0).isActive = true
+        let iconDiameter: CGFloat = AppDelegate.isIPhone5() ? 25.0 : 30.0
+        
+        iconView.widthAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        iconView.heightAnchor.constraint(equalToConstant: iconDiameter).isActive = true
         
         let hStackView = UIStackView(arrangedSubviews: [iconView, vStackView])
         hStackView.axis = .horizontal
         hStackView.distribution = .fillProportionally
         hStackView.alignment = .top
-        hStackView.spacing = 14
+        hStackView.spacing = 10
         hStackView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(hStackView)
+        addSubview(feedbackRow)
         
-        addVisualConstraint("H:|-14-[v0]-14-|", views: ["v0": hStackView])
+        addVisualConstraint("H:|-14-[v0]-[feedback]-14-|", views: ["v0": hStackView, "feedback": feedbackRow])
         addVisualConstraint("V:|-[v0]-|", views: ["v0": hStackView])
+        feedbackRow.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        feedbackRow.widthAnchor.constraint(equalToConstant: iconDiameter).isActive = true
     }
     
     func height(withConstrainedWidth width: CGFloat) -> CGFloat {
-        let w = width - 14.0 - 25.0 - 14.0 - 14.0
-        return 8.0
+        var w = width - 46.0
+        if AppDelegate.isIPhone5() {
+            w -= 50.0 // 25.0 + 25.0
+        } else {
+            w -= 60.0 // 30.0 + 30.0
+        }
+        
+        print("width: \(w), title: \(titleLabel.text!.height(withConstrainedWidth: w, font: titleLabel.font)), explanation: \(explanationLabel.text!.height(withConstrainedWidth: w, font: explanationLabel.font))")
+        
+        
+        
+        return 20.0 // 8 + 8 + 2
             + titleLabel.text!.height(withConstrainedWidth: w, font: titleLabel.font)
             + explanationLabel.text!.height(withConstrainedWidth: w, font: explanationLabel.font)
-            + 8.0
     }
 }

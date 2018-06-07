@@ -1150,6 +1150,145 @@ class FeedbackRowCondensed : UIView {
 
 }
 
+class FeedbackRowUltraCondensed : UIView {
+    var feedbackChanged: ((FeedbackType) -> ())?
+    var iconDiameter:CGFloat = 30.0
+    var selectedColor: UIColor! = Constants.colors.primaryDark {
+        didSet {
+            resetColors()
+        }
+    }
+    var unselectedColor: UIColor! = Constants.colors.primaryLight {
+        didSet {
+            resetColors()
+        }
+    }
+    var selectedFeedback: FeedbackType = .meh {
+        didSet {
+            unselectAll()
+            switch selectedFeedback {
+            case .yes:
+                yesView.isSelected = true
+                yesView.isHidden = false
+                mehView.isHidden = true
+                noView.isHidden = true
+            case .no:
+                noView.isSelected = true
+                yesView.isHidden = true
+                mehView.isHidden = true
+                noView.isHidden = false
+            case .meh:
+                mehView.isSelected = true
+                yesView.isHidden = true
+                mehView.isHidden = false
+                noView.isHidden = true
+            case .none:
+                yesView.isSelected = false
+                yesView.isHidden = false
+                mehView.isHidden = true
+                noView.isHidden = true
+                break
+            }
+        }
+    }
+    
+    private func unselectAll() {
+        yesView.isSelected = false
+        noView.isSelected = false
+        mehView.isSelected = false
+    }
+    
+    private func resetColors() {
+        yesView.selectedColor = selectedColor
+        yesView.unselectedColor = unselectedColor
+        noView.selectedColor = selectedColor
+        noView.unselectedColor = unselectedColor
+        mehView.selectedColor = selectedColor
+        mehView.unselectedColor = unselectedColor
+    }
+    
+    private lazy var yesView: CircleCheckView = {
+        let view = CircleCheckView(frame: CGRect(x: 0, y: 0, width: iconDiameter, height: iconDiameter))
+        view.selectedColor = selectedColor
+        view.unselectedColor = unselectedColor
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private lazy var mehView: MehView = {
+        let view = MehView(frame: CGRect(x: 0, y: 0, width: iconDiameter, height: iconDiameter))
+        view.selectedColor = selectedColor
+        view.unselectedColor = unselectedColor
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private lazy var noView: TimesView = {
+        let view = TimesView(frame: CGRect(x: 0, y: 0, width: iconDiameter, height: iconDiameter))
+        view.selectedColor = selectedColor
+        view.unselectedColor = unselectedColor
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+    
+    convenience init(onChange: ((FeedbackType)->())?, iconDiameter: CGFloat = 30) {
+        self.init(frame: CGRect.zero)
+        self.feedbackChanged = onChange
+        self.iconDiameter = iconDiameter
+        setupViews()
+    }
+    
+    required init(coder aDecoder: NSCoder) {
+        fatalError("This class does not support NSCoding")
+    }
+    
+    func setupViews() {
+        yesView.widthAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        yesView.heightAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        mehView.widthAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        mehView.heightAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        noView.widthAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        noView.heightAnchor.constraint(equalToConstant: iconDiameter).isActive = true
+        
+        addSubview(mehView)
+        addSubview(noView)
+        addSubview(yesView)
+        
+        // add tap recognizers
+        addTapGestureRecognizer { [unowned self] in
+            switch self.selectedFeedback {
+            case .none:
+                self.selectedFeedback = .yes
+                self.feedbackChanged?(.yes)
+            case .yes:
+                self.selectedFeedback = .meh
+                self.feedbackChanged?(.meh)
+            case .meh:
+                self.selectedFeedback = .no
+                self.feedbackChanged?(.no)
+            case .no:
+                self.selectedFeedback = .yes
+                self.feedbackChanged?(.yes)
+            }
+        }
+        
+        // add constraints
+        addVisualConstraint("V:|-[v]-|", views: ["v": yesView])
+        addVisualConstraint("V:|-[v]-|", views: ["v": mehView])
+        addVisualConstraint("V:|-[v]-|", views: ["v": noView])
+        addVisualConstraint("H:|[v]|", views: ["v": yesView])
+        addVisualConstraint("H:|[v]|", views: ["v": noView])
+        addVisualConstraint("H:|[v]|", views: ["v": mehView])
+        
+        translatesAutoresizingMaskIntoConstraints = false
+    }
+}
+
+
 
 class CommentRow : UIView {
     var action: (() -> ())?

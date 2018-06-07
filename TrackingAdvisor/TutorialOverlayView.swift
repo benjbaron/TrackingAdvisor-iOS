@@ -58,7 +58,11 @@ class TutorialOverlayView : UIView, OverlayViewDelegate {
     lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Quick tutorial"
-        label.font = UIFont.systemFont(ofSize: 25.0, weight: .black)
+        if AppDelegate.isIPhone5() {
+            label.font = UIFont.systemFont(ofSize: 20.0, weight: .black)
+        } else {
+            label.font = UIFont.systemFont(ofSize: 25.0, weight: .black)
+        }
         label.textColor = .white
         label.numberOfLines = 2
         label.textAlignment = .center
@@ -69,7 +73,11 @@ class TutorialOverlayView : UIView, OverlayViewDelegate {
     lazy var subtitleLabel: UILabel = {
         let label = UILabel()
         label.text = "Thank you for participating in the study! We would like to show you how you can good feedback with this short tutorial."
-        label.font = UIFont.italicSystemFont(ofSize: 16.0)
+        if AppDelegate.isIPhone5() {
+            label.font = UIFont.italicSystemFont(ofSize: 14.0)
+        } else {
+            label.font = UIFont.italicSystemFont(ofSize: 16.0)
+        }
         label.textAlignment = .center
         label.numberOfLines = 4
         label.lineBreakMode = .byWordWrapping
@@ -155,6 +163,8 @@ class TutorialOverlayView : UIView, OverlayViewDelegate {
         let overlayFrame = OverlayView.frame()
         if AppDelegate.isIPhoneX() {
             self.frame = CGRect(x: 0, y: 0, width: overlayFrame.width - 50, height: overlayFrame.height - 200)
+        } else if AppDelegate.isIPhone5() {
+            self.frame = CGRect(x: 0, y: 0, width: overlayFrame.width - 25, height: overlayFrame.height - 50)
         } else {
             self.frame = CGRect(x: 0, y: 0, width: overlayFrame.width - 50, height: overlayFrame.height - 100)
         }
@@ -223,6 +233,7 @@ class TutorialOverlayView : UIView, OverlayViewDelegate {
         DataStoreService.shared.deleteAggregatedPersonalInformation(piid: "dummy-api-3", ctxt: nil)
     }
     
+    // MARK: - OverlayViewDelegate method
     func overlayViewDismissed() {
         deleteDummyData()
         delegate?.tutorialFinished()
@@ -334,7 +345,7 @@ class TutorialVisitsViewController : UIViewController {
     
     lazy var bottomLabel: UILabel = {
         let label = UILabel(frame: .zero)
-        label.numberOfLines = 4
+        label.numberOfLines = 6
         label.font = UIFont.systemFont(ofSize: 14.0, weight: .light)
         label.textColor = .black
         let formattedString = NSMutableAttributedString()
@@ -390,8 +401,8 @@ class TutorialVisitsViewController : UIViewController {
         timelineView.backgroundColor = Constants.colors.primaryDark
         timelineView.translatesAutoresizingMaskIntoConstraints = false
         view.insertSubview(timelineView, belowSubview: bottomView)
-        view.addVisualConstraint("V:|-40-[v0]|", views: ["v0": timelineView])
-        view.addVisualConstraint("H:|-60-[v0(16)]", views: ["v0": timelineView])
+        view.addVisualConstraint("V:|-30-[v0]|", views: ["v0": timelineView])
+        view.addVisualConstraint("H:|-50-[v0(16)]", views: ["v0": timelineView])
         
         let timelineTopView = UIView()
         timelineTopView.backgroundColor = Constants.colors.primaryDark
@@ -416,7 +427,7 @@ class TutorialVisitsViewController : UIViewController {
         let placeIcon = RoundIconView(image: UIImage(named: "home")!.withRenderingMode(.alwaysTemplate), color: Constants.colors.primaryDark, imageColor: .white)
         placeIcon.translatesAutoresizingMaskIntoConstraints = false
         view.insertSubview(placeIcon, belowSubview: bottomView)
-        view.addVisualConstraint("H:|-20-[v0]", views: ["v0": placeIcon])
+        view.addVisualConstraint("H:|-10-[v0]", views: ["v0": placeIcon])
         placeIcon.widthAnchor.constraint(equalToConstant: 30.0).isActive = true
         placeIcon.heightAnchor.constraint(equalToConstant: 30.0).isActive = true
         placeIcon.centerYAnchor.constraint(equalTo: timelineTopView.centerYAnchor).isActive = true
@@ -442,7 +453,7 @@ class TutorialVisitsViewController : UIViewController {
         placeDescriptionLabel.text = "Visited from 11:12 to 15:25"
         placeDescriptionLabel.translatesAutoresizingMaskIntoConstraints = false
         view.insertSubview(placeDescriptionLabel, belowSubview: bottomView)
-        view.addVisualConstraint("H:[line]-12-[label]-20-|", views: ["line": timelineView, "label": placeDescriptionLabel])
+        view.addVisualConstraint("H:[line]-12-[label]-|", views: ["line": timelineView, "label": placeDescriptionLabel])
         view.addVisualConstraint("V:[title][description]", views: ["title": placeNameLabel, "description": placeDescriptionLabel])
         
         // build the feedback view
@@ -464,7 +475,7 @@ class TutorialVisitsViewController : UIViewController {
         btn3.widthAnchor.constraint(equalTo: btn1.widthAnchor).isActive = true
         
         view.addSubview(feedbackView)
-        view.addVisualConstraint("H:[line]-12-[feeback]-20-|", views: ["line": timelineView, "feeback": feedbackView])
+        view.addVisualConstraint("H:[line]-12-[feeback]-|", views: ["line": timelineView, "feeback": feedbackView])
         view.addVisualConstraint("V:[description]-[feedback]", views: ["description": placeDescriptionLabel, "feedback": feedbackView])
         
         // show a helper arrow
@@ -485,7 +496,7 @@ class TutorialVisitsViewController : UIViewController {
         helperTextView.text = "Tap here to confirm you visit at Bilbo's"
         helperTextView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(helperTextView)
-        view.addVisualConstraint("H:[line]-20-[label]-20-|", views: ["line": timelineView, "label": helperTextView])
+        view.addVisualConstraint("H:[line]-20-[label]-|", views: ["line": timelineView, "label": helperTextView])
         view.addVisualConstraint("V:[arrow]-[text]", views: ["arrow": helperArrowView, "text": helperTextView])
     }
     
@@ -548,7 +559,7 @@ class TutorialPlaceReviewsViewController : UIViewController, UICollectionViewDat
     
     lazy var bottomLabel: UILabel = {
         let label = UILabel(frame: .zero)
-        label.numberOfLines = 5
+        label.numberOfLines = 6
         label.font = UIFont.systemFont(ofSize: 14.0, weight: .light)
         label.textColor = .black
         let formattedString = NSMutableAttributedString()
@@ -723,7 +734,7 @@ class TutorialAPIReviewsViewController : UIViewController, UICollectionViewDataS
     
     lazy var bottomLabel: UILabel = {
         let label = UILabel(frame: .zero)
-        label.numberOfLines = 5
+        label.numberOfLines = 6
         label.font = UIFont.systemFont(ofSize: 14.0, weight: .light)
         label.textColor = .black
         let formattedString = NSMutableAttributedString()
@@ -845,9 +856,7 @@ class TutorialAPIReviewsViewController : UIViewController, UICollectionViewDataS
     func didReviewPersonalInformation(personalInformation: AggregatedPersonalInformation?, type: ReviewType, rating: Int32, indexPath: IndexPath?) {
         print("gave review")
     }
-    
-    func didTapFeedbackExplanation(for personalInformation: AggregatedPersonalInformation) { }
-    
+        
     func didTapHeader(for personalInformation: AggregatedPersonalInformation, indexPath: IndexPath?) { }
     
     func didTapNextPersonalInformationButton(currentPersonalInformation: AggregatedPersonalInformation?, indexPath: IndexPath?) {

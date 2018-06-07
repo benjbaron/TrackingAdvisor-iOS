@@ -9,7 +9,7 @@
 import UIKit
 import Alamofire
 
-class PersonalInformationReviewViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, DataStoreUpdateProtocol, PersonalInformationReviewCategoryDelegate, PersonalInformationReviewHeaderCellDelegate {
+class PersonalInformationReviewViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, DataStoreUpdateProtocol, AggregatedPersonalInformationExplanationOverlayDelegate, PersonalInformationReviewHeaderCellDelegate, PersonalInformationReviewCategoryDelegate {
     
     func goBack() {
         guard let controllers = navigationController?.viewControllers else { return }
@@ -46,7 +46,9 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
             }
         }
     }
-    var updatedReviews: [String:[Int32]] = [:]  // [personalinformationid : [PersonalInformationReviewType:Rating]]
+    var updatedAPIReviews: [String:[Int32]] = [:]  // [personalinformationid : [PersonalInformationReviewType:Rating]]
+    var updatedPIReviews: [String:Int32] = [:]  // place personal information review [reviewId : Answer]
+    
     var picStatus: [Int] = [] // PIC index
     
     var collectionView: UICollectionView!
@@ -65,7 +67,8 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
         
         DataStoreService.shared.delegate = self
         
-        updatedReviews.removeAll()
+        updatedAPIReviews.removeAll()
+        updatedPIReviews.removeAll()
         if collectionView != nil {
             collectionView.reloadData()
         }
@@ -74,8 +77,13 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
-        if updatedReviews.count > 0 {
-            UserUpdateHandler.sendPersonalInformationReviewUpdate(reviews: updatedReviews)
+        if updatedAPIReviews.count > 0 {
+            UserUpdateHandler.sendPersonalInformationReviewUpdate(reviews: updatedAPIReviews)
+            updatedAPIReviews.removeAll()
+        }
+        if updatedPIReviews.count > 0 {
+            UserUpdateHandler.sendReviewUpdate(reviews: updatedPIReviews)
+            updatedPIReviews.removeAll()
         }
     }
     
@@ -188,22 +196,9 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
                                          LogService.args.value: String(rating)])
             
             DataStoreService.shared.updatePersonalInformationReview(with: piid, type: type, rating: rating) { [weak self] allRatings in
-                self?.updatedReviews[piid] = allRatings
+                self?.updatedAPIReviews[piid] = allRatings
             }
         }
-    }
-    
-    func explanationFeedback(cat: String, personalInformation: AggregatedPersonalInformation) {
-        OverlayView.shared.hideOverlayView()
-        let viewController = ExplanationFeedbackViewController()
-        viewController.personalInformation = personalInformation
-        
-        if let piid = personalInformation.id {
-            LogService.shared.log(LogService.types.reviewPiFeedback,
-                                  args: [LogService.args.piId: piid])
-        }
-        
-        self.navigationController?.pushViewController(viewController, animated: true)
     }
     
     func showPlaces(cat: String, personalInformation: AggregatedPersonalInformation, picIndexPath: IndexPath, personalInformationIndexPath: IndexPath) {
@@ -289,6 +284,49 @@ class PersonalInformationReviewViewController: UIViewController, UICollectionVie
         // get the latest aggregatedPersonalInformation
         aggregatedPersonalInformation = DataStoreService.shared.getAggregatedPersonalInformationToReview(ctxt: nil)
     }
+    
+    // MARK: - AggregatedPersonalInformationExplanationOverlayDelegate methods
+    func aggregatedPersonalInformationReview(cat: String, personalInformation: AggregatedPersonalInformation, type: ReviewType, rating: Int32, picIndexPath: IndexPath, personalInformationIndexPath: IndexPath) {
+        if let piid = personalInformation.id {
+            if type == .personalInformation {
+                picStatus[picIndexPath.item] = personalInformationIndexPath.item
+            }
+            
+            LogService.shared.log(LogService.types.reviewPiReview,
+                                  args: [LogService.args.piId: piid,
+                                         LogService.args.reviewType: String(type.rawValue),
+                                         LogService.args.value: String(rating)])
+            
+            DataStoreService.shared.updatePersonalInformationReview(with: piid, type: type, rating: rating) { [weak self] allRatings in
+                self?.updatedAPIReviews[piid] = allRatings
+            }
+        }
+    }
+    
+    func explanationFeedback(cat: String, personalInformation: AggregatedPersonalInformation) {
+        OverlayView.shared.hideOverlayView()
+        let viewController = ExplanationFeedbackViewController()
+        viewController.personalInformation = personalInformation
+        
+        if let piid = personalInformation.id {
+            LogService.shared.log(LogService.types.reviewPiFeedback,
+                                  args: [LogService.args.piId: piid])
+        }
+        
+        self.navigationController?.pushViewController(viewController, animated: true)
+    }
+    
+    func placePersonalInformationReview(personalInformation: PersonalInformation?, rating: Int32) {
+        // save the feedback in the database
+        personalInformation?.rating = rating
+        if let piid = personalInformation?.id {
+            self.updatedPIReviews[piid] = rating
+            DataStoreService.shared.updatePersonalInformationRating(with: piid, rating: rating)
+            UserStats.shared.updatePlacePersonalInformation()
+        }
+    }
+
+    
 }
 
 @objc protocol PersonalInformationReviewHeaderCellDelegate {

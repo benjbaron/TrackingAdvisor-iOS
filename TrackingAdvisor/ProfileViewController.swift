@@ -9,17 +9,20 @@
 import UIKit
 import Mapbox
 
-class ProfileViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, PersonalInformationReviewCategoryDelegate, DataStoreUpdateProtocol, OverlayViewDelegate {
+class ProfileViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, AggregatedPersonalInformationExplanationOverlayDelegate, DataStoreUpdateProtocol, OverlayViewDelegate {
     
-    var updatedReviews: [String:[Int32]] = [:]
+    var updatedAPIReviews: [String:[Int32]] = [:] // aggregated personal information review
+    var updatedPIReviews: [String:Int32] = [:]  // place personal information review [reviewId : Answer]
     var pics: [String]! = []
     var personalInformation: [String: [AggregatedPersonalInformation]]! = [:]
     var scores: [String:Double] = [:]
     var aggregatedPersonalInformation: [AggregatedPersonalInformation]! = [] {
         didSet {
             if aggregatedPersonalInformation.count > 0 {
-                updatedReviews.removeAll()
+                updatedAPIReviews.removeAll()
+                updatedPIReviews.removeAll()
                 personalInformation.removeAll()
+                
                 var s: [String: Set<AggregatedPersonalInformation>] = [:]
                 for pi in aggregatedPersonalInformation {
                     if let picid = pi.category {
@@ -96,8 +99,14 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
-        if updatedReviews.count > 0 {
-            UserUpdateHandler.sendPersonalInformationReviewUpdate(reviews: updatedReviews)
+        if updatedAPIReviews.count > 0 {
+            UserUpdateHandler.sendPersonalInformationReviewUpdate(reviews: updatedAPIReviews)
+            updatedAPIReviews.removeAll()
+        }
+        
+        if updatedPIReviews.count > 0 {
+            UserUpdateHandler.sendReviewUpdate(reviews: updatedPIReviews)
+            updatedPIReviews.removeAll()
         }
     }
     
@@ -221,7 +230,7 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
     
     // MARK: - OverlayViewDelegate methods
     func overlayViewDismissed() {
-        if updatedReviews.count > 0 {
+        if updatedAPIReviews.count > 0 || updatedPIReviews.count > 0 {
             // get the cell and move it to the appropriate place
             if let idx = selectedIndexPath {
                 let picid = pics[idx.section-1]
@@ -259,16 +268,22 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
                 }
             }
             
-            UserUpdateHandler.sendPersonalInformationReviewUpdate(reviews: updatedReviews)
-            updatedReviews.removeAll()
+            if updatedAPIReviews.count > 0 {
+                UserUpdateHandler.sendPersonalInformationReviewUpdate(reviews: updatedAPIReviews)
+                updatedAPIReviews.removeAll()
+            }
+            if updatedPIReviews.count > 0 {
+                UserUpdateHandler.sendReviewUpdate(reviews: updatedPIReviews)
+                updatedPIReviews.removeAll()
+            }
         }
         
         self.selectedIndexPath = nil
     }
     
-    // MARK: - PersonalInformationReviewCategoryDelegate methods
+    // MARK: - AggregatedPersonalInformationExplanationOverlayDelegate methods
     
-    func personalInformationReview(cat: String, personalInformation: AggregatedPersonalInformation, type: ReviewType, rating: Int32, picIndexPath: IndexPath, personalInformationIndexPath: IndexPath) {
+    func aggregatedPersonalInformationReview(cat: String, personalInformation: AggregatedPersonalInformation, type: ReviewType, rating: Int32, picIndexPath: IndexPath, personalInformationIndexPath: IndexPath) {
         
         if let piid = personalInformation.id {
             LogService.shared.log(LogService.types.profilePiReview,
@@ -277,7 +292,7 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
                                          LogService.args.value: String(rating)])
             
             DataStoreService.shared.updatePersonalInformationReview(with: piid, type: type, rating: rating) { [unowned self] allRatings in
-                self.updatedReviews[piid] = allRatings
+                self.updatedAPIReviews[piid] = allRatings
                 UserStats.shared.updateAggregatedPersonalInformation()
             }
         }
@@ -295,6 +310,16 @@ class ProfileViewController: UIViewController, UICollectionViewDataSource, UICol
         }
         
         self.navigationController?.pushViewController(viewController, animated: true)
+    }
+    
+    func placePersonalInformationReview(personalInformation: PersonalInformation?, rating: Int32) {
+        // save the feedback in the database
+        personalInformation?.rating = rating
+        if let piid = personalInformation?.id {
+            self.updatedPIReviews[piid] = rating
+            DataStoreService.shared.updatePersonalInformationRating(with: piid, rating: rating)
+            UserStats.shared.updatePlacePersonalInformation()
+        }
     }
     
     // MARK: - DataStoreUpdateProtocol methods
