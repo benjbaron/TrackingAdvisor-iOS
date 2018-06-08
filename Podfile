@@ -11,6 +11,7 @@ target 'TrackingAdvisor' do
   pod 'Mapbox-iOS-SDK', '~> 4.0'
   pod 'Cosmos', '~> 15.0'
   pod 'MKRingProgressView'
+  pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '3.12.4'
 
   target 'TrackingAdvisorTests' do
     inherit! :search_paths

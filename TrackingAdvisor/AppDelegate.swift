@@ -10,6 +10,7 @@ import UIKit
 import CoreData
 import UserNotifications
 import Alamofire
+import Sentry
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -17,6 +18,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+        
+        // Create a Sentry client and start crash handler
+        do {
+            Client.shared = try Client(dsn: "https://debb77c9551f44c089987ae78e619846@sentry.io/1222117")
+            try Client.shared?.startCrashHandler()
+        } catch let error {
+            print("\(error)")
+            // Wrong DSN or KSCrash not installed
+        }
         
         Settings.registerDefaults()
         getNotificationSettings()

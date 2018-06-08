@@ -328,8 +328,6 @@ class AggregatedPersonalInformationExplanationOverlayView : UIView, UICollection
         // 3 - get the height
         let height = cell.height(withConstrainedWidth: frame.width)
         
-        print("height: \(height)")
-        
         // 4 - return the correct size
         return CGSize(width: frame.width, height: height)
     }
@@ -464,10 +462,6 @@ class AggregatedPersonalInformationExplanationOverlayCell : UICollectionViewCell
         } else {
             w -= 60.0 // 30.0 + 30.0
         }
-        
-        print("width: \(w), title: \(titleLabel.text!.height(withConstrainedWidth: w, font: titleLabel.font)), explanation: \(explanationLabel.text!.height(withConstrainedWidth: w, font: explanationLabel.font))")
-        
-        
         
         return 20.0 // 8 + 8 + 2
             + titleLabel.text!.height(withConstrainedWidth: w, font: titleLabel.font)

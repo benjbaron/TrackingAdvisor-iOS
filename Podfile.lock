@@ -3,8 +3,24 @@ PODS:
   - Cosmos (15.0.0)
   - Eureka (4.1.1)
   - Fuse (1.1.0)
+  - KSCrash/Core (1.15.18):
+    - KSCrash/Reporting/Filters/Basic
+  - KSCrash/Recording (1.15.18):
+    - KSCrash/Recording/Tools (= 1.15.18)
+  - KSCrash/Recording/Tools (1.15.18)
+  - KSCrash/Reporting/Filters/Base (1.15.18):
+    - KSCrash/Recording
+  - KSCrash/Reporting/Filters/Basic (1.15.18):
+    - KSCrash/Recording
+    - KSCrash/Reporting/Filters/Base
   - Mapbox-iOS-SDK (4.0.1)
   - MKRingProgressView (1.2)
+  - Sentry (3.12.4):
+    - Sentry/Core (= 3.12.4)
+    - Sentry/KSCrash (= 3.12.4)
+  - Sentry/Core (3.12.4)
+  - Sentry/KSCrash (3.12.4):
+    - KSCrash/Core (~> 1.15.12)
 
 DEPENDENCIES:
   - Alamofire (~> 4.6)
@@ -13,6 +29,7 @@ DEPENDENCIES:
   - Fuse
   - Mapbox-iOS-SDK (~> 4.0)
   - MKRingProgressView
+  - Sentry (from `https://github.com/getsentry/sentry-cocoa.git`, tag `3.12.4`)
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
@@ -20,17 +37,30 @@ SPEC REPOS:
     - Cosmos
     - Eureka
     - Fuse
+    - KSCrash
     - Mapbox-iOS-SDK
     - MKRingProgressView
+
+EXTERNAL SOURCES:
+  Sentry:
+    :git: https://github.com/getsentry/sentry-cocoa.git
+    :tag: 3.12.4
+
+CHECKOUT OPTIONS:
+  Sentry:
+    :git: https://github.com/getsentry/sentry-cocoa.git
+    :tag: 3.12.4
 
 SPEC CHECKSUMS:
   Alamofire: 68d7d521118d49c615a8d2214d87cdf525599d30
   Cosmos: a6dbd3d0baa0cc8f51f8598f7508d5a09d0a9ade
   Eureka: b88fb930e42c79f8c03c373d0fcdc28c1d6c50ed
   Fuse: 34e3968a93e77b774af6b8b631fcfb61bf829c98
+  KSCrash: 5394936f41e5c1ef7b79cf79b30d53299b0c160e
   Mapbox-iOS-SDK: 09b978be732d753e5c5e2911460fc0a018ce9be6
   MKRingProgressView: 023e2241d1ef23b05cb9893aa4878395861e3902
+  Sentry: 7d3ea7176e5184e9c35c12a5825905345807e8c1
 
-PODFILE CHECKSUM: 8d91f090b90148c1e47ee7fb8369933cec662e5c
+PODFILE CHECKSUM: e81f13bc61deb4894882e2b606f817e1998c463a
 
 COCOAPODS: 1.5.2
